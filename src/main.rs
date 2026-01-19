@@ -244,6 +244,7 @@ impl LanguageServer for Backend {
                 definition_provider: Some(OneOf::Left(true)),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 references_provider: Some(OneOf::Left(true)),
+                document_symbol_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -572,6 +573,60 @@ impl LanguageServer for Backend {
             .collect();
 
         Ok(Some(result))
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams,
+    ) -> Result<Option<DocumentSymbolResponse>> {
+        let uri = params.text_document.uri;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        let symbols = extract_symbols(&doc.tree, &doc.text.text);
+
+        // Convert our symbols to LSP DocumentSymbol
+        // Note: We use ls_types::SymbolKind to avoid conflict with our symbols::SymbolKind
+        let lsp_symbols: Vec<DocumentSymbol> = symbols
+            .into_iter()
+            .map(|s| {
+                let kind = match s.kind {
+                    SymbolKind::Function => tower_lsp_server::ls_types::SymbolKind::FUNCTION,
+                    SymbolKind::Variable => tower_lsp_server::ls_types::SymbolKind::VARIABLE,
+                    SymbolKind::Parameter => tower_lsp_server::ls_types::SymbolKind::VARIABLE,
+                };
+
+                // For the range, we use the symbol's position as both range and selection_range
+                // since Vim script function/variable definitions are typically single-line names
+                let range = Range {
+                    start: Position {
+                        line: s.start.0 as u32,
+                        character: s.start.1 as u32,
+                    },
+                    end: Position {
+                        line: s.end.0 as u32,
+                        character: s.end.1 as u32,
+                    },
+                };
+
+                #[allow(deprecated)]
+                DocumentSymbol {
+                    name: s.full_name(),
+                    detail: s.signature,
+                    kind,
+                    tags: None,
+                    deprecated: None,
+                    range,
+                    selection_range: range,
+                    children: None,
+                }
+            })
+            .collect();
+
+        Ok(Some(DocumentSymbolResponse::Nested(lsp_symbols)))
     }
 }
 
