@@ -3,25 +3,19 @@ mod builtins;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+use texter::core::text::Text;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
-use tree_sitter::{Parser, Tree};
+use tree_sitter::Parser;
 
 use builtins::BUILTIN_FUNCTIONS;
-
-/// Document state holding source text and parsed tree
-#[allow(dead_code)] // Fields will be used for incremental parsing
-struct Document {
-    text: String,
-    tree: Option<Tree>,
-}
 
 /// LSP backend for Vim script
 struct Backend {
     client: Client,
     parser: Mutex<Parser>,
-    documents: Mutex<HashMap<Uri, Document>>,
+    documents: Mutex<HashMap<Uri, Text>>,
 }
 
 impl Backend {
@@ -39,32 +33,42 @@ impl Backend {
     }
 
     /// Parse document and collect syntax errors
-    fn parse_and_diagnose(&self, uri: &Uri, text: &str) -> Vec<Diagnostic> {
+    fn parse_and_diagnose(&self, _uri: &Uri, text: &Text) -> Vec<Diagnostic> {
         let tree = {
             let mut parser = self.parser.lock().unwrap();
-            parser.parse(text, None)
+            parser.parse(&text.text, None)
         };
 
         let Some(tree) = tree else {
             return vec![];
         };
 
-        // Store document
-        {
-            let mut docs = self.documents.lock().unwrap();
-            docs.insert(
-                uri.clone(),
-                Document {
-                    text: text.to_string(),
-                    tree: Some(tree.clone()),
-                },
-            );
-        }
-
         // Collect ERROR nodes as diagnostics
         let mut diagnostics = vec![];
         let mut cursor = tree.walk();
-        collect_errors(&mut cursor, text, &mut diagnostics);
+        collect_errors(&mut cursor, &text.text, &mut diagnostics);
+
+        diagnostics
+    }
+
+    /// Store document and return diagnostics
+    fn open_document(&self, uri: Uri, content: String) -> Vec<Diagnostic> {
+        let text = Text::new(content);
+        let diagnostics = self.parse_and_diagnose(&uri, &text);
+
+        let mut docs = self.documents.lock().unwrap();
+        docs.insert(uri, text);
+
+        diagnostics
+    }
+
+    /// Update document with full content and return diagnostics
+    fn update_document(&self, uri: &Uri, content: String) -> Vec<Diagnostic> {
+        let text = Text::new(content);
+        let diagnostics = self.parse_and_diagnose(uri, &text);
+
+        let mut docs = self.documents.lock().unwrap();
+        docs.insert(uri.clone(), text);
 
         diagnostics
     }
@@ -161,7 +165,7 @@ impl LanguageServer for Backend {
         let uri = params.text_document.uri;
         let text = params.text_document.text;
 
-        let diagnostics = self.parse_and_diagnose(&uri, &text);
+        let diagnostics = self.open_document(uri.clone(), text);
         self.client
             .publish_diagnostics(uri, diagnostics, None)
             .await;
@@ -174,14 +178,13 @@ impl LanguageServer for Backend {
             return;
         };
 
-        let diagnostics = self.parse_and_diagnose(&uri, &change.text);
+        let diagnostics = self.update_document(&uri, change.text);
         self.client
             .publish_diagnostics(uri, diagnostics, None)
             .await;
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
-        // Remove document from cache
         let mut docs = self.documents.lock().unwrap();
         docs.remove(&params.text_document.uri);
     }
