@@ -8,7 +8,6 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use texter::change::Change;
 use texter::core::text::Text;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
@@ -148,6 +147,12 @@ impl Backend {
     fn open_document(&self, uri: Uri, content: String) -> Vec<Diagnostic> {
         // Use UTF-16 encoding for VSCode compatibility
         // TODO: Detect client encoding from capabilities
+        // Guard against empty content - texter panics if row count becomes 0
+        let content = if content.is_empty() {
+            "\n".to_string()
+        } else {
+            content
+        };
         let text = Text::new_utf16(content);
         let tree = match self.parse(&text.text, None) {
             Some(t) => t,
@@ -167,29 +172,36 @@ impl Backend {
         diagnostics
     }
 
-    /// Update document with incremental change
+    /// Update document with full replacement
+    /// Note: We recreate the document instead of using incremental update
+    /// because texter's internal state can become corrupted after certain
+    /// operations (like undo after rename), causing panics in eol_indexes.
     fn update_document(&self, uri: &Uri, content: String) -> Vec<Diagnostic> {
+        // Guard against empty content - texter panics if row count becomes 0
+        let content = if content.is_empty() {
+            "\n".to_string()
+        } else {
+            content
+        };
+
+        // Recreate document from scratch to avoid texter state corruption
+        let text = Text::new_utf16(content);
+        let tree = match self.parse(&text.text, None) {
+            Some(t) => t,
+            None => return vec![],
+        };
+
+        let diagnostics = {
+            let mut diags = vec![];
+            let mut cursor = tree.walk();
+            collect_errors(&mut cursor, &text.text, &mut diags);
+            diags
+        };
+
         let mut docs = self.documents.lock().unwrap();
+        docs.insert(uri.clone(), Document { text, tree });
 
-        if let Some(doc) = docs.get_mut(uri) {
-            // Apply full replacement using texter
-            let change = Change::ReplaceFull(content.into());
-            if doc.text.update(change, &mut doc.tree).is_ok() {
-                // Re-parse with old tree for incremental parsing
-                if let Some(new_tree) = self.parse(&doc.text.text, Some(&doc.tree)) {
-                    doc.tree = new_tree;
-                }
-            }
-
-            let mut diagnostics = vec![];
-            let mut cursor = doc.tree.walk();
-            collect_errors(&mut cursor, &doc.text.text, &mut diagnostics);
-            return diagnostics;
-        }
-
-        drop(docs);
-        // Document not found, open as new
-        self.open_document(uri.clone(), content)
+        diagnostics
     }
 }
 
@@ -348,6 +360,10 @@ impl LanguageServer for Backend {
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 references_provider: Some(OneOf::Left(true)),
                 document_symbol_provider: Some(OneOf::Left(true)),
+                rename_provider: Some(OneOf::Right(RenameOptions {
+                    prepare_provider: Some(true),
+                    work_done_progress_options: Default::default(),
+                })),
                 ..Default::default()
             },
             ..Default::default()
@@ -390,6 +406,13 @@ impl LanguageServer for Backend {
         let Some(change) = params.content_changes.into_iter().last() else {
             return;
         };
+
+        log_debug!(
+            "did_change: len={}, lines={}, empty={}",
+            change.text.len(),
+            change.text.lines().count(),
+            change.text.is_empty()
+        );
 
         let diagnostics = self.update_document(&uri, change.text);
         self.client
@@ -838,6 +861,192 @@ impl LanguageServer for Backend {
             .collect();
 
         Ok(Some(DocumentSymbolResponse::Nested(lsp_symbols)))
+    }
+
+    async fn prepare_rename(
+        &self,
+        params: TextDocumentPositionParams,
+    ) -> Result<Option<PrepareRenameResponse>> {
+        let uri = params.text_document.uri;
+        let position = params.position;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        // Find the identifier at the cursor position
+        let reference = find_identifier_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(reference) = reference else {
+            return Ok(None);
+        };
+
+        // Don't allow renaming built-in functions
+        if reference.is_call {
+            if BUILTIN_FUNCTIONS.iter().any(|f| f.name == reference.name) {
+                return Ok(None);
+            }
+        }
+
+        // For autoload functions, return the full name
+        let name = if let Some(autoload) = &reference.autoload {
+            autoload.full_name.clone()
+        } else {
+            format!("{}{}", reference.scope.as_str(), reference.name)
+        };
+
+        Ok(Some(PrepareRenameResponse::RangeWithPlaceholder {
+            range: Range {
+                start: position,
+                end: Position {
+                    line: position.line,
+                    character: position.character + name.len() as u32,
+                },
+            },
+            placeholder: name,
+        }))
+    }
+
+    async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
+        let uri = params.text_document_position.text_document.uri;
+        let position = params.text_document_position.position;
+        let new_name = params.new_name;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        // Find the identifier at the cursor position
+        let reference = find_identifier_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(reference) = reference else {
+            return Ok(None);
+        };
+
+        // Find all references in the current file
+        let current_file_locations = find_references(
+            &doc.tree,
+            &doc.text.text,
+            &reference.name,
+            reference.scope,
+            true, // include declaration
+        );
+
+        // Release the documents lock before searching other files
+        drop(docs);
+
+        // Collect all edits grouped by file
+        let mut changes: HashMap<Uri, Vec<TextEdit>> = HashMap::new();
+
+        // Add edits for current file
+        let current_edits: Vec<TextEdit> = current_file_locations
+            .into_iter()
+            .map(|loc| TextEdit {
+                range: Range {
+                    start: Position {
+                        line: loc.start.0 as u32,
+                        character: loc.start.1 as u32,
+                    },
+                    end: Position {
+                        line: loc.end.0 as u32,
+                        character: loc.end.1 as u32,
+                    },
+                },
+                new_text: new_name.clone(),
+            })
+            .collect();
+
+        if !current_edits.is_empty() {
+            changes.insert(uri.clone(), current_edits);
+        }
+
+        // Search in other indexed files for cross-file visible symbols
+        let is_cross_file_visible = reference.autoload.is_some()
+            || reference.scope == symbols::VimScope::Global
+            || reference.scope == symbols::VimScope::Implicit && reference.name.contains('#');
+
+        if is_cross_file_visible && self.indexing_complete.load(Ordering::SeqCst) {
+            let current_uri_str = uri.to_string();
+            let source_files = self.source_files.lock().unwrap();
+            let db = self.salsa_db.lock().unwrap();
+
+            for (file_uri, source_file) in source_files.iter() {
+                // Skip the current file (already processed)
+                if file_uri == &current_uri_str {
+                    continue;
+                }
+
+                let content = source_file.content(&*db);
+
+                // Parse the file to search for references
+                let mut parser = tree_sitter::Parser::new();
+                parser
+                    .set_language(&tree_sitter_vim::language())
+                    .expect("Error loading vim grammar");
+
+                if let Some(tree) = parser.parse(&content, None) {
+                    let locations = find_references(
+                        &tree,
+                        &content,
+                        &reference.name,
+                        reference.scope,
+                        true, // include declaration
+                    );
+
+                    if !locations.is_empty() {
+                        if let Some(file_uri_parsed) = Uri::from_file_path(file_uri) {
+                            let edits: Vec<TextEdit> = locations
+                                .into_iter()
+                                .map(|loc| TextEdit {
+                                    range: Range {
+                                        start: Position {
+                                            line: loc.start.0 as u32,
+                                            character: loc.start.1 as u32,
+                                        },
+                                        end: Position {
+                                            line: loc.end.0 as u32,
+                                            character: loc.end.1 as u32,
+                                        },
+                                    },
+                                    new_text: new_name.clone(),
+                                })
+                                .collect();
+
+                            changes.insert(file_uri_parsed, edits);
+                        }
+                    }
+                }
+            }
+        }
+
+        log_debug!(
+            "rename: '{}' -> '{}', {} files affected",
+            reference.name,
+            new_name,
+            changes.len()
+        );
+
+        if changes.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some(WorkspaceEdit {
+            changes: Some(changes),
+            document_changes: None,
+            change_annotations: None,
+        }))
     }
 }
 
