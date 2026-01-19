@@ -1,16 +1,43 @@
-" Test file for hjkls syntax diagnostics
-" This file contains both valid and invalid Vim script
+" Test file for hjkls
+" This file contains examples for testing LSP features
 
-" === Valid syntax ===
+" === Functions (goto_definition, hover) ===
 
 function! Hello(name)
   echo "Hello, " . a:name
 endfunction
 
-let g:my_var = 42
+function! s:PrivateHelper()
+  return 42
+endfunction
 
-if exists('g:my_var')
-  echo "Variable exists"
+function! Greet(who)
+  " Hover over 'Hello' to see signature
+  " Press gd on 'Hello' to jump to definition
+  call Hello(a:who)
+
+  " Hover over 's:PrivateHelper' to see signature
+  let l:result = s:PrivateHelper()
+  return l:result
+endfunction
+
+" === Variables (goto_definition, hover) ===
+
+let g:my_var = 42
+let s:script_var = "hello"
+
+function! UseVariables()
+  " Press gd on 'g:my_var' to jump to definition
+  echo g:my_var
+  echo s:script_var
+endfunction
+
+" === Built-in functions (hover) ===
+
+" Hover over 'strlen', 'exists', 'empty' to see built-in docs
+let g:length = strlen("test")
+if exists('g:my_var') && !empty(g:my_var)
+  echo "Variable exists and is not empty"
 endif
 
 " === Invalid syntax (should show errors) ===
