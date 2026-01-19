@@ -1,0 +1,6 @@
+# typos configuration
+# https://github.com/crate-ci/typos
+
+[default.extend-words]
+# Vim built-in function names
+matchend = "matchend"

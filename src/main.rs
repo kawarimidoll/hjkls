@@ -1,3 +1,5 @@
+mod builtins;
+
 use std::collections::HashMap;
 use std::sync::Mutex;
 
@@ -5,6 +7,8 @@ use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
+
+use builtins::BUILTIN_FUNCTIONS;
 
 /// Document state holding source text and parsed tree
 #[allow(dead_code)] // Fields will be used for incremental parsing
@@ -64,7 +68,6 @@ impl Backend {
 
         diagnostics
     }
-
 }
 
 /// Recursively collect ERROR nodes from the syntax tree
@@ -184,11 +187,18 @@ impl LanguageServer for Backend {
     }
 
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
-        // TODO: tree-sitter で解析して補完候補を返す
-        Ok(Some(CompletionResponse::Array(vec![
-            CompletionItem::new_simple("echo".to_string(), "Echo command".to_string()),
-            CompletionItem::new_simple("function".to_string(), "Define function".to_string()),
-        ])))
+        let items: Vec<CompletionItem> = BUILTIN_FUNCTIONS
+            .iter()
+            .map(|func| CompletionItem {
+                label: func.name.to_string(),
+                kind: Some(CompletionItemKind::FUNCTION),
+                detail: Some(func.signature.to_string()),
+                documentation: Some(Documentation::String(func.description.to_string())),
+                ..Default::default()
+            })
+            .collect();
+
+        Ok(Some(CompletionResponse::Array(items)))
     }
 }
 
