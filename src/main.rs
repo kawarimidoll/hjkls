@@ -15,7 +15,9 @@ use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
 
 use builtins::BUILTIN_FUNCTIONS;
-use symbols::{SymbolKind, extract_symbols, find_identifier_at_position, find_references};
+use db::{HjklsDatabase, SourceFile};
+use salsa::Setter;
+use symbols::{SymbolKind, find_identifier_at_position, find_references};
 
 /// Document state holding text and syntax tree
 struct Document {
@@ -30,6 +32,10 @@ struct Backend {
     documents: Mutex<HashMap<Uri, Document>>,
     /// Workspace root directories
     workspace_roots: Mutex<Vec<PathBuf>>,
+    /// Salsa database for incremental computation
+    salsa_db: Mutex<HjklsDatabase>,
+    /// Mapping from URI to salsa SourceFile
+    source_files: Mutex<HashMap<String, SourceFile>>,
 }
 
 impl Backend {
@@ -44,7 +50,30 @@ impl Backend {
             parser: Mutex::new(parser),
             documents: Mutex::new(HashMap::new()),
             workspace_roots: Mutex::new(Vec::new()),
+            salsa_db: Mutex::new(HjklsDatabase::default()),
+            source_files: Mutex::new(HashMap::new()),
         }
+    }
+
+    /// Get symbols for a document using salsa memoization
+    fn get_symbols(&self, uri: &str, content: &str) -> Vec<symbols::Symbol> {
+        let mut db = self.salsa_db.lock().unwrap();
+        let mut source_files = self.source_files.lock().unwrap();
+
+        let source_file = if let Some(sf) = source_files.get(uri) {
+            // Update existing SourceFile if content changed
+            if sf.content(&*db) != content {
+                sf.set_content(&mut *db).to(content.to_string());
+            }
+            *sf
+        } else {
+            // Create new SourceFile
+            let sf = SourceFile::new(&*db, uri.to_string(), content.to_string());
+            source_files.insert(uri.to_string(), sf);
+            sf
+        };
+
+        db::parse_symbols(&*db, source_file)
     }
 
     /// Set workspace roots from initialize params
@@ -103,13 +132,6 @@ impl Backend {
             }
         }
         None
-    }
-
-    /// Read and parse a file, returning its symbols
-    fn parse_file(&self, path: &PathBuf) -> Option<(Tree, String)> {
-        let content = std::fs::read_to_string(path).ok()?;
-        let tree = self.parse(&content, None)?;
-        Some((tree, content))
     }
 
     /// Parse text and return tree
@@ -346,12 +368,16 @@ impl LanguageServer for Backend {
             log_debug!("goto_definition: found {:?}", file_path);
 
             // Parse the file and find the function definition
-            let Some((tree, content)) = self.parse_file(&file_path) else {
-                log_debug!("goto_definition: failed to parse {:?}", file_path);
-                return Ok(None);
+            let content = match std::fs::read_to_string(&file_path) {
+                Ok(c) => c,
+                Err(_) => {
+                    log_debug!("goto_definition: failed to read {:?}", file_path);
+                    return Ok(None);
+                }
             };
 
-            let symbols = extract_symbols(&tree, &content);
+            let file_uri = file_path.to_string_lossy().to_string();
+            let symbols = self.get_symbols(&file_uri, &content);
             log_debug!(
                 "goto_definition: symbols={:?}",
                 symbols.iter().map(|s| &s.name).collect::<Vec<_>>()
@@ -390,7 +416,11 @@ impl LanguageServer for Backend {
         }
 
         // Extract symbols and find the definition in current file
-        let symbols = extract_symbols(&doc.tree, &doc.text.text);
+        let uri_str = uri.to_string();
+        let content = doc.text.text.clone();
+        drop(docs); // Release lock before calling get_symbols
+
+        let symbols = self.get_symbols(&uri_str, &content);
 
         // Find matching symbol definition
         let definition = symbols.iter().find(|s| {
@@ -475,7 +505,11 @@ impl LanguageServer for Backend {
         }
 
         // Then, check user-defined symbols
-        let symbols = extract_symbols(&doc.tree, &doc.text.text);
+        let uri_str = uri.to_string();
+        let content = doc.text.text.clone();
+        drop(docs); // Release lock before calling get_symbols
+
+        let symbols = self.get_symbols(&uri_str, &content);
         let symbol = symbols.iter().find(|s| {
             s.name == reference.name
                 && (reference.scope == symbols::VimScope::Implicit || s.scope == reference.scope)
@@ -581,12 +615,15 @@ impl LanguageServer for Backend {
     ) -> Result<Option<DocumentSymbolResponse>> {
         let uri = params.text_document.uri;
 
-        let docs = self.documents.lock().unwrap();
-        let Some(doc) = docs.get(&uri) else {
-            return Ok(None);
+        let (uri_str, content) = {
+            let docs = self.documents.lock().unwrap();
+            let Some(doc) = docs.get(&uri) else {
+                return Ok(None);
+            };
+            (uri.to_string(), doc.text.text.clone())
         };
 
-        let symbols = extract_symbols(&doc.tree, &doc.text.text);
+        let symbols = self.get_symbols(&uri_str, &content);
 
         // Convert our symbols to LSP DocumentSymbol
         // Note: We use ls_types::SymbolKind to avoid conflict with our symbols::SymbolKind

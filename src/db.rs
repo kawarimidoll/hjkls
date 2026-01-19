@@ -1,10 +1,17 @@
 //! Salsa database for incremental computation
 
-// Functions will be used in go-to-definition implementation
-#![allow(dead_code)]
-
 use crate::symbols::{Symbol, VimScope};
 use salsa::Database;
+
+/// The salsa database for hjkls
+#[salsa::db]
+#[derive(Default, Clone)]
+pub struct HjklsDatabase {
+    storage: salsa::Storage<Self>,
+}
+
+#[salsa::db]
+impl Database for HjklsDatabase {}
 
 /// Source file input for salsa
 #[salsa::input]
@@ -34,6 +41,8 @@ pub fn parse_symbols(db: &dyn Database, file: SourceFile) -> Vec<Symbol> {
 }
 
 /// Find symbol at a given position
+/// Note: Reserved for future use in cross-file features
+#[allow(dead_code)]
 pub fn find_symbol_at_position(
     db: &dyn Database,
     file: SourceFile,
@@ -60,6 +69,8 @@ pub fn find_symbol_at_position(
 }
 
 /// Find symbol definition by name
+/// Note: Reserved for future use in cross-file features
+#[allow(dead_code)]
 pub fn find_symbol_definition(
     db: &dyn Database,
     file: SourceFile,
