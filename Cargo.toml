@@ -13,3 +13,4 @@ tree-sitter = "0.25"
 tree-sitter-vim = "0.4"
 texter = "0.2"
 tokio = { version = "1", features = ["full"] }
+salsa = "0.25"

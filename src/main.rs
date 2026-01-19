@@ -1,4 +1,6 @@
 mod builtins;
+mod db;
+mod symbols;
 
 use std::collections::HashMap;
 use std::sync::Mutex;
