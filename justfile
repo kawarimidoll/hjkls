@@ -32,6 +32,15 @@ verify: fmt check test
 clean:
   cargo clean
 
-# Open test file in Neovim with minimal config
+# Open test file in Neovim with minimal config (logs to logs/hjkls.log)
 test-nvim: build
+  mkdir -p logs
   nvim -u test/minimal_init.lua test/test.vim
+
+# Show hjkls debug log
+log:
+  @cat logs/hjkls.log 2>/dev/null || echo "(no log)"
+
+# Clear debug logs
+log-clear:
+  rm -rf logs/

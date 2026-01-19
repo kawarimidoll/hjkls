@@ -24,3 +24,6 @@ target
 /result
 .direnv
 .pre-commit-config.yaml
+
+# Debug logs
+/logs/

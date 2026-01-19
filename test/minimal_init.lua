@@ -24,9 +24,11 @@ if vim.fn.executable(hjkls_path) == 0 then
   return
 end
 
--- Configure LSP
+-- Configure LSP with debug logging
+local log_path = repo_root .. "/logs/hjkls.log"
+
 vim.lsp.config("hjkls", {
-  cmd = { hjkls_path },
+  cmd = { hjkls_path, "--log=" .. log_path },
   filetypes = { "vim" },
   root_markers = { ".git" },
 })

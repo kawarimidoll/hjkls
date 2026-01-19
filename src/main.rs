@@ -1,5 +1,6 @@
 mod builtins;
 mod db;
+mod logger;
 mod symbols;
 
 use std::collections::HashMap;
@@ -330,37 +331,60 @@ impl LanguageServer for Backend {
             // Release the lock before doing file I/O
             drop(docs);
 
-            // Try to find the autoload file (search relative to current doc first)
-            if let Some(file_path) = self.find_autoload_file(autoload_ref, Some(&uri)) {
-                // Parse the file and find the function definition
-                if let Some((tree, content)) = self.parse_file(&file_path) {
-                    let symbols = extract_symbols(&tree, &content);
+            log_debug!("goto_definition: autoload={}", autoload_ref.full_name);
 
-                    // Look for the function with matching name
-                    // Autoload files define functions with full name (e.g., myplugin#util#helper)
-                    if let Some(symbol) = symbols.iter().find(|s| {
-                        s.kind == SymbolKind::Function && s.name == autoload_ref.full_name
-                    }) {
-                        if let Some(target_uri) = Uri::from_file_path(&file_path) {
-                            let location = Location {
-                                uri: target_uri,
-                                range: Range {
-                                    start: Position {
-                                        line: symbol.start.0 as u32,
-                                        character: symbol.start.1 as u32,
-                                    },
-                                    end: Position {
-                                        line: symbol.end.0 as u32,
-                                        character: symbol.end.1 as u32,
-                                    },
-                                },
-                            };
-                            return Ok(Some(GotoDefinitionResponse::Scalar(location)));
-                        }
-                    }
-                }
-            }
-            return Ok(None);
+            // Try to find the autoload file (search relative to current doc first)
+            let Some(file_path) = self.find_autoload_file(autoload_ref, Some(&uri)) else {
+                log_debug!(
+                    "goto_definition: file not found for {}",
+                    autoload_ref.to_file_path()
+                );
+                return Ok(None);
+            };
+            log_debug!("goto_definition: found {:?}", file_path);
+
+            // Parse the file and find the function definition
+            let Some((tree, content)) = self.parse_file(&file_path) else {
+                log_debug!("goto_definition: failed to parse {:?}", file_path);
+                return Ok(None);
+            };
+
+            let symbols = extract_symbols(&tree, &content);
+            log_debug!(
+                "goto_definition: symbols={:?}",
+                symbols.iter().map(|s| &s.name).collect::<Vec<_>>()
+            );
+
+            // Look for the function with matching name
+            // Autoload files define functions with full name (e.g., myplugin#util#helper)
+            let Some(symbol) = symbols
+                .iter()
+                .find(|s| s.kind == SymbolKind::Function && s.name == autoload_ref.full_name)
+            else {
+                log_debug!("goto_definition: no match for '{}'", autoload_ref.full_name);
+                return Ok(None);
+            };
+
+            let Some(target_uri) = Uri::from_file_path(&file_path) else {
+                log_debug!("goto_definition: invalid URI for {:?}", file_path);
+                return Ok(None);
+            };
+
+            log_debug!("goto_definition: jumping to {:?}", target_uri);
+            let location = Location {
+                uri: target_uri,
+                range: Range {
+                    start: Position {
+                        line: symbol.start.0 as u32,
+                        character: symbol.start.1 as u32,
+                    },
+                    end: Position {
+                        line: symbol.end.0 as u32,
+                        character: symbol.end.1 as u32,
+                    },
+                },
+            };
+            return Ok(Some(GotoDefinitionResponse::Scalar(location)));
         }
 
         // Extract symbols and find the definition in current file
@@ -488,6 +512,10 @@ impl LanguageServer for Backend {
 
 #[tokio::main]
 async fn main() {
+    // Parse --log=PATH argument
+    let log_path = std::env::args().find_map(|arg| arg.strip_prefix("--log=").map(String::from));
+    logger::init(log_path);
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
