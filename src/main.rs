@@ -169,6 +169,7 @@ impl LanguageServer for Backend {
                 )),
                 completion_provider: Some(CompletionOptions::default()),
                 definition_provider: Some(OneOf::Left(true)),
+                hover_provider: Some(HoverProviderCapability::Simple(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -278,6 +279,81 @@ impl LanguageServer for Backend {
                 },
             };
             return Ok(Some(GotoDefinitionResponse::Scalar(location)));
+        }
+
+        Ok(None)
+    }
+
+    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        // Find the identifier at the cursor position
+        let reference = find_identifier_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(reference) = reference else {
+            return Ok(None);
+        };
+
+        // First, check if it's a built-in function
+        if reference.is_call {
+            if let Some(builtin) = BUILTIN_FUNCTIONS.iter().find(|f| f.name == reference.name) {
+                let contents = format!(
+                    "```vim\n{}\n```\n\n{}",
+                    builtin.signature, builtin.description
+                );
+                return Ok(Some(Hover {
+                    contents: HoverContents::Markup(MarkupContent {
+                        kind: MarkupKind::Markdown,
+                        value: contents,
+                    }),
+                    range: None,
+                }));
+            }
+        }
+
+        // Then, check user-defined symbols
+        let symbols = extract_symbols(&doc.tree, &doc.text.text);
+        let symbol = symbols.iter().find(|s| {
+            s.name == reference.name
+                && (reference.scope == symbols::VimScope::Implicit || s.scope == reference.scope)
+        });
+
+        if let Some(symbol) = symbol {
+            let kind_str = match symbol.kind {
+                SymbolKind::Function => "function",
+                SymbolKind::Variable => "variable",
+                SymbolKind::Parameter => "parameter",
+            };
+
+            let contents = if let Some(sig) = &symbol.signature {
+                format!("```vim\n{}\n```\n\n*{}*", sig, kind_str)
+            } else {
+                format!(
+                    "```vim\n{}{}\n```\n\n*{}*",
+                    symbol.scope.as_str(),
+                    symbol.name,
+                    kind_str
+                )
+            };
+
+            return Ok(Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: contents,
+                }),
+                range: None,
+            }));
         }
 
         Ok(None)
