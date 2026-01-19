@@ -47,7 +47,9 @@ impl Backend {
 
     /// Open a new document
     fn open_document(&self, uri: Uri, content: String) -> Vec<Diagnostic> {
-        let text = Text::new(content);
+        // Use UTF-16 encoding for VSCode compatibility
+        // TODO: Detect client encoding from capabilities
+        let text = Text::new_utf16(content);
         let tree = match self.parse(&text.text, None) {
             Some(t) => t,
             None => return vec![],
