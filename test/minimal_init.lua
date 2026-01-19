@@ -29,6 +29,7 @@ local log_path = repo_root .. "/logs/hjkls.log"
 
 vim.lsp.config("hjkls", {
   cmd = { hjkls_path, "--log=" .. log_path },
+  cmd_env = { RUST_BACKTRACE = "1" },
   filetypes = { "vim" },
   root_markers = { ".git" },
 })
