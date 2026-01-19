@@ -15,7 +15,7 @@ use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
 
 use builtins::BUILTIN_FUNCTIONS;
-use symbols::{SymbolKind, extract_symbols, find_identifier_at_position};
+use symbols::{SymbolKind, extract_symbols, find_identifier_at_position, find_references};
 
 /// Document state holding text and syntax tree
 struct Document {
@@ -243,6 +243,7 @@ impl LanguageServer for Backend {
                 completion_provider: Some(CompletionOptions::default()),
                 definition_provider: Some(OneOf::Left(true)),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
+                references_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -507,6 +508,70 @@ impl LanguageServer for Backend {
         }
 
         Ok(None)
+    }
+
+    async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
+        let start_time = std::time::Instant::now();
+
+        let uri = params.text_document_position.text_document.uri;
+        let position = params.text_document_position.position;
+        let include_declaration = params.context.include_declaration;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        // Find the identifier at the cursor position
+        let reference = find_identifier_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(reference) = reference else {
+            return Ok(None);
+        };
+
+        // Find all references in the current file
+        let locations = find_references(
+            &doc.tree,
+            &doc.text.text,
+            &reference.name,
+            reference.scope,
+            include_declaration,
+        );
+
+        log_debug!(
+            "references: found {} refs for '{}' in {:?}",
+            locations.len(),
+            reference.name,
+            start_time.elapsed()
+        );
+
+        if locations.is_empty() {
+            return Ok(None);
+        }
+
+        let result: Vec<Location> = locations
+            .into_iter()
+            .map(|loc| Location {
+                uri: uri.clone(),
+                range: Range {
+                    start: Position {
+                        line: loc.start.0 as u32,
+                        character: loc.start.1 as u32,
+                    },
+                    end: Position {
+                        line: loc.end.0 as u32,
+                        character: loc.end.1 as u32,
+                    },
+                },
+            })
+            .collect();
+
+        Ok(Some(result))
     }
 }
 

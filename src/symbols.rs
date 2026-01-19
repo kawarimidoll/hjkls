@@ -261,6 +261,112 @@ fn find_identifier_in_node(node: &Node, source: &str, row: usize, col: usize) ->
     }
 }
 
+/// A location in the source code
+#[derive(Debug, Clone)]
+pub struct SourceLocation {
+    pub start: (usize, usize),
+    pub end: (usize, usize),
+}
+
+/// Find all references to a symbol in the syntax tree
+pub fn find_references(
+    tree: &Tree,
+    source: &str,
+    name: &str,
+    scope: VimScope,
+    include_declaration: bool,
+) -> Vec<SourceLocation> {
+    let mut locations = Vec::new();
+    let root = tree.root_node();
+    find_references_in_node(
+        &root,
+        source,
+        name,
+        scope,
+        include_declaration,
+        &mut locations,
+    );
+    locations
+}
+
+fn find_references_in_node(
+    node: &Node,
+    source: &str,
+    target_name: &str,
+    target_scope: VimScope,
+    include_declaration: bool,
+    locations: &mut Vec<SourceLocation>,
+) {
+    match node.kind() {
+        "identifier" => {
+            if let Ok(name) = node.utf8_text(source.as_bytes()) {
+                if name == target_name && target_scope == VimScope::Implicit {
+                    // Skip if this is a declaration and we don't want declarations
+                    let is_declaration = is_declaration_node(node);
+                    if include_declaration || !is_declaration {
+                        locations.push(SourceLocation {
+                            start: (node.start_position().row, node.start_position().column),
+                            end: (node.end_position().row, node.end_position().column),
+                        });
+                    }
+                }
+            }
+        }
+        "scoped_identifier" => {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            let scope_node = children.iter().find(|c| c.kind() == "scope");
+            let ident_node = children.iter().find(|c| c.kind() == "identifier");
+
+            if let (Some(scope_node), Some(ident_node)) = (scope_node, ident_node) {
+                if let (Ok(scope_text), Ok(name)) = (
+                    scope_node.utf8_text(source.as_bytes()),
+                    ident_node.utf8_text(source.as_bytes()),
+                ) {
+                    let scope = VimScope::from_str(scope_text);
+                    if name == target_name && scope == target_scope {
+                        let is_declaration = is_declaration_node(node);
+                        if include_declaration || !is_declaration {
+                            locations.push(SourceLocation {
+                                start: (node.start_position().row, node.start_position().column),
+                                end: (node.end_position().row, node.end_position().column),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        find_references_in_node(
+            &child,
+            source,
+            target_name,
+            target_scope,
+            include_declaration,
+            locations,
+        );
+    }
+}
+
+/// Check if a node is part of a declaration (function definition or let/const statement)
+fn is_declaration_node(node: &Node) -> bool {
+    let mut current = node.parent();
+    while let Some(parent) = current {
+        match parent.kind() {
+            "function_declaration" | "let_statement" | "const_statement" => return true,
+            "call_expression" | "binary_expression" => return false,
+            _ => current = parent.parent(),
+        }
+    }
+    false
+}
+
 /// Extract symbols from a syntax tree
 pub fn extract_symbols(tree: &Tree, source: &str) -> Vec<Symbol> {
     let mut symbols = Vec::new();
