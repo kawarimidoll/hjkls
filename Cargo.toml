@@ -1,0 +1,14 @@
+[package]
+name = "hjkls"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Language Server Protocol implementation for Vim script"
+license = "MIT"
+repository = "https://github.com/kawarimidoll/hjkls"
+
+[dependencies]
+tower-lsp-server = "0.23"
+tree-sitter = "0.26"
+tree-sitter-vim = "0.4"
+tokio = { version = "1", features = ["full"] }
