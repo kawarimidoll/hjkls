@@ -3,19 +3,26 @@ mod builtins;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+use texter::change::Change;
 use texter::core::text::Text;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
-use tree_sitter::Parser;
+use tree_sitter::{Parser, Tree};
 
 use builtins::BUILTIN_FUNCTIONS;
+
+/// Document state holding text and syntax tree
+struct Document {
+    text: Text,
+    tree: Tree,
+}
 
 /// LSP backend for Vim script
 struct Backend {
     client: Client,
     parser: Mutex<Parser>,
-    documents: Mutex<HashMap<Uri, Text>>,
+    documents: Mutex<HashMap<Uri, Document>>,
 }
 
 impl Backend {
@@ -32,45 +39,56 @@ impl Backend {
         }
     }
 
-    /// Parse document and collect syntax errors
-    fn parse_and_diagnose(&self, _uri: &Uri, text: &Text) -> Vec<Diagnostic> {
-        let tree = {
-            let mut parser = self.parser.lock().unwrap();
-            parser.parse(&text.text, None)
-        };
-
-        let Some(tree) = tree else {
-            return vec![];
-        };
-
-        // Collect ERROR nodes as diagnostics
-        let mut diagnostics = vec![];
-        let mut cursor = tree.walk();
-        collect_errors(&mut cursor, &text.text, &mut diagnostics);
-
-        diagnostics
+    /// Parse text and return tree
+    fn parse(&self, text: &str, old_tree: Option<&Tree>) -> Option<Tree> {
+        let mut parser = self.parser.lock().unwrap();
+        parser.parse(text, old_tree)
     }
 
-    /// Store document and return diagnostics
+    /// Open a new document
     fn open_document(&self, uri: Uri, content: String) -> Vec<Diagnostic> {
         let text = Text::new(content);
-        let diagnostics = self.parse_and_diagnose(&uri, &text);
+        let tree = match self.parse(&text.text, None) {
+            Some(t) => t,
+            None => return vec![],
+        };
+
+        let diagnostics = {
+            let mut diags = vec![];
+            let mut cursor = tree.walk();
+            collect_errors(&mut cursor, &text.text, &mut diags);
+            diags
+        };
 
         let mut docs = self.documents.lock().unwrap();
-        docs.insert(uri, text);
+        docs.insert(uri, Document { text, tree });
 
         diagnostics
     }
 
-    /// Update document with full content and return diagnostics
+    /// Update document with incremental change
     fn update_document(&self, uri: &Uri, content: String) -> Vec<Diagnostic> {
-        let text = Text::new(content);
-        let diagnostics = self.parse_and_diagnose(uri, &text);
-
         let mut docs = self.documents.lock().unwrap();
-        docs.insert(uri.clone(), text);
 
-        diagnostics
+        if let Some(doc) = docs.get_mut(uri) {
+            // Apply full replacement using texter
+            let change = Change::ReplaceFull(content.into());
+            if doc.text.update(change, &mut doc.tree).is_ok() {
+                // Re-parse with old tree for incremental parsing
+                if let Some(new_tree) = self.parse(&doc.text.text, Some(&doc.tree)) {
+                    doc.tree = new_tree;
+                }
+            }
+
+            let mut diagnostics = vec![];
+            let mut cursor = doc.tree.walk();
+            collect_errors(&mut cursor, &doc.text.text, &mut diagnostics);
+            return diagnostics;
+        }
+
+        drop(docs);
+        // Document not found, open as new
+        self.open_document(uri.clone(), content)
     }
 }
 
