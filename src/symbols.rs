@@ -92,6 +92,84 @@ impl Symbol {
     }
 }
 
+/// A reference to a symbol at a specific location
+#[derive(Debug, Clone)]
+pub struct Reference {
+    /// Symbol name (without scope prefix)
+    pub name: String,
+    /// Symbol scope
+    pub scope: VimScope,
+    /// Whether this is a function call
+    pub is_call: bool,
+}
+
+/// Find the identifier at a given position in the syntax tree
+pub fn find_identifier_at_position(
+    tree: &Tree,
+    source: &str,
+    row: usize,
+    col: usize,
+) -> Option<Reference> {
+    let root = tree.root_node();
+    find_identifier_in_node(&root, source, row, col)
+}
+
+fn find_identifier_in_node(node: &Node, source: &str, row: usize, col: usize) -> Option<Reference> {
+    // Check if position is within this node
+    let start = node.start_position();
+    let end = node.end_position();
+
+    if row < start.row || row > end.row {
+        return None;
+    }
+    if row == start.row && col < start.column {
+        return None;
+    }
+    if row == end.row && col > end.column {
+        return None;
+    }
+
+    // Check children first (more specific match)
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if let Some(reference) = find_identifier_in_node(&child, source, row, col) {
+            return Some(reference);
+        }
+    }
+
+    // Check if this node is an identifier
+    match node.kind() {
+        "identifier" => {
+            let name = node.utf8_text(source.as_bytes()).ok()?.to_string();
+            // Check if parent is a call_expression
+            let is_call = node.parent().is_some_and(|p| p.kind() == "call_expression");
+            Some(Reference {
+                name,
+                scope: VimScope::Implicit,
+                is_call,
+            })
+        }
+        "scoped_identifier" => {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            let scope_node = children.iter().find(|c| c.kind() == "scope")?;
+            let ident_node = children.iter().find(|c| c.kind() == "identifier")?;
+
+            let scope_text = scope_node.utf8_text(source.as_bytes()).ok()?;
+            let name = ident_node.utf8_text(source.as_bytes()).ok()?.to_string();
+
+            let is_call = node.parent().is_some_and(|p| p.kind() == "call_expression");
+            Some(Reference {
+                name,
+                scope: VimScope::from_str(scope_text),
+                is_call,
+            })
+        }
+        _ => None,
+    }
+}
+
 /// Extract symbols from a syntax tree
 pub fn extract_symbols(tree: &Tree, source: &str) -> Vec<Symbol> {
     let mut symbols = Vec::new();

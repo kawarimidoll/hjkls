@@ -13,6 +13,7 @@ use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
 
 use builtins::BUILTIN_FUNCTIONS;
+use symbols::{SymbolKind, extract_symbols, find_identifier_at_position};
 
 /// Document state holding text and syntax tree
 struct Document {
@@ -167,6 +168,7 @@ impl LanguageServer for Backend {
                     TextDocumentSyncKind::FULL,
                 )),
                 completion_provider: Some(CompletionOptions::default()),
+                definition_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -224,6 +226,61 @@ impl LanguageServer for Backend {
             .collect();
 
         Ok(Some(CompletionResponse::Array(items)))
+    }
+
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        // Find the identifier at the cursor position
+        let reference = find_identifier_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(reference) = reference else {
+            return Ok(None);
+        };
+
+        // Extract symbols and find the definition
+        let symbols = extract_symbols(&doc.tree, &doc.text.text);
+
+        // Find matching symbol definition
+        let definition = symbols.iter().find(|s| {
+            s.name == reference.name
+                && (reference.scope == symbols::VimScope::Implicit || s.scope == reference.scope)
+                && (reference.is_call == (s.kind == SymbolKind::Function)
+                    || !reference.is_call && s.kind == SymbolKind::Variable)
+        });
+
+        if let Some(symbol) = definition {
+            let location = Location {
+                uri: uri.clone(),
+                range: Range {
+                    start: Position {
+                        line: symbol.start.0 as u32,
+                        character: symbol.start.1 as u32,
+                    },
+                    end: Position {
+                        line: symbol.end.0 as u32,
+                        character: symbol.end.1 as u32,
+                    },
+                },
+            };
+            return Ok(Some(GotoDefinitionResponse::Scalar(location)));
+        }
+
+        Ok(None)
     }
 }
 
