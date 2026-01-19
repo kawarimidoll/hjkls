@@ -5,16 +5,9 @@ fn main() {
     parser.set_language(&tree_sitter_vim::language()).unwrap();
 
     let code = r#"
-let g:global_var = 1
-let s:script_var = 2
-
-function! MyFunction(arg1, arg2)
-  let l:local_var = a:arg1 + a:arg2
-  return l:local_var
-endfunction
-
-function! s:PrivateFunc()
-  echo "private"
+" Autoload function definition (in autoload/myplugin/util.vim)
+function! myplugin#util#helper()
+  return "Hello"
 endfunction
 "#;
 

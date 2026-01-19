@@ -3,6 +3,7 @@ mod db;
 mod symbols;
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 use texter::change::Change;
@@ -26,6 +27,8 @@ struct Backend {
     client: Client,
     parser: Mutex<Parser>,
     documents: Mutex<HashMap<Uri, Document>>,
+    /// Workspace root directories
+    workspace_roots: Mutex<Vec<PathBuf>>,
 }
 
 impl Backend {
@@ -39,7 +42,73 @@ impl Backend {
             client,
             parser: Mutex::new(parser),
             documents: Mutex::new(HashMap::new()),
+            workspace_roots: Mutex::new(Vec::new()),
         }
+    }
+
+    /// Set workspace roots from initialize params
+    fn set_workspace_roots(&self, params: &InitializeParams) {
+        let mut roots = self.workspace_roots.lock().unwrap();
+        roots.clear();
+
+        // Try workspace folders first (LSP 3.6+)
+        if let Some(folders) = &params.workspace_folders {
+            for folder in folders {
+                if let Some(path) = folder.uri.to_file_path() {
+                    roots.push(path.into_owned());
+                }
+            }
+        }
+
+        // Fall back to root_uri (deprecated but still used)
+        #[allow(deprecated)]
+        if roots.is_empty() {
+            if let Some(uri) = &params.root_uri {
+                if let Some(path) = uri.to_file_path() {
+                    roots.push(path.into_owned());
+                }
+            }
+        }
+    }
+
+    /// Find autoload file in workspace or relative to a document
+    /// Returns the file path if found
+    fn find_autoload_file(
+        &self,
+        autoload_ref: &symbols::AutoloadRef,
+        current_doc_uri: Option<&Uri>,
+    ) -> Option<PathBuf> {
+        let relative_path = autoload_ref.to_file_path();
+
+        // First, try relative to the current document's directory
+        // This handles cases where autoload/ is in a subdirectory (e.g., test/)
+        if let Some(uri) = current_doc_uri {
+            if let Some(doc_path) = uri.to_file_path() {
+                if let Some(doc_dir) = doc_path.parent() {
+                    let full_path = doc_dir.join(&relative_path);
+                    if full_path.exists() {
+                        return Some(full_path);
+                    }
+                }
+            }
+        }
+
+        // Then, try workspace roots
+        let roots = self.workspace_roots.lock().unwrap();
+        for root in roots.iter() {
+            let full_path = root.join(&relative_path);
+            if full_path.exists() {
+                return Some(full_path);
+            }
+        }
+        None
+    }
+
+    /// Read and parse a file, returning its symbols
+    fn parse_file(&self, path: &PathBuf) -> Option<(Tree, String)> {
+        let content = std::fs::read_to_string(path).ok()?;
+        let tree = self.parse(&content, None)?;
+        Some((tree, content))
     }
 
     /// Parse text and return tree
@@ -161,7 +230,10 @@ fn collect_errors(
 }
 
 impl LanguageServer for Backend {
-    async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
+    async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
+        // Capture workspace roots for cross-file features
+        self.set_workspace_roots(&params);
+
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
@@ -253,7 +325,45 @@ impl LanguageServer for Backend {
             return Ok(None);
         };
 
-        // Extract symbols and find the definition
+        // Check if this is an autoload function call
+        if let Some(autoload_ref) = &reference.autoload {
+            // Release the lock before doing file I/O
+            drop(docs);
+
+            // Try to find the autoload file (search relative to current doc first)
+            if let Some(file_path) = self.find_autoload_file(autoload_ref, Some(&uri)) {
+                // Parse the file and find the function definition
+                if let Some((tree, content)) = self.parse_file(&file_path) {
+                    let symbols = extract_symbols(&tree, &content);
+
+                    // Look for the function with matching name
+                    // Autoload files define functions with full name (e.g., myplugin#util#helper)
+                    if let Some(symbol) = symbols.iter().find(|s| {
+                        s.kind == SymbolKind::Function && s.name == autoload_ref.full_name
+                    }) {
+                        if let Some(target_uri) = Uri::from_file_path(&file_path) {
+                            let location = Location {
+                                uri: target_uri,
+                                range: Range {
+                                    start: Position {
+                                        line: symbol.start.0 as u32,
+                                        character: symbol.start.1 as u32,
+                                    },
+                                    end: Position {
+                                        line: symbol.end.0 as u32,
+                                        character: symbol.end.1 as u32,
+                                    },
+                                },
+                            };
+                            return Ok(Some(GotoDefinitionResponse::Scalar(location)));
+                        }
+                    }
+                }
+            }
+            return Ok(None);
+        }
+
+        // Extract symbols and find the definition in current file
         let symbols = extract_symbols(&doc.tree, &doc.text.text);
 
         // Find matching symbol definition
@@ -305,7 +415,23 @@ impl LanguageServer for Backend {
             return Ok(None);
         };
 
-        // First, check if it's a built-in function
+        // First, check if it's an autoload function
+        if let Some(autoload) = &reference.autoload {
+            let contents = format!(
+                "```vim\n{}()\n```\n\n*autoload function*\n\nExpected file: `{}`",
+                autoload.full_name,
+                autoload.to_file_path()
+            );
+            return Ok(Some(Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: contents,
+                }),
+                range: None,
+            }));
+        }
+
+        // Then, check if it's a built-in function
         if reference.is_call {
             if let Some(builtin) = BUILTIN_FUNCTIONS.iter().find(|f| f.name == reference.name) {
                 let contents = format!(

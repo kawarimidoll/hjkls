@@ -40,6 +40,16 @@ if exists('g:my_var') && !empty(g:my_var)
   echo "Variable exists and is not empty"
 endif
 
+" === Autoload functions (hover, goto_definition) ===
+
+" Hover over autoload function calls to see expected file path
+" Press gd to jump to the definition in autoload/myplugin/util.vim
+call myplugin#util#helper()
+call myplugin#util#greet("World")
+
+" These don't exist - hover shows path, gd won't work
+call nonexistent#module#func()
+
 " === Invalid syntax (should show errors) ===
 
 " Unclosed function

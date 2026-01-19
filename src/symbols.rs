@@ -92,15 +92,96 @@ impl Symbol {
     }
 }
 
+/// Parsed autoload function reference
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AutoloadRef {
+    /// The full autoload name (e.g., "myplugin#util#helper")
+    pub full_name: String,
+    /// Path components (e.g., ["myplugin", "util"])
+    pub path_parts: Vec<String>,
+    /// Function name (e.g., "helper")
+    pub func_name: String,
+}
+
+impl AutoloadRef {
+    /// Parse an autoload function name
+    /// Returns None if the name doesn't contain '#'
+    pub fn parse(name: &str) -> Option<Self> {
+        if !name.contains('#') {
+            return None;
+        }
+
+        let parts: Vec<&str> = name.split('#').collect();
+        if parts.len() < 2 {
+            return None;
+        }
+
+        let func_name = parts.last()?.to_string();
+        let path_parts: Vec<String> = parts[..parts.len() - 1]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+
+        Some(Self {
+            full_name: name.to_string(),
+            path_parts,
+            func_name,
+        })
+    }
+
+    /// Get the expected file path relative to runtimepath
+    /// e.g., "myplugin#util#helper" -> "autoload/myplugin/util.vim"
+    pub fn to_file_path(&self) -> String {
+        format!("autoload/{}.vim", self.path_parts.join("/"))
+    }
+}
+
+#[cfg(test)]
+mod autoload_tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_autoload_simple() {
+        let result = AutoloadRef::parse("myplugin#func").unwrap();
+        assert_eq!(result.path_parts, vec!["myplugin"]);
+        assert_eq!(result.func_name, "func");
+        assert_eq!(result.to_file_path(), "autoload/myplugin.vim");
+    }
+
+    #[test]
+    fn test_parse_autoload_nested() {
+        let result = AutoloadRef::parse("myplugin#util#helper").unwrap();
+        assert_eq!(result.path_parts, vec!["myplugin", "util"]);
+        assert_eq!(result.func_name, "helper");
+        assert_eq!(result.to_file_path(), "autoload/myplugin/util.vim");
+    }
+
+    #[test]
+    fn test_parse_autoload_deep() {
+        let result = AutoloadRef::parse("a#b#c#d#func").unwrap();
+        assert_eq!(result.path_parts, vec!["a", "b", "c", "d"]);
+        assert_eq!(result.func_name, "func");
+        assert_eq!(result.to_file_path(), "autoload/a/b/c/d.vim");
+    }
+
+    #[test]
+    fn test_parse_non_autoload() {
+        assert!(AutoloadRef::parse("regular_func").is_none());
+        assert!(AutoloadRef::parse("s:private").is_none());
+    }
+}
+
 /// A reference to a symbol at a specific location
 #[derive(Debug, Clone)]
 pub struct Reference {
-    /// Symbol name (without scope prefix)
+    /// Symbol name (without scope prefix for regular symbols, full name for autoload)
     pub name: String,
     /// Symbol scope
     pub scope: VimScope,
     /// Whether this is a function call
     pub is_call: bool,
+    /// Autoload reference info (if this is an autoload function call)
+    pub autoload: Option<AutoloadRef>,
 }
 
 /// Find the identifier at a given position in the syntax tree
@@ -143,10 +224,19 @@ fn find_identifier_in_node(node: &Node, source: &str, row: usize, col: usize) ->
             let name = node.utf8_text(source.as_bytes()).ok()?.to_string();
             // Check if parent is a call_expression
             let is_call = node.parent().is_some_and(|p| p.kind() == "call_expression");
+
+            // Check if this is an autoload function reference
+            let autoload = if is_call {
+                AutoloadRef::parse(&name)
+            } else {
+                None
+            };
+
             Some(Reference {
                 name,
                 scope: VimScope::Implicit,
                 is_call,
+                autoload,
             })
         }
         "scoped_identifier" => {
@@ -164,6 +254,7 @@ fn find_identifier_in_node(node: &Node, source: &str, row: usize, col: usize) ->
                 name,
                 scope: VimScope::from_str(scope_text),
                 is_call,
+                autoload: None,
             })
         }
         _ => None,
@@ -358,5 +449,22 @@ mod tests {
         assert_eq!(symbols[0].scope, VimScope::Global);
         assert_eq!(symbols[1].name, "script_var");
         assert_eq!(symbols[1].scope, VimScope::Script);
+    }
+
+    #[test]
+    fn test_extract_autoload_function() {
+        // Autoload functions have their full name including #
+        let code = "function! myplugin#util#helper()\n  return 42\nendfunction";
+        let tree = parse(code);
+        let symbols = extract_symbols(&tree, code);
+
+        assert_eq!(symbols.len(), 1);
+        assert_eq!(symbols[0].name, "myplugin#util#helper");
+        assert_eq!(symbols[0].scope, VimScope::Implicit);
+        assert_eq!(symbols[0].kind, SymbolKind::Function);
+        assert_eq!(
+            symbols[0].signature,
+            Some("myplugin#util#helper()".to_string())
+        );
     }
 }

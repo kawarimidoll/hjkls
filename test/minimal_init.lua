@@ -10,6 +10,10 @@ vim.opt.backup = false
 local script_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h")
 local repo_root = vim.fn.fnamemodify(script_dir, ":h")
 
+-- Add test directory to runtimepath so autoload functions work
+-- (autoload/ is in test/ for testing purposes)
+vim.opt.runtimepath:prepend(script_dir)
+
 -- Path to hjkls binary
 local hjkls_path = repo_root .. "/target/debug/hjkls"
 
@@ -34,6 +38,15 @@ vim.diagnostic.config({
   virtual_text = true,
   signs = true,
   underline = true,
+})
+
+-- LSP keymaps (gd is not mapped by default in Neovim)
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local opts = { buffer = args.buf }
+    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+  end,
 })
 
 vim.notify("hjkls LSP configured: " .. hjkls_path, vim.log.levels.INFO)
