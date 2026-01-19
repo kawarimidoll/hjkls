@@ -42,13 +42,13 @@ vim.diagnostic.config({
   underline = true,
 })
 
--- LSP keymaps (gd/gr are not mapped by default in Neovim)
+-- Custom LSP keymaps
+-- Neovim defaults: grr=references, gO=document_symbol, K=hover, <C-]>=definition
+-- See :h lsp-defaults for full list
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local opts = { buffer = args.buf }
-    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-    vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- shortcut (default: <C-]>)
   end,
 })
 

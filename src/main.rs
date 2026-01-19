@@ -5,7 +5,8 @@ mod symbols;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use texter::change::Change;
 use texter::core::text::Text;
@@ -31,11 +32,13 @@ struct Backend {
     parser: Mutex<Parser>,
     documents: Mutex<HashMap<Uri, Document>>,
     /// Workspace root directories
-    workspace_roots: Mutex<Vec<PathBuf>>,
+    workspace_roots: Arc<Mutex<Vec<PathBuf>>>,
     /// Salsa database for incremental computation
-    salsa_db: Mutex<HjklsDatabase>,
+    salsa_db: Arc<Mutex<HjklsDatabase>>,
     /// Mapping from URI to salsa SourceFile
-    source_files: Mutex<HashMap<String, SourceFile>>,
+    source_files: Arc<Mutex<HashMap<String, SourceFile>>>,
+    /// Whether workspace indexing is complete
+    indexing_complete: Arc<AtomicBool>,
 }
 
 impl Backend {
@@ -49,9 +52,10 @@ impl Backend {
             client,
             parser: Mutex::new(parser),
             documents: Mutex::new(HashMap::new()),
-            workspace_roots: Mutex::new(Vec::new()),
-            salsa_db: Mutex::new(HjklsDatabase::default()),
-            source_files: Mutex::new(HashMap::new()),
+            workspace_roots: Arc::new(Mutex::new(Vec::new())),
+            salsa_db: Arc::new(Mutex::new(HjklsDatabase::default())),
+            source_files: Arc::new(Mutex::new(HashMap::new())),
+            indexing_complete: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -189,6 +193,75 @@ impl Backend {
     }
 }
 
+/// Background workspace indexing function
+fn index_workspace_background(
+    workspace_roots: Arc<Mutex<Vec<PathBuf>>>,
+    salsa_db: Arc<Mutex<HjklsDatabase>>,
+    source_files: Arc<Mutex<HashMap<String, SourceFile>>>,
+    indexing_complete: Arc<AtomicBool>,
+) {
+    // Scan for .vim files
+    let vim_files: Vec<PathBuf> = {
+        let roots = workspace_roots.lock().unwrap();
+        let mut files = Vec::new();
+        for root in roots.iter() {
+            scan_directory_recursive(root, &mut files);
+        }
+        files
+    };
+
+    let file_count = vim_files.len();
+    log_debug!("indexing: starting, found {} .vim files", file_count);
+
+    // Index each file
+    for (i, path) in vim_files.iter().enumerate() {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            let uri = path.to_string_lossy().to_string();
+
+            let db = salsa_db.lock().unwrap();
+            let mut sf_map = source_files.lock().unwrap();
+
+            if !sf_map.contains_key(&uri) {
+                let sf = SourceFile::new(&*db, uri.clone(), content);
+                sf_map.insert(uri.clone(), sf);
+                // Trigger symbol parsing to populate cache
+                let _ = db::parse_symbols(&*db, sf);
+            }
+        }
+
+        if (i + 1) % 50 == 0 {
+            log_debug!("indexing: progress {}/{}", i + 1, file_count);
+        }
+    }
+
+    indexing_complete.store(true, Ordering::SeqCst);
+    log_debug!("indexing: complete, indexed {} files", file_count);
+}
+
+/// Recursively scan a directory for .vim files
+fn scan_directory_recursive(dir: &PathBuf, files: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+
+        // Skip hidden directories and common non-source directories
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            if name.starts_with('.') || name == "node_modules" || name == "target" {
+                continue;
+            }
+        }
+
+        if path.is_dir() {
+            scan_directory_recursive(&path, files);
+        } else if path.extension().is_some_and(|ext| ext == "vim") {
+            files.push(path);
+        }
+    }
+}
+
 /// Recursively collect ERROR nodes from the syntax tree
 fn collect_errors(
     cursor: &mut tree_sitter::TreeCursor,
@@ -259,8 +332,16 @@ impl LanguageServer for Backend {
 
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
-                text_document_sync: Some(TextDocumentSyncCapability::Kind(
-                    TextDocumentSyncKind::FULL,
+                text_document_sync: Some(TextDocumentSyncCapability::Options(
+                    TextDocumentSyncOptions {
+                        open_close: Some(true),
+                        change: Some(TextDocumentSyncKind::FULL),
+                        will_save: None,
+                        will_save_wait_until: None,
+                        save: Some(TextDocumentSyncSaveOptions::SaveOptions(SaveOptions {
+                            include_text: Some(true),
+                        })),
+                    },
                 )),
                 completion_provider: Some(CompletionOptions::default()),
                 definition_provider: Some(OneOf::Left(true)),
@@ -277,6 +358,16 @@ impl LanguageServer for Backend {
         self.client
             .log_message(MessageType::INFO, "hjkls initialized!")
             .await;
+
+        // Start background indexing
+        let workspace_roots = Arc::clone(&self.workspace_roots);
+        let salsa_db = Arc::clone(&self.salsa_db);
+        let source_files = Arc::clone(&self.source_files);
+        let indexing_complete = Arc::clone(&self.indexing_complete);
+
+        std::thread::spawn(move || {
+            index_workspace_background(workspace_roots, salsa_db, source_files, indexing_complete);
+        });
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -309,6 +400,29 @@ impl LanguageServer for Backend {
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         let mut docs = self.documents.lock().unwrap();
         docs.remove(&params.text_document.uri);
+    }
+
+    async fn did_save(&self, params: DidSaveTextDocumentParams) {
+        // Update the salsa index when a file is saved
+        let uri = params.text_document.uri;
+        let uri_str = uri.to_string();
+
+        // Get the saved content (if include_text is enabled)
+        let content = if let Some(text) = params.text {
+            text
+        } else {
+            // Fall back to reading from the document store
+            let docs = self.documents.lock().unwrap();
+            if let Some(doc) = docs.get(&uri) {
+                doc.text.text.clone()
+            } else {
+                return;
+            }
+        };
+
+        // Update the salsa cache
+        let _ = self.get_symbols(&uri_str, &content);
+        log_debug!("did_save: updated index for {}", uri_str);
     }
 
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -570,7 +684,7 @@ impl LanguageServer for Backend {
         };
 
         // Find all references in the current file
-        let locations = find_references(
+        let current_file_locations = find_references(
             &doc.tree,
             &doc.text.text,
             &reference.name,
@@ -578,18 +692,10 @@ impl LanguageServer for Backend {
             include_declaration,
         );
 
-        log_debug!(
-            "references: found {} refs for '{}' in {:?}",
-            locations.len(),
-            reference.name,
-            start_time.elapsed()
-        );
+        // Release the documents lock before searching other files
+        drop(docs);
 
-        if locations.is_empty() {
-            return Ok(None);
-        }
-
-        let result: Vec<Location> = locations
+        let mut result: Vec<Location> = current_file_locations
             .into_iter()
             .map(|loc| Location {
                 uri: uri.clone(),
@@ -605,6 +711,74 @@ impl LanguageServer for Backend {
                 },
             })
             .collect();
+
+        // Search in other indexed files if:
+        // 1. Indexing is complete
+        // 2. The symbol is visible across files (autoload or global scope)
+        let is_cross_file_visible = reference.autoload.is_some()
+            || reference.scope == symbols::VimScope::Global
+            || reference.scope == symbols::VimScope::Implicit && reference.name.contains('#');
+
+        if is_cross_file_visible && self.indexing_complete.load(Ordering::SeqCst) {
+            let current_uri_str = uri.to_string();
+            let source_files = self.source_files.lock().unwrap();
+            let db = self.salsa_db.lock().unwrap();
+
+            for (file_uri, source_file) in source_files.iter() {
+                // Skip the current file (already searched)
+                if file_uri == &current_uri_str {
+                    continue;
+                }
+
+                let content = source_file.content(&*db);
+
+                // Parse the file to search for references
+                let mut parser = tree_sitter::Parser::new();
+                parser
+                    .set_language(&tree_sitter_vim::language())
+                    .expect("Error loading vim grammar");
+
+                if let Some(tree) = parser.parse(&content, None) {
+                    let locations = find_references(
+                        &tree,
+                        &content,
+                        &reference.name,
+                        reference.scope,
+                        include_declaration,
+                    );
+
+                    for loc in locations {
+                        // Convert file path to URI
+                        if let Some(file_uri) = Uri::from_file_path(file_uri) {
+                            result.push(Location {
+                                uri: file_uri,
+                                range: Range {
+                                    start: Position {
+                                        line: loc.start.0 as u32,
+                                        character: loc.start.1 as u32,
+                                    },
+                                    end: Position {
+                                        line: loc.end.0 as u32,
+                                        character: loc.end.1 as u32,
+                                    },
+                                },
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        log_debug!(
+            "references: found {} refs for '{}' in {:?}",
+            result.len(),
+            reference.name,
+            start_time.elapsed()
+        );
+
+        if result.is_empty() {
+            return Ok(None);
+        }
 
         Ok(Some(result))
     }
