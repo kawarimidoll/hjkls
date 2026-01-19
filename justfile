@@ -15,9 +15,11 @@ check:
   cargo check --all-targets
   cargo clippy --all-targets -- -D warnings
 
-# Format code
+# Format code (Rust, Markdown, YAML, Nix)
 fmt:
   cargo fmt --all
+  dprint fmt
+  nixfmt *.nix
 
 # Run tests
 test:
