@@ -125,6 +125,7 @@
               rust-analyzer
               clippy
               rustfmt
+              just
               nixfmt
               dprint
               actionlint
