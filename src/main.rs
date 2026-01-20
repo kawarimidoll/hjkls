@@ -104,8 +104,92 @@ impl Backend {
         }
     }
 
+    /// Collect warnings for autoload function calls that reference non-existent files
+    fn collect_autoload_warnings(
+        &self,
+        tree: &Tree,
+        source: &str,
+        current_doc_uri: Option<&Uri>,
+    ) -> Vec<Diagnostic> {
+        let mut diagnostics = Vec::new();
+        let mut cursor = tree.walk();
+
+        self.collect_autoload_warnings_recursive(
+            &mut cursor,
+            source,
+            current_doc_uri,
+            &mut diagnostics,
+        );
+
+        diagnostics
+    }
+
+    fn collect_autoload_warnings_recursive(
+        &self,
+        cursor: &mut tree_sitter::TreeCursor,
+        source: &str,
+        current_doc_uri: Option<&Uri>,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        loop {
+            let node = cursor.node();
+
+            // Check if this is a call_expression
+            if node.kind() == "call_expression" {
+                // Get the function name (first child is usually the function reference)
+                if let Some(func_node) = node.child(0) {
+                    let func_name = func_node.utf8_text(source.as_bytes()).unwrap_or("");
+
+                    // Check if it's an autoload function call (contains #)
+                    if let Some(autoload_ref) = symbols::AutoloadRef::parse(func_name) {
+                        // Check if the autoload file exists
+                        if self
+                            .find_autoload_file(&autoload_ref, current_doc_uri)
+                            .is_none()
+                        {
+                            let start = func_node.start_position();
+                            let end = func_node.end_position();
+                            let expected_path = autoload_ref.to_file_path();
+
+                            diagnostics.push(Diagnostic {
+                                range: Range {
+                                    start: Position {
+                                        line: start.row as u32,
+                                        character: start.column as u32,
+                                    },
+                                    end: Position {
+                                        line: end.row as u32,
+                                        character: end.column as u32,
+                                    },
+                                },
+                                severity: Some(DiagnosticSeverity::WARNING),
+                                source: Some("hjkls".to_string()),
+                                message: format!("Autoload file not found: {}", expected_path),
+                                ..Default::default()
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Recurse into children
+            if cursor.goto_first_child() {
+                self.collect_autoload_warnings_recursive(
+                    cursor,
+                    source,
+                    current_doc_uri,
+                    diagnostics,
+                );
+                cursor.goto_parent();
+            }
+
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+
     /// Find autoload file in workspace or relative to a document
-    /// Returns the file path if found
     fn find_autoload_file(
         &self,
         autoload_ref: &symbols::AutoloadRef,
@@ -159,12 +243,17 @@ impl Backend {
             None => return vec![],
         };
 
-        let diagnostics = {
+        // Collect syntax errors
+        let mut diagnostics = {
             let mut diags = vec![];
             let mut cursor = tree.walk();
             collect_errors(&mut cursor, &text.text, &mut diags);
             diags
         };
+
+        // Collect autoload warnings
+        let autoload_warnings = self.collect_autoload_warnings(&tree, &text.text, Some(&uri));
+        diagnostics.extend(autoload_warnings);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
@@ -191,12 +280,17 @@ impl Backend {
             None => return vec![],
         };
 
-        let diagnostics = {
+        // Collect syntax errors
+        let mut diagnostics = {
             let mut diags = vec![];
             let mut cursor = tree.walk();
             collect_errors(&mut cursor, &text.text, &mut diags);
             diags
         };
+
+        // Collect autoload warnings
+        let autoload_warnings = self.collect_autoload_warnings(&tree, &text.text, Some(uri));
+        diagnostics.extend(autoload_warnings);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });
