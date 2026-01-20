@@ -20,6 +20,9 @@ _G.TEST_PATHS = {
   child_init = test_dir .. "/minimal_init.lua",
 }
 
+-- Load shared test helpers
+_G.H = dofile(test_dir .. "/helpers.lua")
+
 -- Setup mini.test (loaded via Nix)
 require("mini.test").setup({
   collect = {
