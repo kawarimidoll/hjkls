@@ -95,9 +95,6 @@
               # YAML (GitHub Actions)
               actionlint.enable = true;
 
-              # Spell check (Rust-based, fast)
-              typos.enable = true;
-
               # Security
               check-merge-conflicts.enable = true;
               detect-private-keys.enable = true;
