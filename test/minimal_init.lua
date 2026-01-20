@@ -45,11 +45,13 @@ vim.diagnostic.config({
 
 -- Custom LSP keymaps
 -- Neovim defaults: grr=references, gO=document_symbol, K=hover, <C-]>=definition
+-- Neovim 0.11+: <C-s> (insert) = signature_help
 -- See :h lsp-defaults for full list
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local opts = { buffer = args.buf }
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- shortcut (default: <C-]>)
+    vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, opts) -- normal mode shortcut
   end,
 })
 
