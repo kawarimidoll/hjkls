@@ -3376,4 +3376,351 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Delete buffer-local keymap",
         availability: Availability::NeovimOnly,
     },
+    // Argument list functions
+    BuiltinFunction {
+        name: "argc",
+        signature: "argc([{winid}])",
+        description: "Return number of files in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "argidx",
+        signature: "argidx()",
+        description: "Return current index in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "arglistid",
+        signature: "arglistid([{winnr} [, {tabnr}]])",
+        description: "Return argument list ID",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "argv",
+        signature: "argv([{nr} [, {winid}]])",
+        description: "Return argument from argument list",
+        availability: Availability::Common,
+    },
+    // Base64 functions
+    BuiltinFunction {
+        name: "base64_decode",
+        signature: "base64_decode({string})",
+        description: "Decode base64 encoded string",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "base64_encode",
+        signature: "base64_encode({blob})",
+        description: "Encode blob to base64 string",
+        availability: Availability::Common,
+    },
+    // Blob/string conversion
+    BuiltinFunction {
+        name: "blob2str",
+        signature: "blob2str({blob})",
+        description: "Convert blob to string",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "str2blob",
+        signature: "str2blob({string})",
+        description: "Convert string to blob",
+        availability: Availability::Common,
+    },
+    // Buffer/window
+    BuiltinFunction {
+        name: "bufwinnr",
+        signature: "bufwinnr({buf})",
+        description: "Return window number of buffer",
+        availability: Availability::Common,
+    },
+    // Indent functions
+    BuiltinFunction {
+        name: "cindent",
+        signature: "cindent({lnum})",
+        description: "Return C indent for line",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "lispindent",
+        signature: "lispindent({lnum})",
+        description: "Return Lisp indent for line",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "indent",
+        signature: "indent({lnum})",
+        description: "Return indent of line",
+        availability: Availability::Common,
+    },
+    // Command line
+    BuiltinFunction {
+        name: "cmdcomplete_info",
+        signature: "cmdcomplete_info([{what}])",
+        description: "Return command line completion info",
+        availability: Availability::Common,
+    },
+    // Cscope
+    BuiltinFunction {
+        name: "cscope_connection",
+        signature: "cscope_connection([{num} [, {dbpath} [, {prepend}]]])",
+        description: "Check cscope connection",
+        availability: Availability::VimOnly,
+    },
+    // File type detection
+    BuiltinFunction {
+        name: "did_filetype",
+        signature: "did_filetype()",
+        description: "Return TRUE if FileType autocommand was used",
+        availability: Availability::Common,
+    },
+    // Diff
+    BuiltinFunction {
+        name: "diff",
+        signature: "diff({fromlist}, {tolist} [, {options}])",
+        description: "Return diff between two lists",
+        availability: Availability::Common,
+    },
+    // Expand command
+    BuiltinFunction {
+        name: "expandcmd",
+        signature: "expandcmd({string} [, {options}])",
+        description: "Expand special items in command string",
+        availability: Availability::Common,
+    },
+    // Find file/dir
+    BuiltinFunction {
+        name: "finddir",
+        signature: "finddir({name} [, {path} [, {count}]])",
+        description: "Find directory in path",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "findfile",
+        signature: "findfile({name} [, {path} [, {count}]])",
+        description: "Find file in path",
+        availability: Availability::Common,
+    },
+    // Foreground (GUI)
+    BuiltinFunction {
+        name: "foreground",
+        signature: "foreground()",
+        description: "Bring Vim window to foreground",
+        availability: Availability::VimOnly,
+    },
+    // Garbage collection
+    BuiltinFunction {
+        name: "garbagecollect",
+        signature: "garbagecollect([{atexit}])",
+        description: "Free unused memory",
+        availability: Availability::Common,
+    },
+    // GUI font
+    BuiltinFunction {
+        name: "getfontname",
+        signature: "getfontname([{name}])",
+        description: "Return name of current font",
+        availability: Availability::VimOnly,
+    },
+    // Mouse shape
+    BuiltinFunction {
+        name: "getmouseshape",
+        signature: "getmouseshape()",
+        description: "Return current mouse shape name",
+        availability: Availability::VimOnly,
+    },
+    // Region functions (Vim 9.1+)
+    BuiltinFunction {
+        name: "getregion",
+        signature: "getregion({pos1}, {pos2} [, {opts}])",
+        description: "Return text in region",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "getregionpos",
+        signature: "getregionpos({pos1}, {pos2} [, {opts}])",
+        description: "Return positions of region",
+        availability: Availability::Common,
+    },
+    // Window position
+    BuiltinFunction {
+        name: "getwinpos",
+        signature: "getwinpos([{timeout}])",
+        description: "Return [X, Y] of GUI Vim window",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "getwinposx",
+        signature: "getwinposx()",
+        description: "Return X position of GUI Vim window",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "getwinposy",
+        signature: "getwinposy()",
+        description: "Return Y position of GUI Vim window",
+        availability: Availability::Common,
+    },
+    // Glob to regex
+    BuiltinFunction {
+        name: "glob2regpat",
+        signature: "glob2regpat({string})",
+        description: "Convert glob pattern to regex",
+        availability: Availability::Common,
+    },
+    // Local directory
+    BuiltinFunction {
+        name: "haslocaldir",
+        signature: "haslocaldir([{winnr} [, {tabnr}]])",
+        description: "Return TRUE if local directory is set",
+        availability: Availability::Common,
+    },
+    // Type checking
+    BuiltinFunction {
+        name: "instanceof",
+        signature: "instanceof({object}, {class})",
+        description: "Return TRUE if object is instance of class",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "isinf",
+        signature: "isinf({expr})",
+        description: "Return TRUE if value is infinity",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "isnan",
+        signature: "isnan({expr})",
+        description: "Return TRUE if value is NaN",
+        availability: Availability::Common,
+    },
+    // Match functions
+    BuiltinFunction {
+        name: "matchbufline",
+        signature: "matchbufline({buf}, {pat}, {lnum}, {end} [, {dict}])",
+        description: "Return all matches in buffer lines",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "matchstrlist",
+        signature: "matchstrlist({list}, {pat} [, {dict}])",
+        description: "Return all matches in list of strings",
+        availability: Availability::Common,
+    },
+    // Popup echo (Vim-only)
+    BuiltinFunction {
+        name: "popup_findecho",
+        signature: "popup_findecho()",
+        description: "Return echo popup window ID",
+        availability: Availability::VimOnly,
+    },
+    // Read blob
+    BuiltinFunction {
+        name: "readblob",
+        signature: "readblob({fname} [, {offset} [, {size}]])",
+        description: "Read file as blob",
+        availability: Availability::Common,
+    },
+    // Server to client
+    BuiltinFunction {
+        name: "server2client",
+        signature: "server2client({clientid}, {string})",
+        description: "Send reply to client",
+        availability: Availability::Common,
+    },
+    // Slice
+    BuiltinFunction {
+        name: "slice",
+        signature: "slice({expr}, {start} [, {end}])",
+        description: "Return slice of list or blob",
+        availability: Availability::Common,
+    },
+    // Sound fold
+    BuiltinFunction {
+        name: "soundfold",
+        signature: "soundfold({word})",
+        description: "Return sound-folded word",
+        availability: Availability::Common,
+    },
+    // String conversion
+    BuiltinFunction {
+        name: "string",
+        signature: "string({expr})",
+        description: "Convert expression to string",
+        availability: Availability::Common,
+    },
+    // String transform
+    BuiltinFunction {
+        name: "strtrans",
+        signature: "strtrans({string})",
+        description: "Translate unprintable characters",
+        availability: Availability::Common,
+    },
+    // Swap file functions
+    BuiltinFunction {
+        name: "swapfilelist",
+        signature: "swapfilelist()",
+        description: "Return list of swap file names",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "swapinfo",
+        signature: "swapinfo({fname})",
+        description: "Return info about swap file",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "swapname",
+        signature: "swapname({buf})",
+        description: "Return swap file name for buffer",
+        availability: Availability::Common,
+    },
+    // Terminal functions (Vim-only, missing)
+    BuiltinFunction {
+        name: "term_getaltscreen",
+        signature: "term_getaltscreen({buf})",
+        description: "Return alternate screen flag",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "term_scrape",
+        signature: "term_scrape({buf}, {row})",
+        description: "Return terminal screen contents",
+        availability: Availability::VimOnly,
+    },
+    // UTF-16 index
+    BuiltinFunction {
+        name: "utf16idx",
+        signature: "utf16idx({string}, {idx} [, {countcc} [, {charidx}]])",
+        description: "Return UTF-16 index of byte index",
+        availability: Availability::Common,
+    },
+    // Assert (missing)
+    BuiltinFunction {
+        name: "assert_equalfile",
+        signature: "assert_equalfile({fname1}, {fname2} [, {msg}])",
+        description: "Assert two files have equal contents",
+        availability: Availability::Common,
+    },
+    // Internationalization
+    BuiltinFunction {
+        name: "bindtextdomain",
+        signature: "bindtextdomain({package}, {path})",
+        description: "Set path for message translations",
+        availability: Availability::Common,
+    },
+    // Wildmenu mode
+    BuiltinFunction {
+        name: "wildmenumode",
+        signature: "wildmenumode()",
+        description: "Return TRUE if wildmenu is active",
+        availability: Availability::Common,
+    },
+    // Windows version
+    BuiltinFunction {
+        name: "windowsversion",
+        signature: "windowsversion()",
+        description: "Return Windows version string",
+        availability: Availability::VimOnly,
+    },
 ];
