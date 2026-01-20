@@ -116,6 +116,10 @@
           neovim-test = pkgs.neovim.override {
             configure.packages.test.start = [ pkgs.vimPlugins.mini-test ];
           };
+          # Vim with vim-lsp for manual testing
+          vim-dev = pkgs.vim-full.customize {
+            vimrcConfig.packages.dev.start = [ pkgs.vimPlugins.vim-lsp ];
+          };
         in
         {
           default = pkgs.mkShell {
@@ -133,6 +137,7 @@
               convco
               typos
               neovim-test
+              vim-dev
             ];
           };
         }
