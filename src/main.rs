@@ -549,7 +549,7 @@ impl LanguageServer for Backend {
         let position = params.text_document_position.position;
 
         // Get document content and find the completion token range
-        let (uri_str, content, token_start) = {
+        let (uri_str, content, token_start, input_has_scope) = {
             let docs = self.documents.lock().unwrap();
             let Some(doc) = docs.get(&uri) else {
                 return Ok(Some(CompletionResponse::Array(vec![])));
@@ -561,7 +561,11 @@ impl LanguageServer for Backend {
             let col = position.character as usize;
             let token_start = find_completion_token_start(line, col);
 
-            (uri.to_string(), content, token_start)
+            // Check if current input contains a scope prefix (e.g., "g:", "s:")
+            let current_input = &line[token_start..col.min(line.len())];
+            let input_has_scope = current_input.contains(':');
+
+            (uri.to_string(), content, token_start, input_has_scope)
         };
 
         // Create text edit range for replacing the current token
@@ -592,8 +596,8 @@ impl LanguageServer for Backend {
         // 2. User-defined symbols from current document
         let symbols = self.get_symbols(&uri_str, &content);
         for sym in symbols {
-            // Skip parameters - they are function-local and not useful in completion
-            if sym.kind == SymbolKind::Parameter {
+            // Skip parameters and empty names
+            if sym.kind == SymbolKind::Parameter || sym.name.is_empty() {
                 continue;
             }
             let kind = match sym.kind {
@@ -615,34 +619,28 @@ impl LanguageServer for Backend {
             let full_name = sym.full_name();
             let has_scope = !sym.scope.as_str().is_empty();
 
-            // Add completion item with full name (matches "g:m" -> "g:my_var")
+            // For scoped symbols, choose filter strategy based on user input:
+            // - If user typed scope prefix (e.g., "g:"), match by full name
+            // - If user typed without scope (e.g., "m"), match by name only
+            let filter_text = if has_scope && !input_has_scope {
+                // User typing without scope -> filter by name only
+                Some(sym.name.clone())
+            } else {
+                // User typing with scope or symbol has no scope -> filter by label (full_name)
+                None
+            };
+
             items.push(CompletionItem {
                 label: full_name.clone(),
+                filter_text,
                 kind: Some(kind),
-                detail: detail.clone(),
+                detail,
                 text_edit: Some(CompletionTextEdit::Edit(TextEdit {
                     range: edit_range,
-                    new_text: full_name.clone(),
+                    new_text: full_name,
                 })),
                 ..Default::default()
             });
-
-            // For scoped symbols, also add an entry that matches by name only
-            // (matches "m" -> "g:my_var", "P" -> "s:PrivateHelper")
-            if has_scope {
-                items.push(CompletionItem {
-                    label: full_name.clone(),
-                    // filterText uses name only for matching without scope prefix
-                    filter_text: Some(sym.name.clone()),
-                    kind: Some(kind),
-                    detail,
-                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
-                        range: edit_range,
-                        new_text: full_name,
-                    })),
-                    ..Default::default()
-                });
-            }
         }
 
         Ok(Some(CompletionResponse::Array(items)))
