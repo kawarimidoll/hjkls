@@ -16,6 +16,8 @@ pub struct BuiltinFunction {
     pub name: &'static str,
     pub signature: &'static str,
     pub description: &'static str,
+    /// Future: filter completions based on editor detection (`has("nvim")`)
+    #[allow(dead_code)]
     pub availability: Availability,
 }
 
