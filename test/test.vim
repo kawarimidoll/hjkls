@@ -3,7 +3,7 @@
 
 " === Functions (goto_definition, hover) ===
 
-function! Hello(name)
+function! Hello(name = 'World')
   echo "Hello, " . a:name
 endfunction
 
@@ -49,6 +49,24 @@ call myplugin#util#greet("World")
 
 " These don't exist - hover shows path, gd won't work
 call nonexistent#module#func()
+
+" === Invalid argument count (should show warnings) ===
+
+" Too few arguments
+call strlen()
+call search()
+
+" Too many arguments
+call Hello("alice", "bob")
+call s:PrivateHelper("extra")
+call empty(1, 2, 3)
+
+" Valid: optional arguments
+call Hello()
+call Hello("alice")
+call search("pattern")
+call search("pattern", "n")
+call search("pattern", "n", 100)
 
 " === Invalid syntax (should show errors) ===
 

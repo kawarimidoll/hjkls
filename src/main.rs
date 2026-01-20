@@ -189,6 +189,115 @@ impl Backend {
         }
     }
 
+    /// Collect warnings for function calls with wrong number of arguments
+    fn collect_arity_warnings(&self, tree: &Tree, source: &str, uri: &Uri) -> Vec<Diagnostic> {
+        let mut diagnostics = Vec::new();
+        let mut cursor = tree.walk();
+
+        // Get user-defined symbols for this document
+        let uri_str = uri.to_string();
+        let symbols = self.get_symbols(&uri_str, source);
+
+        self.collect_arity_warnings_recursive(&mut cursor, source, &symbols, &mut diagnostics);
+
+        diagnostics
+    }
+
+    fn collect_arity_warnings_recursive(
+        &self,
+        cursor: &mut tree_sitter::TreeCursor,
+        source: &str,
+        symbols: &[symbols::Symbol],
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        loop {
+            let node = cursor.node();
+
+            // Check if this is a call_expression
+            if node.kind() == "call_expression" {
+                if let Some(func_node) = node.child(0) {
+                    let func_name = func_node.utf8_text(source.as_bytes()).unwrap_or("");
+
+                    // Skip autoload functions (handled separately) and empty names
+                    if func_name.is_empty() || func_name.contains('#') {
+                        // Continue to recurse but skip arity check
+                    } else {
+                        // Try to find signature - first check built-in functions
+                        let signature = BUILTIN_FUNCTIONS
+                            .iter()
+                            .find(|f| f.name == func_name)
+                            .map(|f| f.signature.to_string())
+                            .or_else(|| {
+                                // Then check user-defined functions
+                                symbols
+                                    .iter()
+                                    .find(|s| {
+                                        s.kind == symbols::SymbolKind::Function
+                                            && s.full_name() == func_name
+                                    })
+                                    .and_then(|s| s.signature.clone())
+                            });
+
+                        if let Some(sig) = signature {
+                            let (min_args, max_args) = get_param_count_range(&sig);
+                            let actual_args = count_call_arguments(node, source);
+
+                            let is_error = if actual_args < min_args {
+                                Some(format!(
+                                    "Too few arguments: {} requires at least {} argument(s), got {}",
+                                    func_name, min_args, actual_args
+                                ))
+                            } else if let Some(max) = max_args {
+                                if actual_args > max {
+                                    Some(format!(
+                                        "Too many arguments: {} accepts at most {} argument(s), got {}",
+                                        func_name, max, actual_args
+                                    ))
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            };
+
+                            if let Some(message) = is_error {
+                                let start = func_node.start_position();
+                                let end = node.end_position(); // Use whole call expression
+
+                                diagnostics.push(Diagnostic {
+                                    range: Range {
+                                        start: Position {
+                                            line: start.row as u32,
+                                            character: start.column as u32,
+                                        },
+                                        end: Position {
+                                            line: end.row as u32,
+                                            character: end.column as u32,
+                                        },
+                                    },
+                                    severity: Some(DiagnosticSeverity::WARNING),
+                                    source: Some("hjkls".to_string()),
+                                    message,
+                                    ..Default::default()
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Recurse into children
+            if cursor.goto_first_child() {
+                self.collect_arity_warnings_recursive(cursor, source, symbols, diagnostics);
+                cursor.goto_parent();
+            }
+
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+
     /// Find autoload file in workspace or relative to a document
     fn find_autoload_file(
         &self,
@@ -255,6 +364,10 @@ impl Backend {
         let autoload_warnings = self.collect_autoload_warnings(&tree, &text.text, Some(&uri));
         diagnostics.extend(autoload_warnings);
 
+        // Collect arity warnings (argument count mismatch)
+        let arity_warnings = self.collect_arity_warnings(&tree, &text.text, &uri);
+        diagnostics.extend(arity_warnings);
+
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
 
@@ -291,6 +404,10 @@ impl Backend {
         // Collect autoload warnings
         let autoload_warnings = self.collect_autoload_warnings(&tree, &text.text, Some(uri));
         diagnostics.extend(autoload_warnings);
+
+        // Collect arity warnings (argument count mismatch)
+        let arity_warnings = self.collect_arity_warnings(&tree, &text.text, uri);
+        diagnostics.extend(arity_warnings);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });
@@ -520,6 +637,120 @@ fn parse_signature_params(signature: &str) -> Vec<String> {
     }
 
     params
+}
+
+/// Get the minimum and maximum argument count from a function signature
+/// Returns (min_args, max_args) where max_args is None if unlimited (e.g., varargs)
+fn get_param_count_range(signature: &str) -> (usize, Option<usize>) {
+    // Check for varargs
+    if signature.contains("...") {
+        // Count required args before varargs
+        let params = parse_signature_params(signature);
+        let min_args = params
+            .iter()
+            .filter(|p| !p.trim().starts_with('[') && !p.contains('=') && !p.contains("..."))
+            .count();
+        return (min_args, None);
+    }
+
+    // Find the content between parentheses
+    let Some(start) = signature.find('(') else {
+        return (0, Some(0));
+    };
+    let Some(end) = signature.rfind(')') else {
+        return (0, Some(0));
+    };
+
+    if start + 1 >= end {
+        return (0, Some(0));
+    }
+
+    let args_str = &signature[start + 1..end];
+
+    // Count required and optional arguments directly from signature string
+    let mut min_args = 0;
+    let mut max_args = 0;
+    let mut in_optional = false;
+    let mut depth = 0;
+    let mut current_arg = String::new();
+
+    for ch in args_str.chars() {
+        match ch {
+            '[' => {
+                if depth == 0 {
+                    in_optional = true;
+                }
+                depth += 1;
+            }
+            ']' => {
+                depth -= 1;
+            }
+            '{' => {
+                // Start of an argument like {pattern}
+                current_arg.clear();
+            }
+            '}' => {
+                // End of an argument - count it
+                if !current_arg.is_empty() {
+                    max_args += 1;
+                    if !in_optional {
+                        min_args += 1;
+                    }
+                }
+                current_arg.clear();
+            }
+            ',' if depth == 0 => {
+                // Top-level comma - check if current_arg has content (user-defined style)
+                let trimmed = current_arg.trim();
+                if !trimmed.is_empty() && !trimmed.starts_with('{') {
+                    // User-defined param like "name" or "name = 'default'"
+                    max_args += 1;
+                    if !trimmed.contains('=') {
+                        min_args += 1;
+                    }
+                }
+                current_arg.clear();
+            }
+            _ => {
+                current_arg.push(ch);
+            }
+        }
+    }
+
+    // Handle last argument (user-defined style without braces)
+    let trimmed = current_arg.trim();
+    if !trimmed.is_empty() && !trimmed.starts_with('{') && !trimmed.starts_with('[') {
+        max_args += 1;
+        if !trimmed.contains('=') {
+            min_args += 1;
+        }
+    }
+
+    (min_args, Some(max_args))
+}
+
+/// Count the number of arguments in a call_expression node
+fn count_call_arguments(node: tree_sitter::Node, _source: &str) -> usize {
+    let mut count = 0;
+    let mut cursor = node.walk();
+
+    // Skip the function name (first child)
+    if !cursor.goto_first_child() {
+        return 0;
+    }
+
+    // Iterate through remaining children
+    while cursor.goto_next_sibling() {
+        let child = cursor.node();
+        let kind = child.kind();
+        // Count actual argument nodes (not punctuation)
+        // Arguments can be various expression types
+        if kind != "(" && kind != ")" && kind != "," {
+            count += 1;
+        }
+    }
+
+    count
 }
 
 impl LanguageServer for Backend {

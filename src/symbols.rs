@@ -495,11 +495,33 @@ fn extract_function_params(decl: &Node, source: &str) -> Vec<String> {
         .find(|c| c.kind() == "parameters");
 
     if let Some(params_node) = params_node {
-        let mut cursor = params_node.walk();
-        for child in params_node.children(&mut cursor) {
-            if child.kind() == "identifier" {
-                if let Ok(name) = child.utf8_text(source.as_bytes()) {
-                    params.push(name.to_string());
+        // Get the full text of parameters and parse it
+        // This handles default values like "name = 'World'"
+        if let Ok(params_text) = params_node.utf8_text(source.as_bytes()) {
+            // Remove parentheses
+            let inner = params_text.trim_start_matches('(').trim_end_matches(')');
+            if !inner.trim().is_empty() {
+                // Split by comma, handling string literals
+                let mut depth = 0;
+                let mut current = String::new();
+                for ch in inner.chars() {
+                    match ch {
+                        '\'' | '"' if depth == 0 => depth = 1,
+                        '\'' | '"' if depth == 1 => depth = 0,
+                        ',' if depth == 0 => {
+                            let trimmed = current.trim();
+                            if !trimmed.is_empty() {
+                                params.push(trimmed.to_string());
+                            }
+                            current.clear();
+                        }
+                        _ => current.push(ch),
+                    }
+                }
+                // Last parameter
+                let trimmed = current.trim();
+                if !trimmed.is_empty() {
+                    params.push(trimmed.to_string());
                 }
             }
         }
