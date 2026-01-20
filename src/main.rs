@@ -17,7 +17,7 @@ use tree_sitter::{Parser, Tree};
 use builtins::BUILTIN_FUNCTIONS;
 use db::{HjklsDatabase, SourceFile};
 use salsa::Setter;
-use symbols::{SymbolKind, find_identifier_at_position, find_references};
+use symbols::{SymbolKind, find_call_at_position, find_identifier_at_position, find_references};
 
 /// Document state holding text and syntax tree
 struct Document {
@@ -337,6 +337,61 @@ fn collect_errors(
     }
 }
 
+/// Parse parameter names from a function signature string
+/// e.g., "substitute({string}, {pat}, {sub}, {flags})" -> ["{string}", "{pat}", "{sub}", "{flags}"]
+fn parse_signature_params(signature: &str) -> Vec<String> {
+    let mut params = Vec::new();
+
+    // Find the content between parentheses
+    let Some(start) = signature.find('(') else {
+        return params;
+    };
+    let Some(end) = signature.rfind(')') else {
+        return params;
+    };
+
+    if start + 1 >= end {
+        return params;
+    }
+
+    let args_str = &signature[start + 1..end];
+
+    // Split by comma, but handle nested brackets
+    let mut depth = 0;
+    let mut current_param = String::new();
+
+    for ch in args_str.chars() {
+        match ch {
+            '[' | '{' => {
+                depth += 1;
+                current_param.push(ch);
+            }
+            ']' | '}' => {
+                depth -= 1;
+                current_param.push(ch);
+            }
+            ',' if depth == 0 => {
+                let trimmed = current_param.trim().to_string();
+                if !trimmed.is_empty() {
+                    params.push(trimmed);
+                }
+                current_param.clear();
+            }
+            _ => {
+                current_param.push(ch);
+            }
+        }
+    }
+
+    // Don't forget the last parameter
+    let trimmed = current_param.trim().to_string();
+    if !trimmed.is_empty() {
+        params.push(trimmed);
+    }
+
+    params
+}
+
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         // Capture workspace roots for cross-file features
@@ -356,6 +411,11 @@ impl LanguageServer for Backend {
                     },
                 )),
                 completion_provider: Some(CompletionOptions::default()),
+                signature_help_provider: Some(SignatureHelpOptions {
+                    trigger_characters: Some(vec!["(".to_string(), ",".to_string()]),
+                    retrigger_characters: None,
+                    work_done_progress_options: Default::default(),
+                }),
                 definition_provider: Some(OneOf::Left(true)),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 references_provider: Some(OneOf::Left(true)),
@@ -461,6 +521,119 @@ impl LanguageServer for Backend {
             .collect();
 
         Ok(Some(CompletionResponse::Array(items)))
+    }
+
+    async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        log_debug!(
+            "signature_help: position={}:{}",
+            position.line,
+            position.character
+        );
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            log_debug!("signature_help: document not found");
+            return Ok(None);
+        };
+
+        // Find the function call at cursor position
+        let call_info = find_call_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(call_info) = call_info else {
+            log_debug!("signature_help: no call found at position");
+            return Ok(None);
+        };
+
+        log_debug!(
+            "signature_help: found call '{}', param={}",
+            call_info.function_name,
+            call_info.active_param
+        );
+
+        // First, check if it's a built-in function
+        if let Some(builtin) = BUILTIN_FUNCTIONS
+            .iter()
+            .find(|f| f.name == call_info.function_name)
+        {
+            let params = parse_signature_params(builtin.signature);
+            let parameters: Vec<ParameterInformation> = params
+                .iter()
+                .map(|p| ParameterInformation {
+                    label: ParameterLabel::Simple(p.clone()),
+                    documentation: None,
+                })
+                .collect();
+
+            let signature = SignatureInformation {
+                label: builtin.signature.to_string(),
+                documentation: Some(Documentation::String(builtin.description.to_string())),
+                parameters: Some(parameters),
+                active_parameter: Some(call_info.active_param as u32),
+            };
+
+            return Ok(Some(SignatureHelp {
+                signatures: vec![signature],
+                active_signature: Some(0),
+                active_parameter: Some(call_info.active_param as u32),
+            }));
+        }
+
+        // Then, check user-defined functions
+        let uri_str = uri.to_string();
+        let content = doc.text.text.clone();
+        drop(docs);
+
+        let symbols = self.get_symbols(&uri_str, &content);
+
+        // Look for matching function (handle both scoped and autoload)
+        let symbol = symbols.iter().find(|s| {
+            s.kind == SymbolKind::Function
+                && (s.name == call_info.function_name
+                    || s.full_name() == call_info.function_name
+                    || call_info
+                        .autoload
+                        .as_ref()
+                        .is_some_and(|a| a.full_name == s.name))
+        });
+
+        if let Some(symbol) = symbol {
+            let sig_str = symbol
+                .signature
+                .clone()
+                .unwrap_or_else(|| format!("{}()", symbol.full_name()));
+
+            let params = parse_signature_params(&sig_str);
+            let parameters: Vec<ParameterInformation> = params
+                .iter()
+                .map(|p| ParameterInformation {
+                    label: ParameterLabel::Simple(p.clone()),
+                    documentation: None,
+                })
+                .collect();
+
+            let signature = SignatureInformation {
+                label: sig_str,
+                documentation: None,
+                parameters: Some(parameters),
+                active_parameter: Some(call_info.active_param as u32),
+            };
+
+            return Ok(Some(SignatureHelp {
+                signatures: vec![signature],
+                active_signature: Some(0),
+                active_parameter: Some(call_info.active_param as u32),
+            }));
+        }
+
+        Ok(None)
     }
 
     async fn goto_definition(

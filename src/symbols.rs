@@ -508,6 +508,136 @@ fn extract_function_params(decl: &Node, source: &str) -> Vec<String> {
     params
 }
 
+/// Information about a function call at cursor position
+#[derive(Debug, Clone)]
+pub struct CallInfo {
+    /// Function name (with scope prefix if present)
+    pub function_name: String,
+    /// Autoload reference if this is an autoload function
+    pub autoload: Option<AutoloadRef>,
+    /// Current parameter index (0-based)
+    pub active_param: usize,
+}
+
+/// Find function call information at the given position
+/// Returns None if cursor is not inside a function call
+pub fn find_call_at_position(
+    tree: &Tree,
+    source: &str,
+    row: usize,
+    col: usize,
+) -> Option<CallInfo> {
+    let root = tree.root_node();
+    find_call_in_node(&root, source, row, col)
+}
+
+fn find_call_in_node(node: &Node, source: &str, row: usize, col: usize) -> Option<CallInfo> {
+    // Check if position is within this node's range
+    let start = node.start_position();
+    let end = node.end_position();
+
+    if row < start.row || row > end.row {
+        return None;
+    }
+    if row == start.row && col < start.column {
+        return None;
+    }
+    if row == end.row && col > end.column {
+        return None;
+    }
+
+    // Check children first (more specific match)
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if let Some(info) = find_call_in_node(&child, source, row, col) {
+            return Some(info);
+        }
+    }
+
+    // Check if this node is a call_expression
+    if node.kind() == "call_expression" {
+        return extract_call_info(node, source, row, col);
+    }
+
+    None
+}
+
+fn extract_call_info(node: &Node, source: &str, row: usize, col: usize) -> Option<CallInfo> {
+    let mut cursor = node.walk();
+    let children: Vec<_> = node.children(&mut cursor).collect();
+
+    // Find function name (first child is usually the function reference)
+    let func_node = children.first()?;
+    let function_name = match func_node.kind() {
+        "identifier" => func_node.utf8_text(source.as_bytes()).ok()?.to_string(),
+        "scoped_identifier" => {
+            // Handle s:func, g:func, etc.
+            let mut inner_cursor = func_node.walk();
+            let inner_children: Vec<_> = func_node.children(&mut inner_cursor).collect();
+
+            let scope_node = inner_children.iter().find(|c| c.kind() == "scope")?;
+            let ident_node = inner_children.iter().find(|c| c.kind() == "identifier")?;
+
+            let scope = scope_node.utf8_text(source.as_bytes()).ok()?;
+            let name = ident_node.utf8_text(source.as_bytes()).ok()?;
+            format!("{}{}", scope, name)
+        }
+        _ => func_node.utf8_text(source.as_bytes()).ok()?.to_string(),
+    };
+
+    // Check for autoload reference
+    let autoload = AutoloadRef::parse(&function_name);
+
+    // Calculate active parameter by counting commas before cursor position
+    // tree-sitter-vim doesn't have an "arguments" node - args are direct children of call_expression
+    let active_param = calculate_active_param(&children, row, col);
+
+    Some(CallInfo {
+        function_name,
+        autoload,
+        active_param,
+    })
+}
+
+fn calculate_active_param(children: &[Node], row: usize, col: usize) -> usize {
+    let mut param_index = 0;
+    let mut inside_parens = false;
+
+    for child in children {
+        let child_start = child.start_position();
+        let child_end = child.end_position();
+
+        // Track when we enter the argument list
+        if child.kind() == "(" {
+            inside_parens = true;
+            continue;
+        }
+
+        if !inside_parens {
+            continue;
+        }
+
+        // Stop at closing paren
+        if child.kind() == ")" {
+            break;
+        }
+
+        // If cursor is before or at this child, we're done
+        if row < child_start.row || (row == child_start.row && col <= child_start.column) {
+            break;
+        }
+
+        // Count commas that are before the cursor
+        if child.kind() == ","
+            && (row > child_end.row || (row == child_end.row && col > child_end.column))
+        {
+            param_index += 1;
+        }
+    }
+
+    param_index
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -572,5 +702,40 @@ mod tests {
             symbols[0].signature,
             Some("myplugin#util#helper()".to_string())
         );
+    }
+
+    #[test]
+    fn test_find_call_at_position() {
+        // Empty arguments
+        let code = "echo strlen()";
+        let tree = parse(code);
+        let call_info = find_call_at_position(&tree, code, 0, 12);
+        assert!(call_info.is_some());
+        let info = call_info.unwrap();
+        assert_eq!(info.function_name, "strlen");
+        assert_eq!(info.active_param, 0);
+
+        // With arguments: echo substitute(str, pat, sub, flags)
+        //                 0         1         2         3
+        //                 0123456789012345678901234567890123456
+        let code = "echo substitute(str, pat, sub, flags)";
+        let tree = parse(code);
+
+        // Position 17 is inside "str" (first param)
+        let info = find_call_at_position(&tree, code, 0, 17).unwrap();
+        assert_eq!(info.function_name, "substitute");
+        assert_eq!(info.active_param, 0);
+
+        // Position 22 is inside "pat" (second param, after first comma)
+        let info = find_call_at_position(&tree, code, 0, 22).unwrap();
+        assert_eq!(info.active_param, 1);
+
+        // Position 27 is inside "sub" (third param, after second comma)
+        let info = find_call_at_position(&tree, code, 0, 27).unwrap();
+        assert_eq!(info.active_param, 2);
+
+        // Position 33 is inside "flags" (fourth param, after third comma)
+        let info = find_call_at_position(&tree, code, 0, 33).unwrap();
+        assert_eq!(info.active_param, 3);
     }
 }
