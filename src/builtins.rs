@@ -371,6 +371,27 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         signature: "append({lnum}, {text})",
         description: "Append {text} after line {lnum}",
     },
+    // Search functions
+    BuiltinFunction {
+        name: "search",
+        signature: "search({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])",
+        description: "Search for {pattern}, return line number of match",
+    },
+    BuiltinFunction {
+        name: "searchpos",
+        signature: "searchpos({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])",
+        description: "Search for {pattern}, return [lnum, col] of match",
+    },
+    BuiltinFunction {
+        name: "searchpair",
+        signature: "searchpair({start}, {middle}, {end} [, {flags} [, {skip} [, {stopline} [, {timeout}]]]])",
+        description: "Search for matching pair of start/end patterns",
+    },
+    BuiltinFunction {
+        name: "searchpairpos",
+        signature: "searchpairpos({start}, {middle}, {end} [, {flags} [, {skip} [, {stopline} [, {timeout}]]]])",
+        description: "Search for matching pair, return [lnum, col]",
+    },
     // File functions
     BuiltinFunction {
         name: "expand",
