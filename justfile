@@ -28,6 +28,14 @@ test:
 # Verify (fmt + check + test)
 verify: fmt check test
 
+# CI: format check, lint, build, and test
+ci:
+  cargo fmt --all -- --check
+  cargo check --all-targets
+  cargo clippy --all-targets -- -D warnings
+  cargo build
+  cargo test --all-targets
+
 # Clean build artifacts
 clean:
   cargo clean
