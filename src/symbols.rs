@@ -372,6 +372,8 @@ pub fn extract_symbols(tree: &Tree, source: &str) -> Vec<Symbol> {
     let mut symbols = Vec::new();
     let root = tree.root_node();
     extract_symbols_from_node(&root, source, &mut symbols);
+    // Filter out symbols with empty names (from malformed syntax like `let = "value"`)
+    symbols.retain(|s| !s.name.is_empty());
     symbols
 }
 
