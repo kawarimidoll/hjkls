@@ -52,6 +52,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
     local opts = { buffer = args.buf }
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- shortcut (default: <C-]>)
     vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, opts) -- normal mode shortcut
+
+    -- Enable autocompletion with LSP omnifunc
+    -- 'autocomplete' (boolean) triggers completion as you type
+    -- 'complete' with 'o' flag uses omnifunc (set by LSP)
+    -- 'completeopt' with 'noselect' prevents auto-selecting first item
+    vim.bo[args.buf].complete = ".,o"
+    vim.bo[args.buf].autocomplete = true
+    vim.opt.completeopt = { "menuone", "noselect" }
   end,
 })
 
