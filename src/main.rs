@@ -337,6 +337,42 @@ fn collect_errors(
     }
 }
 
+/// Find the start position of a completion token, including scope prefix.
+/// For Vim script, this includes scope prefixes like s:, g:, l:, a:, b:, w:, t:, v:
+/// e.g., for "call s:Priv|" (| is cursor), returns the position of 's'
+fn find_completion_token_start(line: &str, cursor_col: usize) -> usize {
+    let bytes: Vec<char> = line.chars().collect();
+    let col = cursor_col.min(bytes.len());
+
+    if col == 0 {
+        return 0;
+    }
+
+    // First, find the start of the identifier part (alphanumeric, underscore, #)
+    let mut start = col;
+    while start > 0 {
+        let ch = bytes[start - 1];
+        if ch.is_alphanumeric() || ch == '_' || ch == '#' {
+            start -= 1;
+        } else {
+            break;
+        }
+    }
+
+    // Then, check if there's a scope prefix (s:, g:, etc.) before the identifier
+    if start >= 2 && bytes[start - 1] == ':' {
+        let scope_char = bytes[start - 2];
+        if matches!(scope_char, 's' | 'g' | 'l' | 'a' | 'b' | 'w' | 't' | 'v') {
+            // Verify this is actually a scope prefix (not part of another word)
+            if start < 3 || !bytes[start - 3].is_alphanumeric() {
+                start -= 2; // Include the scope prefix
+            }
+        }
+    }
+
+    start
+}
+
 /// Parse parameter names from a function signature string
 /// e.g., "substitute({string}, {pat}, {sub}, {flags})" -> ["{string}", "{pat}", "{sub}", "{flags}"]
 fn parse_signature_params(signature: &str) -> Vec<String> {
@@ -508,17 +544,106 @@ impl LanguageServer for Backend {
         log_debug!("did_save: updated index for {}", uri_str);
     }
 
-    async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
-        let items: Vec<CompletionItem> = BUILTIN_FUNCTIONS
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        let uri = params.text_document_position.text_document.uri;
+        let position = params.text_document_position.position;
+
+        // Get document content and find the completion token range
+        let (uri_str, content, token_start) = {
+            let docs = self.documents.lock().unwrap();
+            let Some(doc) = docs.get(&uri) else {
+                return Ok(Some(CompletionResponse::Array(vec![])));
+            };
+            let content = doc.text.text.clone();
+
+            // Find token start position (including scope prefix like s:, g:)
+            let line = content.lines().nth(position.line as usize).unwrap_or("");
+            let col = position.character as usize;
+            let token_start = find_completion_token_start(line, col);
+
+            (uri.to_string(), content, token_start)
+        };
+
+        // Create text edit range for replacing the current token
+        let edit_range = Range {
+            start: Position {
+                line: position.line,
+                character: token_start as u32,
+            },
+            end: position,
+        };
+
+        // 1. Built-in functions
+        let mut items: Vec<CompletionItem> = BUILTIN_FUNCTIONS
             .iter()
             .map(|func| CompletionItem {
                 label: func.name.to_string(),
                 kind: Some(CompletionItemKind::FUNCTION),
                 detail: Some(func.signature.to_string()),
                 documentation: Some(Documentation::String(func.description.to_string())),
+                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                    range: edit_range,
+                    new_text: func.name.to_string(),
+                })),
                 ..Default::default()
             })
             .collect();
+
+        // 2. User-defined symbols from current document
+        let symbols = self.get_symbols(&uri_str, &content);
+        for sym in symbols {
+            // Skip parameters - they are function-local and not useful in completion
+            if sym.kind == SymbolKind::Parameter {
+                continue;
+            }
+            let kind = match sym.kind {
+                SymbolKind::Function => CompletionItemKind::FUNCTION,
+                SymbolKind::Variable => CompletionItemKind::VARIABLE,
+                SymbolKind::Parameter => continue, // already handled above
+            };
+            let detail = sym.signature.clone().or_else(|| {
+                // For variables, show scope as detail
+                if sym.kind == SymbolKind::Variable {
+                    Some(format!(
+                        "{} variable",
+                        sym.scope.as_str().trim_end_matches(':')
+                    ))
+                } else {
+                    None
+                }
+            });
+            let full_name = sym.full_name();
+            let has_scope = !sym.scope.as_str().is_empty();
+
+            // Add completion item with full name (matches "g:m" -> "g:my_var")
+            items.push(CompletionItem {
+                label: full_name.clone(),
+                kind: Some(kind),
+                detail: detail.clone(),
+                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                    range: edit_range,
+                    new_text: full_name.clone(),
+                })),
+                ..Default::default()
+            });
+
+            // For scoped symbols, also add an entry that matches by name only
+            // (matches "m" -> "g:my_var", "P" -> "s:PrivateHelper")
+            if has_scope {
+                items.push(CompletionItem {
+                    label: full_name.clone(),
+                    // filterText uses name only for matching without scope prefix
+                    filter_text: Some(sym.name.clone()),
+                    kind: Some(kind),
+                    detail,
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: full_name,
+                    })),
+                    ..Default::default()
+                });
+            }
+        }
 
         Ok(Some(CompletionResponse::Array(items)))
     }
