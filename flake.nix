@@ -112,6 +112,10 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          # Neovim with mini.test for E2E testing (isolated environment)
+          neovim-test = pkgs.neovim.override {
+            configure.packages.test.start = [ pkgs.vimPlugins.mini-test ];
+          };
         in
         {
           default = pkgs.mkShell {
@@ -128,6 +132,7 @@
               actionlint
               convco
               typos
+              neovim-test
             ];
           };
         }

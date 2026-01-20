@@ -32,6 +32,10 @@ verify: fmt check test
 clean:
   cargo clean
 
+# Run E2E tests with mini.test
+test-e2e: build
+  nvim --headless -u test/e2e_init.lua
+
 # Open sample file in Neovim for manual testing (logs to logs/hjkls.log)
 dev: build
   mkdir -p logs
