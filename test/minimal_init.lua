@@ -1,5 +1,5 @@
 -- Minimal Neovim config for testing hjkls
--- Usage: nvim -u test/minimal_init.lua test/test.vim
+-- Usage: nvim -u test/minimal_init.lua test/fixtures/sample.vim
 
 -- Disable unnecessary features for faster startup
 vim.opt.loadplugins = false
@@ -11,9 +11,9 @@ local script_path = debug.getinfo(1, "S").source:sub(2)
 local script_dir = vim.fs.dirname(script_path)
 local repo_root = vim.fs.dirname(script_dir)
 
--- Add test directory to runtimepath so autoload functions work
--- (autoload/ is in test/ for testing purposes)
-vim.opt.runtimepath:prepend(script_dir)
+-- Add fixtures directory to runtimepath so autoload functions work
+local fixtures_dir = script_dir .. "/fixtures"
+vim.opt.runtimepath:prepend(fixtures_dir)
 
 -- Path to hjkls binary
 local hjkls_path = repo_root .. "/target/debug/hjkls"
