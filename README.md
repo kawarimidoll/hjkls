@@ -13,6 +13,22 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 - [x] Rename (cross-file support)
 - [x] Signature help (parameter info on function calls)
 
+## Builtin Function Coverage
+
+**Total: 600 functions**
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Common | ~420 | Vim/Neovim shared functions (`strlen`, `expand`, `bufnr`, etc.) |
+| Vim-only | ~90 | `popup_*`, `ch_*`, `job_*`, `term_*`, etc. |
+| Neovim-only | ~56 | `nvim_*` API functions |
+
+### Not Supported
+
+| Category | Reason |
+|----------|--------|
+| `test_*` functions (~25) | Internal testing functions, not used in plugin development |
+
 ## Requirements
 
 - Rust 1.85+
