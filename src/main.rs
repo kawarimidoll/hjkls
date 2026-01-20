@@ -781,6 +781,7 @@ impl LanguageServer for Backend {
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 references_provider: Some(OneOf::Left(true)),
                 document_symbol_provider: Some(OneOf::Left(true)),
+                workspace_symbol_provider: Some(OneOf::Left(true)),
                 rename_provider: Some(OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -1482,6 +1483,86 @@ impl LanguageServer for Backend {
             .collect();
 
         Ok(Some(DocumentSymbolResponse::Nested(lsp_symbols)))
+    }
+
+    async fn symbol(
+        &self,
+        params: WorkspaceSymbolParams,
+    ) -> Result<Option<WorkspaceSymbolResponse>> {
+        // Wait for indexing to complete for accurate results
+        if !self.indexing_complete.load(Ordering::SeqCst) {
+            log_debug!("workspace_symbol: indexing not complete yet");
+            return Ok(Some(WorkspaceSymbolResponse::Flat(Vec::new())));
+        }
+
+        let query = params.query.to_lowercase();
+        let mut results: Vec<SymbolInformation> = Vec::new();
+
+        // Limit results to avoid overwhelming the client
+        const MAX_RESULTS: usize = 500;
+
+        let source_files = self.source_files.lock().unwrap();
+        let db = self.salsa_db.lock().unwrap();
+
+        for (file_uri, source_file) in source_files.iter() {
+            if results.len() >= MAX_RESULTS {
+                break;
+            }
+
+            let symbols = db::parse_symbols(&*db, *source_file);
+
+            for s in symbols {
+                // Filter by query (case-insensitive partial match)
+                // Empty query returns all symbols
+                if !query.is_empty() && !s.full_name().to_lowercase().contains(&query) {
+                    continue;
+                }
+
+                let kind = match s.kind {
+                    SymbolKind::Function => tower_lsp_server::ls_types::SymbolKind::FUNCTION,
+                    SymbolKind::Variable => tower_lsp_server::ls_types::SymbolKind::VARIABLE,
+                    SymbolKind::Parameter => tower_lsp_server::ls_types::SymbolKind::VARIABLE,
+                };
+
+                let range = Range {
+                    start: Position {
+                        line: s.start.0 as u32,
+                        character: s.start.1 as u32,
+                    },
+                    end: Position {
+                        line: s.end.0 as u32,
+                        character: s.end.1 as u32,
+                    },
+                };
+
+                // Convert file path to URI
+                let Some(uri) = Uri::from_file_path(file_uri) else {
+                    continue;
+                };
+
+                #[allow(deprecated)]
+                results.push(SymbolInformation {
+                    name: s.full_name(),
+                    kind,
+                    tags: None,
+                    deprecated: None,
+                    location: Location { uri, range },
+                    container_name: s.signature,
+                });
+
+                if results.len() >= MAX_RESULTS {
+                    break;
+                }
+            }
+        }
+
+        log_debug!(
+            "workspace_symbol: query='{}', found {} symbols",
+            params.query,
+            results.len()
+        );
+
+        Ok(Some(WorkspaceSymbolResponse::Flat(results)))
     }
 
     async fn prepare_rename(
