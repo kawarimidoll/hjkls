@@ -7,8 +7,9 @@ vim.opt.swapfile = false
 vim.opt.backup = false
 
 -- Get the directory of this script
-local script_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h")
-local repo_root = vim.fn.fnamemodify(script_dir, ":h")
+local script_path = debug.getinfo(1, "S").source:sub(2)
+local script_dir = vim.fs.dirname(script_path)
+local repo_root = vim.fs.dirname(script_dir)
 
 -- Add test directory to runtimepath so autoload functions work
 -- (autoload/ is in test/ for testing purposes)
