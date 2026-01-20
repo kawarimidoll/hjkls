@@ -5,9 +5,13 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 ## Features
 
 - [x] Syntax error diagnostics (via tree-sitter-vim)
-- [ ] Completion for built-in functions
-- [ ] Go to definition
-- [ ] Hover information
+- [x] Completion (built-in functions + user-defined symbols with scope support)
+- [x] Go to definition (same file + cross-file autoload support)
+- [x] Hover information (function signatures, autoload file paths)
+- [x] Find references (same file + cross-file)
+- [x] Document symbols (outline)
+- [x] Rename (cross-file support)
+- [x] Signature help (parameter info on function calls)
 
 ## Requirements
 
@@ -55,6 +59,18 @@ vim.lsp.config("hjkls", {
 })
 
 vim.lsp.enable("hjkls")
+```
+
+#### Optional: Enable autocompletion
+
+```lua
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    vim.bo[args.buf].complete = ".,o"
+    vim.bo[args.buf].autocomplete = true
+    vim.opt.completeopt = { "menuone", "noselect" }
+  end,
+})
 ```
 
 ## License
