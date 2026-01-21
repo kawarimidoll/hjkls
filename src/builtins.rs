@@ -11,13 +11,44 @@ pub enum Availability {
     NeovimOnly,
 }
 
+/// Editor mode for filtering completions
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum EditorMode {
+    /// Show all functions (default)
+    #[default]
+    Both,
+    /// Show only Vim-compatible functions
+    VimOnly,
+    /// Show only Neovim-compatible functions
+    NeovimOnly,
+}
+
+impl Availability {
+    /// Get label suffix for completion items
+    pub fn label_suffix(&self) -> &'static str {
+        match self {
+            Availability::Common => "",
+            Availability::VimOnly => " [Vim only]",
+            Availability::NeovimOnly => " [Neovim only]",
+        }
+    }
+
+    /// Check if this availability is compatible with the given editor mode
+    pub fn is_compatible(&self, mode: EditorMode) -> bool {
+        match (mode, self) {
+            (EditorMode::Both, _) => true,
+            (EditorMode::VimOnly, Availability::NeovimOnly) => false,
+            (EditorMode::NeovimOnly, Availability::VimOnly) => false,
+            _ => true,
+        }
+    }
+}
+
 /// Information about a built-in function
 pub struct BuiltinFunction {
     pub name: &'static str,
     pub signature: &'static str,
     pub description: &'static str,
-    /// Future: filter completions based on editor detection (`has("nvim")`)
-    #[allow(dead_code)]
     pub availability: Availability,
 }
 
@@ -3726,3 +3757,33 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         availability: Availability::VimOnly,
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_availability_is_compatible() {
+        // EditorMode::Both allows everything
+        assert!(Availability::Common.is_compatible(EditorMode::Both));
+        assert!(Availability::VimOnly.is_compatible(EditorMode::Both));
+        assert!(Availability::NeovimOnly.is_compatible(EditorMode::Both));
+
+        // EditorMode::VimOnly excludes NeovimOnly
+        assert!(Availability::Common.is_compatible(EditorMode::VimOnly));
+        assert!(Availability::VimOnly.is_compatible(EditorMode::VimOnly));
+        assert!(!Availability::NeovimOnly.is_compatible(EditorMode::VimOnly));
+
+        // EditorMode::NeovimOnly excludes VimOnly
+        assert!(Availability::Common.is_compatible(EditorMode::NeovimOnly));
+        assert!(!Availability::VimOnly.is_compatible(EditorMode::NeovimOnly));
+        assert!(Availability::NeovimOnly.is_compatible(EditorMode::NeovimOnly));
+    }
+
+    #[test]
+    fn test_availability_label_suffix() {
+        assert_eq!(Availability::Common.label_suffix(), "");
+        assert_eq!(Availability::VimOnly.label_suffix(), " [Vim only]");
+        assert_eq!(Availability::NeovimOnly.label_suffix(), " [Neovim only]");
+    }
+}

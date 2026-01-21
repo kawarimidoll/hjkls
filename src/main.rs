@@ -14,7 +14,7 @@ use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
 
-use builtins::BUILTIN_FUNCTIONS;
+use builtins::{BUILTIN_FUNCTIONS, EditorMode};
 use db::{HjklsDatabase, SourceFile};
 use salsa::Setter;
 use symbols::{
@@ -41,10 +41,12 @@ struct Backend {
     source_files: Arc<Mutex<HashMap<String, SourceFile>>>,
     /// Whether workspace indexing is complete
     indexing_complete: Arc<AtomicBool>,
+    /// Editor mode for filtering completions
+    editor_mode: EditorMode,
 }
 
 impl Backend {
-    fn new(client: Client) -> Self {
+    fn new(client: Client, editor_mode: EditorMode) -> Self {
         let mut parser = Parser::new();
         parser
             .set_language(&tree_sitter_vim::language())
@@ -58,6 +60,7 @@ impl Backend {
             salsa_db: Arc::new(Mutex::new(HjklsDatabase::default())),
             source_files: Arc::new(Mutex::new(HashMap::new())),
             indexing_complete: Arc::new(AtomicBool::new(false)),
+            editor_mode,
         }
     }
 
@@ -1048,19 +1051,29 @@ impl LanguageServer for Backend {
             end: position,
         };
 
-        // 1. Built-in functions
+        // 1. Built-in functions (filtered by editor mode, with availability labels)
         let mut items: Vec<CompletionItem> = BUILTIN_FUNCTIONS
             .iter()
-            .map(|func| CompletionItem {
-                label: func.name.to_string(),
-                kind: Some(CompletionItemKind::FUNCTION),
-                detail: Some(func.signature.to_string()),
-                documentation: Some(Documentation::String(func.description.to_string())),
-                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
-                    range: edit_range,
-                    new_text: func.name.to_string(),
-                })),
-                ..Default::default()
+            .filter(|func| func.availability.is_compatible(self.editor_mode))
+            .map(|func| {
+                // Add availability label to documentation (e.g., "[Vim only]\n\nDescription...")
+                let label_suffix = func.availability.label_suffix();
+                let documentation = if label_suffix.is_empty() {
+                    func.description.to_string()
+                } else {
+                    format!("{}\n{}", label_suffix.trim(), func.description)
+                };
+                CompletionItem {
+                    label: func.name.to_string(),
+                    kind: Some(CompletionItemKind::FUNCTION),
+                    detail: Some(func.signature.to_string()),
+                    documentation: Some(Documentation::String(documentation)),
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: func.name.to_string(),
+                    })),
+                    ..Default::default()
+                }
             })
             .collect();
 
@@ -1989,6 +2002,8 @@ Usage: {} [OPTIONS]
 
 Options:
   -V, --version      Show version information
+      --vim-only     Show only Vim-compatible functions in completion
+      --neovim-only  Show only Neovim-compatible functions in completion
       --log=<PATH>   Enable debug logging to specified file
   -h, --help         Show this help message
 
@@ -2005,6 +2020,9 @@ async fn main() {
     // Parse CLI arguments
     let args: Vec<String> = std::env::args().collect();
 
+    let mut vim_only = false;
+    let mut neovim_only = false;
+
     for arg in &args[1..] {
         match arg.as_str() {
             "-V" | "--version" => {
@@ -2015,9 +2033,25 @@ async fn main() {
                 print_help();
                 return;
             }
+            "--vim-only" => vim_only = true,
+            "--neovim-only" => neovim_only = true,
             _ => {}
         }
     }
+
+    // Check for conflicting options
+    if vim_only && neovim_only {
+        eprintln!("error: --vim-only and --neovim-only cannot be used together");
+        std::process::exit(1);
+    }
+
+    let editor_mode = if vim_only {
+        EditorMode::VimOnly
+    } else if neovim_only {
+        EditorMode::NeovimOnly
+    } else {
+        EditorMode::Both
+    };
 
     // Parse --log=PATH argument
     let log_path = args
@@ -2028,6 +2062,6 @@ async fn main() {
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
-    let (service, socket) = LspService::new(Backend::new);
+    let (service, socket) = LspService::new(|client| Backend::new(client, editor_mode));
     Server::new(stdin, stdout, socket).serve(service).await;
 }
