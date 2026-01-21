@@ -2469,4 +2469,27 @@ mod completion_context_tests {
             CompletionContext::Function
         );
     }
+
+    #[test]
+    fn test_operator_not_confused_with_command() {
+        // Operators should not trigger Command context
+        // `<` as comparison operator, not Ex command
+        assert_eq!(
+            get_completion_context("if a < b", 6),
+            CompletionContext::Function
+        );
+        // `<` after `=` assignment
+        assert_eq!(
+            get_completion_context("let x = <", 9),
+            CompletionContext::Function
+        );
+        // `>` as comparison operator
+        assert_eq!(
+            get_completion_context("if a > b", 6),
+            CompletionContext::Function
+        );
+        // `<` at line start IS a valid Ex command (shift left)
+        assert_eq!(get_completion_context("<", 1), CompletionContext::Command);
+        assert_eq!(get_completion_context(">", 1), CompletionContext::Command);
+    }
 }
