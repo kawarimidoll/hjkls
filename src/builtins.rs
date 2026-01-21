@@ -10443,6 +10443,10 @@ pub static MAP_OPTIONS: &[MapOption] = &[
         name: "<unique>",
         description: "Fail if mapping already exists",
     },
+    MapOption {
+        name: "<special>",
+        description: "Use special keys even with 'cpoptions' containing '<'",
+    },
 ];
 
 // ============================================================================
@@ -10465,195 +10469,1052 @@ pub static HAS_VERSION_PREFIXES: &[&str] = &["patch-", "nvim-"];
 /// List of has() features
 /// Reference: :help feature-list
 pub static HAS_FEATURES: &[HasFeature] = &[
-    // Editor
+    // === Neovim-only features ===
     HasFeature {
         name: "nvim",
         description: "Running on Neovim",
         availability: Availability::NeovimOnly,
     },
     HasFeature {
-        name: "vim9script",
-        description: "Vim9 script support",
-        availability: Availability::VimOnly,
+        name: "wsl",
+        description: "Windows Subsystem for Linux",
+        availability: Availability::NeovimOnly,
     },
+    // === Common features (both Vim and Neovim) ===
     HasFeature {
-        name: "vim_starting",
-        description: "True during startup",
-        availability: Availability::Common,
-    },
-    // Language support
-    HasFeature {
-        name: "python3",
-        description: "Python 3 support",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "lua",
-        description: "Lua support",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "ruby",
-        description: "Ruby support",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "perl",
-        description: "Perl support",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "tcl",
-        description: "Tcl support",
-        availability: Availability::Common,
-    },
-    // UI
-    HasFeature {
-        name: "gui_running",
-        description: "GUI is running",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "gui",
-        description: "GUI support compiled in",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "termguicolors",
-        description: "True color support",
-        availability: Availability::Common,
-    },
-    // OS
-    HasFeature {
-        name: "unix",
-        description: "Unix-like system",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "win32",
-        description: "32-bit Windows",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "win64",
-        description: "64-bit Windows",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "mac",
-        description: "macOS",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "macunix",
-        description: "macOS with Unix features",
-        availability: Availability::Common,
-    },
-    HasFeature {
-        name: "linux",
-        description: "Linux",
+        name: "acl",
+        description: "ACL support",
         availability: Availability::Common,
     },
     HasFeature {
         name: "bsd",
-        description: "BSD",
+        description: "BSD system (not macOS)",
         availability: Availability::Common,
     },
-    // Features
     HasFeature {
         name: "clipboard",
         description: "Clipboard support",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "clipboard_working",
-        description: "Clipboard is working",
+        name: "fname_case",
+        description: "Case in file names matters",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "conceal",
-        description: "Conceal support",
+        name: "gui_running",
+        description: "GUI is running or will start soon",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "folding",
-        description: "Folding support",
+        name: "hurd",
+        description: "GNU/Hurd system",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "syntax",
-        description: "Syntax highlighting",
+        name: "iconv",
+        description: "Can use iconv() for conversion",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "spell",
-        description: "Spell checking",
+        name: "linux",
+        description: "Linux system",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "virtualedit",
-        description: "Virtual editing",
+        name: "mac",
+        description: "macOS system",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "signs",
-        description: "Sign support",
+        name: "python3",
+        description: "Python 3 interface available",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "mouse",
-        description: "Mouse support",
-        availability: Availability::Common,
-    },
-    // Core features
-    HasFeature {
-        name: "eval",
-        description: "Expression evaluation",
+        name: "pythonx",
+        description: "Python 2.x and/or 3.x interface available",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "float",
-        description: "Floating point support",
+        name: "sun",
+        description: "SunOS system",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "job",
-        description: "Job support",
+        name: "ttyin",
+        description: "Input is a terminal (tty)",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "channel",
-        description: "Channel support",
+        name: "ttyout",
+        description: "Output is a terminal (tty)",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "timers",
-        description: "Timer support",
+        name: "unix",
+        description: "Unix system",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "lambda",
-        description: "Lambda expressions",
+        name: "vim_starting",
+        description: "True during startup",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "packages",
-        description: "Package support",
+        name: "win32",
+        description: "Windows system (32 or 64 bit)",
         availability: Availability::Common,
     },
     HasFeature {
-        name: "terminal",
-        description: "Terminal support",
+        name: "win64",
+        description: "Windows system (64 bit)",
         availability: Availability::Common,
     },
+    // === Vim-only features ===
     HasFeature {
-        name: "textprop",
-        description: "Text properties",
+        name: "all_builtin_terms",
+        description: "Compiled with all builtin terminals enabled",
         availability: Availability::VimOnly,
     },
     HasFeature {
-        name: "popupwin",
-        description: "Popup window support",
+        name: "amiga",
+        description: "Amiga version of Vim",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "arabic",
+        description: "Compiled with Arabic support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "arp",
+        description: "Compiled with ARP support (Amiga)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "autocmd",
+        description: "Compiled with autocommand support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "autochdir",
+        description: "Compiled with support for 'autochdir'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "autoservername",
+        description: "Automatically enable clientserver",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "balloon_eval",
+        description: "Compiled with balloon-eval support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "balloon_multiline",
+        description: "GUI supports multiline balloons",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "beos",
+        description: "BeOS version of Vim",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "browse",
+        description: "Compiled with :browse support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "browsefilter",
+        description: "Compiled with support for browsefilter",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "builtin_terms",
+        description: "Compiled with some builtin terminals",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "byte_offset",
+        description: "Compiled with support for 'o' in 'statusline'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "channel",
+        description: "Compiled with support for channel and job",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cindent",
+        description: "Compiled with 'cindent' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "clientserver",
+        description: "Compiled with remote invocation support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "clipboard_working",
+        description: "Clipboard is compiled and working",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cmdline_compl",
+        description: "Compiled with cmdline-completion support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cmdline_hist",
+        description: "Compiled with cmdline-history support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cmdline_info",
+        description: "Compiled with 'showcmd' and 'ruler' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "comments",
+        description: "Compiled with 'comments' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "compatible",
+        description: "Compiled to be very Vi compatible",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "conpty",
+        description: "Platform where ConPTY can be used",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cryptv",
+        description: "Compiled with encryption support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cscope",
+        description: "Compiled with cscope support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "cursorbind",
+        description: "Compiled with 'cursorbind' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "debug",
+        description: "Compiled with DEBUG defined",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "dialog_con",
+        description: "Compiled with console dialog support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "dialog_con_gui",
+        description: "Compiled with console and GUI dialog support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "dialog_gui",
+        description: "Compiled with GUI dialog support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "diff",
+        description: "Compiled with vimdiff and 'diff' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "digraphs",
+        description: "Compiled with support for digraphs",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "directx",
+        description: "Compiled with support for DirectX",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "dnd",
+        description: "Compiled with support for ~ register",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "drop_file",
+        description: "Compiled with drop_file support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "ebcdic",
+        description: "Compiled on a machine with ebcdic character set",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "emacs_tags",
+        description: "Compiled with support for Emacs tags",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "eval",
+        description: "Compiled with expression evaluation support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "ex_extra",
+        description: "Extra Ex commands (always true)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "extra_search",
+        description: "Compiled with support for 'incsearch' and 'hlsearch'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "farsi",
+        description: "Support for Farsi was removed",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "file_in_path",
+        description: "Compiled with support for gf and <cfile>",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "filterpipe",
+        description: "Pipes used for shell commands when 'shelltemp' is off",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "find_in_path",
+        description: "Compiled with support for include file searches",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "float",
+        description: "Compiled with support for Float",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "folding",
+        description: "Compiled with folding support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "footer",
+        description: "Compiled with GUI footer support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "fork",
+        description: "Compiled to use fork()/exec() instead of system()",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gettext",
+        description: "Compiled with message translation",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui",
+        description: "Compiled with GUI enabled",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_athena",
+        description: "Compiled with Athena GUI (always false)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_gnome",
+        description: "Compiled with Gnome support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_gtk",
+        description: "Compiled with GTK+ GUI (any version)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_gtk2",
+        description: "Compiled with GTK+ 2 GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_gtk3",
+        description: "Compiled with GTK+ 3 GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_haiku",
+        description: "Compiled with Haiku GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_mac",
+        description: "Compiled with Macintosh GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_motif",
+        description: "Compiled with Motif GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_photon",
+        description: "Compiled with Photon GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_win32",
+        description: "Compiled with MS-Windows Win32 GUI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "gui_win32s",
+        description: "Compiled with Win32s system (Windows 3.1)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "haiku",
+        description: "Haiku version of Vim",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "hangul_input",
+        description: "Compiled with Hangul input support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "hpux",
+        description: "HP-UX version of Vim",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "insert_expand",
+        description: "Compiled with CTRL-X expansion commands in Insert mode",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "job",
+        description: "Compiled with support for channel and job",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "ipv6",
+        description: "Compiled with support for IPv6 networking",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "jumplist",
+        description: "Compiled with jumplist support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "keymap",
+        description: "Compiled with 'keymap' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "lambda",
+        description: "Compiled with lambda support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "langmap",
+        description: "Compiled with 'langmap' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "libcall",
+        description: "Compiled with libcall() support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "linebreak",
+        description: "Compiled with 'linebreak', 'breakat', 'showbreak' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "lispindent",
+        description: "Compiled with support for lisp indenting",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "listcmds",
+        description: "Compiled with commands for buffer and argument list",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "localmap",
+        description: "Compiled with local mappings and abbr",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "lua",
+        description: "Compiled with Lua interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "macunix",
+        description: "Synonym for osxdarwin",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "menu",
+        description: "Compiled with support for :menu",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mksession",
+        description: "Compiled with support for :mksession",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "modify_fname",
+        description: "Compiled with file name modifiers",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse",
+        description: "Compiled with support for mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_dec",
+        description: "Compiled with support for Dec terminal mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_gpm",
+        description: "Compiled with support for gpm (Linux console mouse)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_gpm_enabled",
+        description: "GPM mouse is working",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_netterm",
+        description: "Compiled with support for netterm mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_pterm",
+        description: "Compiled with support for qnx pterm mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_sysmouse",
+        description: "Compiled with support for sysmouse (*BSD console mouse)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_sgr",
+        description: "Compiled with support for sgr mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_urxvt",
+        description: "Compiled with support for urxvt mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouse_xterm",
+        description: "Compiled with support for xterm mouse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mouseshape",
+        description: "Compiled with support for 'mouseshape'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "multi_byte",
+        description: "Compiled with support for 'encoding'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "multi_byte_encoding",
+        description: "'encoding' is set to a multibyte encoding",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "multi_byte_ime",
+        description: "Compiled with support for IME input method",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "multi_lang",
+        description: "Compiled with support for multiple languages",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "mzscheme",
+        description: "Compiled with MzScheme interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "nanotime",
+        description: "Compiled with sub-second time stamp checks",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "netbeans_enabled",
+        description: "Compiled with support for netbeans and connected",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "netbeans_intg",
+        description: "Compiled with support for netbeans",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "num64",
+        description: "Compiled with 64-bit Number support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "ole",
+        description: "Compiled with OLE automation support for Win32",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "osx",
+        description: "Compiled for macOS",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "osxdarwin",
+        description: "Compiled for macOS with mac-darwin-feature",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "packages",
+        description: "Compiled with packages support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "path_extra",
+        description: "Compiled with up/downwards search in 'path' and 'tags'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "perl",
+        description: "Compiled with Perl interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "persistent_undo",
+        description: "Compiled with support for persistent undo history",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "postscript",
+        description: "Compiled with PostScript file printing",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "printer",
+        description: "Compiled with :hardcopy support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "profile",
+        description: "Compiled with :profile support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "prof_nsec",
+        description: "Profile results are in nanoseconds",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "python",
+        description: "Python 2.x interface available",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "python_compiled",
+        description: "Compiled with Python 2.x interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "python_dynamic",
+        description: "Python 2.x interface is dynamically loaded",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "python3_compiled",
+        description: "Compiled with Python 3.x interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "python3_dynamic",
+        description: "Python 3.x interface is dynamically loaded",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "python3_stable",
+        description: "Python 3.x interface is using Python Stable ABI",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "qnx",
+        description: "QNX version of Vim",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "quickfix",
+        description: "Compiled with quickfix support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "reltime",
+        description: "Compiled with reltime() support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "rightleft",
+        description: "Compiled with 'rightleft' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "ruby",
+        description: "Compiled with Ruby interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "scrollbind",
+        description: "Compiled with 'scrollbind' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "showcmd",
+        description: "Compiled with 'showcmd' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "signs",
+        description: "Compiled with :sign support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "smartindent",
+        description: "Compiled with 'smartindent' support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "socketserver",
+        description: "Compiled with socket server functionality (Unix only)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "sodium",
+        description: "Compiled with libsodium for better crypt support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "sound",
+        description: "Compiled with sound support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "spell",
+        description: "Compiled with spell checking support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "startuptime",
+        description: "Compiled with --startuptime support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "statusline",
+        description: "Compiled with support for 'statusline' and 'rulerformat'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "sun_workshop",
+        description: "Support for Sun workshop has been removed",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "syntax",
+        description: "Compiled with syntax highlighting support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "syntax_items",
+        description: "There are active syntax highlighting items",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "system",
+        description: "Compiled to use system() instead of fork()/exec()",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "tag_binary",
+        description: "Compiled with binary searching in tags files",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "tag_old_static",
+        description: "Support for old static tags was removed",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "tcl",
+        description: "Compiled with Tcl interface",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "termguicolors",
+        description: "Compiled with true color in terminal support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "terminal",
+        description: "Compiled with terminal support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "terminfo",
+        description: "Compiled with terminfo instead of termcap",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "termresponse",
+        description: "Compiled with support for t_RV and v:termresponse",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "textobjects",
+        description: "Compiled with support for text-objects",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "textprop",
+        description: "Compiled with support for text-properties",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "tgetent",
+        description: "Compiled with tgetent support, able to use termcap/terminfo",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "timers",
+        description: "Compiled with timer_start() support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "title",
+        description: "Compiled with window title support 'title'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "toolbar",
+        description: "Compiled with support for gui-toolbar",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "unnamedplus",
+        description: "Compiled with support for unnamedplus in 'clipboard'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "user_commands",
+        description: "User-defined commands",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vartabs",
+        description: "Compiled with variable tabstop support 'vartabstop'",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vcon",
+        description: "Win32: Virtual console support is working",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vertsplit",
+        description: "Compiled with vertically split windows :vsplit",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vim9script",
+        description: "Compiled with Vim9 script support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "viminfo",
+        description: "Compiled with viminfo support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vimscript-1",
+        description: "Compiled Vim script version 1 support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vimscript-2",
+        description: "Compiled Vim script version 2 support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vimscript-3",
+        description: "Compiled Vim script version 3 support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vimscript-4",
+        description: "Compiled Vim script version 4 support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "virtualedit",
+        description: "Compiled with 'virtualedit' option",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "visual",
+        description: "Compiled with Visual mode",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "visualextra",
+        description: "Compiled with extra Visual mode commands",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vms",
+        description: "VMS version of Vim",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vreplace",
+        description: "Compiled with gR and gr commands",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vtp",
+        description: "Compiled for vcon support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "wayland",
+        description: "Compiled with Wayland protocol support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "wayland_clipboard",
+        description: "Compiled with support for Wayland clipboard",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "wayland_focus_steal",
+        description: "Compiled with support for Wayland clipboard focus stealing",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "wildignore",
+        description: "Compiled with 'wildignore' option",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "wildmenu",
+        description: "Compiled with 'wildmenu' option",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "win16",
+        description: "Old version for MS-Windows 3.1 (always false)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "win32unix",
+        description: "Win32 version of Vim, using Unix files (Cygwin)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "win95",
+        description: "Win32 version for MS-Windows 95/98/ME (always false)",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "winaltkeys",
+        description: "Compiled with 'winaltkeys' option",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "windows",
+        description: "Compiled with support for more than one window",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "writebackup",
+        description: "Compiled with 'writebackup' default on",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xattr",
+        description: "Compiled with extended attributes support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xfontset",
+        description: "Compiled with X fontset support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xim",
+        description: "Compiled with X input method support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xpm",
+        description: "Compiled with pixmap support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xpm_w32",
+        description: "Compiled with pixmap support for Win32",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xsmp",
+        description: "Compiled with X session management support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xsmp_interact",
+        description: "Compiled with interactive X session management support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xterm_clipboard",
+        description: "Compiled with support for xterm clipboard",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "xterm_save",
+        description: "Compiled with support for saving and restoring xterm screen",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "x11",
+        description: "Compiled with X11 support",
         availability: Availability::VimOnly,
     },
 ];
