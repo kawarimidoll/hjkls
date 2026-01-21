@@ -71,13 +71,11 @@ function! s:on_lsp_buffer_enabled() abort
   nmap <buffer> gs <plug>(lsp-signature-help)
   nmap <buffer> gO <plug>(lsp-document-symbol)
 
-  " Completion settings (similar to Neovim's minimal_init.lua)
-  " 'complete' with 'o' flag uses omnifunc (set by LSP)
-  " 'completeopt' with 'noselect' prevents auto-selecting first item
-  " 'autocomplete' triggers completion as you type
+  " Completion settings
+  " Use <C-x><C-o> for omnifunc completion
+  " NOTE: 'autocomplete' (Vim 9.1) causes E565 with vim-lsp, disabled
   setlocal complete=.,o
   setlocal completeopt=menuone,noselect
-  setlocal autocomplete
 
   " Folding (zc=close, zo=open, zR=open all, zM=close all)
   setlocal foldmethod=expr

@@ -63,9 +63,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
     -- Enable LSP-based folding (zc=close, zo=open, zR=open all, zM=close all)
     if client and client:supports_method("textDocument/foldingRange") then
-      vim.wo[args.buf].foldmethod = "expr"
-      vim.wo[args.buf].foldexpr = "v:lua.vim.lsp.foldexpr()"
-      vim.wo[args.buf].foldlevel = 99 -- start with all folds open
+      local win = vim.api.nvim_get_current_win()
+      vim.wo[win].foldmethod = "expr"
+      vim.wo[win].foldexpr = "v:lua.vim.lsp.foldexpr()"
+      vim.wo[win].foldlevel = 99 -- start with all folds open
     end
   end,
 })
