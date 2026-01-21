@@ -4353,6 +4353,2547 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Start Vim9 script",
         availability: Availability::VimOnly,
     },
+    // Additional Ex commands from Vim documentation
+    // Symbol commands
+    BuiltinCommand {
+        name: "!",
+        description: "filter lines or execute an external command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "!!",
+        description: "repeat last \":!\" command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "#",
+        description: "same as \":number\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "&",
+        description: "repeat last \":substitute\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "2match",
+        description: "define a second match to highlight",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "3match",
+        description: "define a third match to highlight",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "<",
+        description: "shift lines one 'shiftwidth' left",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "=",
+        description: "print the last line number",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: ">",
+        description: "shift lines one 'shiftwidth' right",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "@",
+        description: "execute contents of a register",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "@@",
+        description: "repeat the previous \":@\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "~",
+        description: "repeat last \":substitute\"",
+        availability: Availability::Common,
+    },
+    // Argument list commands
+    BuiltinCommand {
+        name: "Next",
+        description: "go to previous file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argadd",
+        description: "add items to the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argdedupe",
+        description: "remove duplicates from the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argdelete",
+        description: "delete items from the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argdo",
+        description: "do a command on all items in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argedit",
+        description: "add item to the argument list and edit it",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argglobal",
+        description: "define the global argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "arglocal",
+        description: "define a local argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "args",
+        description: "print the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "argument",
+        description: "go to specific file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "first",
+        description: "go to the first file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "last",
+        description: "go to the last file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "next",
+        description: "go to next file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "previous",
+        description: "go to previous file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "rewind",
+        description: "go to the first file in the argument list",
+        availability: Availability::Common,
+    },
+    // Buffer commands
+    BuiltinCommand {
+        name: "bNext",
+        description: "go to previous buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "badd",
+        description: "add buffer to the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ball",
+        description: "open a window for each buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "balt",
+        description: "like \":badd\" but also set the alternate file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bfirst",
+        description: "go to first buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "blast",
+        description: "go to last buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bmodified",
+        description: "go to next buffer in the buffer list that has been modified",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bnext",
+        description: "go to next buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bprevious",
+        description: "go to previous buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "brewind",
+        description: "go to first buffer in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bufdo",
+        description: "execute command in each listed buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "buffers",
+        description: "list all files in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bunload",
+        description: "unload a specific buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "files",
+        description: "list all files in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ls",
+        description: "list all buffers",
+        availability: Availability::Common,
+    },
+    // Window positioning
+    BuiltinCommand {
+        name: "aboveleft",
+        description: "make split window appear left or above",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "belowright",
+        description: "make split window appear right or below",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "botright",
+        description: "make split window appear at bottom or far right",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "browse",
+        description: "use file selection dialog",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "confirm",
+        description: "prompt user when confirmation required",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "hide",
+        description: "hide current buffer for a command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "horizontal",
+        description: "following window command work horizontally",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "leftabove",
+        description: "make split window appear left or above",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "rightbelow",
+        description: "make split window appear right or below",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tab",
+        description: "create new tab when opening new window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "topleft",
+        description: "make split window appear at top or far left",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vertical",
+        description: "make following command split vertically",
+        availability: Availability::Common,
+    },
+    // Quickfix commands
+    BuiltinCommand {
+        name: "cNext",
+        description: "go to previous error",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cNfile",
+        description: "go to last error in previous file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cabove",
+        description: "go to error above current line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "caddbuffer",
+        description: "add errors from buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "caddexpr",
+        description: "add errors from expr",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "caddfile",
+        description: "add error message to current quickfix list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cafter",
+        description: "go to error after current cursor",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cbefore",
+        description: "go to error before current cursor",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cbelow",
+        description: "go to error below current line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cbottom",
+        description: "scroll to the bottom of the quickfix window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cbuffer",
+        description: "parse error messages and jump to first error",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cc",
+        description: "go to specific error",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cclose",
+        description: "close quickfix window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cdo",
+        description: "execute command in each valid error list entry",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cexpr",
+        description: "read errors from expr and jump to first",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cfdo",
+        description: "execute command in each file in error list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cfile",
+        description: "read file with error messages and jump to first",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cfirst",
+        description: "go to the specified error, default first one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cgetbuffer",
+        description: "get errors from buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cgetexpr",
+        description: "get errors from expr",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cgetfile",
+        description: "read file with error messages",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "chistory",
+        description: "list the error lists",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "clast",
+        description: "go to the specified error, default last one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "clist",
+        description: "list all errors",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cnewer",
+        description: "go to newer error list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cnext",
+        description: "go to next error",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cnfile",
+        description: "go to first error in next file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "colder",
+        description: "go to older error list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "copen",
+        description: "open quickfix window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cpfile",
+        description: "go to last error in previous file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cprevious",
+        description: "go to previous error",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cquit",
+        description: "quit Vim with an error code",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "crewind",
+        description: "go to the specified error, default first one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cwindow",
+        description: "open or close quickfix window",
+        availability: Availability::Common,
+    },
+    // Location list commands
+    BuiltinCommand {
+        name: "lNext",
+        description: "go to previous entry in location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lNfile",
+        description: "go to last entry in previous file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "labove",
+        description: "go to location above current line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "laddbuffer",
+        description: "add locations from buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "laddexpr",
+        description: "add locations from expr",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "laddfile",
+        description: "add locations to current location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lafter",
+        description: "go to location after current cursor",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lbefore",
+        description: "go to location before current cursor",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lbelow",
+        description: "go to location below current line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lbottom",
+        description: "scroll to the bottom of the location window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lbuffer",
+        description: "parse locations and jump to first location",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lclose",
+        description: "close location window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ldo",
+        description: "execute command in valid location list entries",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lexpr",
+        description: "read locations from expr and jump to first",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lfdo",
+        description: "execute command in each file in location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lfile",
+        description: "read file with locations and jump to first",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lfirst",
+        description: "go to the specified location, default first one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lgetbuffer",
+        description: "get locations from buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lgetexpr",
+        description: "get locations from expr",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lgetfile",
+        description: "read file with locations",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lgrep",
+        description: "run 'grepprg' and jump to first match",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lgrepadd",
+        description: "like :grep, but append to current list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lhelpgrep",
+        description: "like \":helpgrep\" but uses location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lhistory",
+        description: "list the location lists",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ll",
+        description: "go to specific location",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "llast",
+        description: "go to the specified location, default last one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "llist",
+        description: "list all locations",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lmake",
+        description: "execute external command 'makeprg' and parse",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lnewer",
+        description: "go to newer location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lnext",
+        description: "go to next location",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lnfile",
+        description: "go to first location in next file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lolder",
+        description: "go to older location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lopen",
+        description: "open location window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lpfile",
+        description: "go to last location in previous file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lprevious",
+        description: "go to previous location",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lrewind",
+        description: "go to the specified location, default first one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ltag",
+        description: "jump to tag and add matching tags to the location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lvimgrep",
+        description: "search for pattern in files",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lvimgrepadd",
+        description: "like :vimgrep, but append to current list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lwindow",
+        description: "open or close location window",
+        availability: Availability::Common,
+    },
+    // Directory commands
+    BuiltinCommand {
+        name: "cd",
+        description: "change directory",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "chdir",
+        description: "change directory",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lcd",
+        description: "change directory locally",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lchdir",
+        description: "change directory locally",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pwd",
+        description: "print current directory",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tcd",
+        description: "change directory for tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tchdir",
+        description: "change directory for tab page",
+        availability: Availability::Common,
+    },
+    // Text manipulation
+    BuiltinCommand {
+        name: "Print",
+        description: "print lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "append",
+        description: "append text",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "center",
+        description: "format lines at the center",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "change",
+        description: "replace a line or series of lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "copy",
+        description: "copy lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "delete",
+        description: "delete lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "insert",
+        description: "insert text",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "join",
+        description: "join lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "left",
+        description: "left align lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "list",
+        description: "print lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "move",
+        description: "move lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "number",
+        description: "print lines with line number",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "print",
+        description: "print lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "put",
+        description: "insert contents of register in the text",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "read",
+        description: "read file into the text",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "retab",
+        description: "change tab size",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "right",
+        description: "right align text",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sort",
+        description: "sort lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "t",
+        description: "same as \":copy\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "uniq",
+        description: "uniq lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "yank",
+        description: "yank lines into a register",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "z",
+        description: "print some lines",
+        availability: Availability::Common,
+    },
+    // Undo/Redo
+    BuiltinCommand {
+        name: "earlier",
+        description: "go to older change, undo",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "later",
+        description: "go to newer change, redo",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "redo",
+        description: "redo one undone change",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "rundo",
+        description: "read undo information from a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "undo",
+        description: "undo last change(s)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "undojoin",
+        description: "join next change with previous undo block",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "undolist",
+        description: "list leafs of the undo tree",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wundo",
+        description: "write undo information to a file",
+        availability: Availability::Common,
+    },
+    // Mark commands
+    BuiltinCommand {
+        name: "changes",
+        description: "print the change list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "clearjumps",
+        description: "clear the jump list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "delmarks",
+        description: "delete marks",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "jumps",
+        description: "print the jump list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "k",
+        description: "set a mark",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mark",
+        description: "set a mark",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "marks",
+        description: "list all marks",
+        availability: Availability::Common,
+    },
+    // Register/display
+    BuiltinCommand {
+        name: "ascii",
+        description: "print ascii value of character under the cursor",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "display",
+        description: "display registers",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "registers",
+        description: "display the contents of registers",
+        availability: Availability::Common,
+    },
+    // Tag commands
+    BuiltinCommand {
+        name: "cscope",
+        description: "execute cscope command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cstag",
+        description: "use cscope to jump to a tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lcscope",
+        description: "like \":cscope\" but uses location list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pop",
+        description: "jump to older entry in tag stack",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptNext",
+        description: ":tNext in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptag",
+        description: "show tag in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptfirst",
+        description: ":trewind in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptjump",
+        description: ":tjump and show tag in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptlast",
+        description: ":tlast in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptnext",
+        description: ":tnext in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptprevious",
+        description: ":tprevious in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptrewind",
+        description: ":trewind in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ptselect",
+        description: ":tselect and show tag in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "scscope",
+        description: "split window and execute cscope command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "stag",
+        description: "split window and jump to a tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "stjump",
+        description: "do \":tjump\" and split window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "stselect",
+        description: "do \":tselect\" and split window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tNext",
+        description: "jump to previous matching tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tag",
+        description: "jump to tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tags",
+        description: "show the contents of the tag stack",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tfirst",
+        description: "jump to first matching tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tjump",
+        description: "like \":tselect\", but jump directly when there is only one match",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tlast",
+        description: "jump to last matching tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tnext",
+        description: "jump to next matching tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tprevious",
+        description: "jump to previous matching tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "trewind",
+        description: "jump to first matching tag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tselect",
+        description: "list matching tags and select one",
+        availability: Availability::Common,
+    },
+    // Tab commands
+    BuiltinCommand {
+        name: "tabNext",
+        description: "go to previous tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabdo",
+        description: "execute command in each tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabedit",
+        description: "edit a file in a new tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabfind",
+        description: "find file in 'path', edit it in a new tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabfirst",
+        description: "go to first tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tablast",
+        description: "go to last tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabmove",
+        description: "move tab page to other position",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabonly",
+        description: "close all tab pages except the current one",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabrewind",
+        description: "go to first tab page",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabs",
+        description: "list the tab pages and what they contain",
+        availability: Availability::Common,
+    },
+    // Split window commands
+    BuiltinCommand {
+        name: "all",
+        description: "open a window for each file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pbuffer",
+        description: "edit buffer in the preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pclose",
+        description: "close preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pedit",
+        description: "edit file in the preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ppop",
+        description: "\":pop\" in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "psearch",
+        description: "like \":ijump\" but shows match in preview window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "resize",
+        description: "change current window height",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sNext",
+        description: "split window and go to previous file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sall",
+        description: "open a window for each file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sargument",
+        description: "split window and go to specific file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbNext",
+        description: "split window and go to previous file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sball",
+        description: "open a window for each file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbfirst",
+        description: "split window and go to first file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sblast",
+        description: "split window and go to last file in buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbmodified",
+        description: "split window and go to modified file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbnext",
+        description: "split window and go to next file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbprevious",
+        description: "split window and go to previous file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbrewind",
+        description: "split window and go to first file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sbuffer",
+        description: "split window and go to specific file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sfind",
+        description: "split current window and edit file in 'path'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sfirst",
+        description: "split window and go to first file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "slast",
+        description: "split window and go to last file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "snext",
+        description: "split window and go to next file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sprevious",
+        description: "split window and go to previous file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "srewind",
+        description: "split window and go to first file in the argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sunhide",
+        description: "same as \":unhide\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sview",
+        description: "split window and edit file read-only",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unhide",
+        description: "open a window for each loaded file in the buffer list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wincmd",
+        description: "execute a Window (CTRL-W) command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "windo",
+        description: "execute command in each window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "winpos",
+        description: "get or set window position",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "winsize",
+        description: "get or set window size (obsolete)",
+        availability: Availability::Common,
+    },
+    // File/session commands
+    BuiltinCommand {
+        name: "X",
+        description: "ask for encryption key",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "drop",
+        description: "jump to window editing file or edit file in current window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ex",
+        description: "same as \":edit\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "exit",
+        description: "same as \":xit\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "file",
+        description: "show or set the current file name",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "find",
+        description: "find file in 'path' and edit it",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "loadview",
+        description: "load view for current window from a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mkexrc",
+        description: "write current mappings and settings to a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mksession",
+        description: "write session info to a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mkview",
+        description: "write view of current window to a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mkvimrc",
+        description: "write current mappings and settings to a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "oldfiles",
+        description: "list files that have marks in the viminfo file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "preserve",
+        description: "write all text to swap file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "quitall",
+        description: "quit Vim",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "recover",
+        description: "recover a file from a swap file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "rviminfo",
+        description: "read from viminfo file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "swapname",
+        description: "show the name of the current swap file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "update",
+        description: "write buffer if modified",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "view",
+        description: "edit a file read-only",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "visual",
+        description: "same as \":edit\", but turns off \"Ex\" mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wNext",
+        description: "write to a file and go to previous file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wnext",
+        description: "write to a file and go to next file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wprevious",
+        description: "write to a file and go to previous file in argument list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wviminfo",
+        description: "write to viminfo file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xall",
+        description: "same as \":wqall\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xit",
+        description: "write if buffer changed and close window",
+        availability: Availability::Common,
+    },
+    // Diff commands
+    BuiltinCommand {
+        name: "diffget",
+        description: "remove differences in current buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "diffoff",
+        description: "switch off diff mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "diffpatch",
+        description: "apply a patch and show differences",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "diffput",
+        description: "remove differences in other buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "diffsplit",
+        description: "show differences with another file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "diffthis",
+        description: "make current window a diff window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "diffupdate",
+        description: "update 'diff' buffers",
+        availability: Availability::Common,
+    },
+    // Fold commands
+    BuiltinCommand {
+        name: "fold",
+        description: "create a fold",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "foldclose",
+        description: "close folds",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "folddoclosed",
+        description: "execute command on lines in a closed fold",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "folddoopen",
+        description: "execute command on lines not in a closed fold",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "foldopen",
+        description: "open folds",
+        availability: Availability::Common,
+    },
+    // Abbreviation commands
+    BuiltinCommand {
+        name: "abbreviate",
+        description: "enter abbreviation",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "abclear",
+        description: "remove all abbreviations",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cabbrev",
+        description: "like \":abbreviate\" but for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cabclear",
+        description: "clear all abbreviations for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cnoreabbrev",
+        description: "like \":noreabbrev\" but for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cunabbrev",
+        description: "like \":unabbrev\" but for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "iabbrev",
+        description: "like \":abbrev\" but for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "iabclear",
+        description: "like \":abclear\" but for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "inoreabbrev",
+        description: "like \":noreabbrev\" but for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "iunabbrev",
+        description: "like \":unabbrev\" but for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "noreabbrev",
+        description: "enter an abbreviation that will not be remapped",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unabbreviate",
+        description: "remove abbreviation",
+        availability: Availability::Common,
+    },
+    // Menu commands
+    BuiltinCommand {
+        name: "amenu",
+        description: "enter new menu item for all modes",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "anoremenu",
+        description: "enter a new menu for all modes that will not be remapped",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "aunmenu",
+        description: "remove menu for all modes",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cmenu",
+        description: "add menu for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cnoremenu",
+        description: "like \":noremenu\" but for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cunmenu",
+        description: "remove menu for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "emenu",
+        description: "execute a menu by name",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "imenu",
+        description: "add menu for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "inoremenu",
+        description: "like \":noremenu\" but for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "iunmenu",
+        description: "remove menu for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "menu",
+        description: "enter a new menu item",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "menutranslate",
+        description: "add a menu translation item",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nmenu",
+        description: "add menu for Normal mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nnoremenu",
+        description: "like \":noremenu\" but for Normal mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "noremenu",
+        description: "enter a menu that will not be remapped",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nunmenu",
+        description: "remove menu for Normal mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "omenu",
+        description: "add menu for Operator-pending mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "onoremenu",
+        description: "like \":noremenu\" but for Operator-pending mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ounmenu",
+        description: "remove menu for Operator-pending mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "popup",
+        description: "popup a menu by name",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "smenu",
+        description: "add menu for Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "snoremenu",
+        description: "like \":noremenu\" but for Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sunmenu",
+        description: "remove menu for Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tearoff",
+        description: "tear-off a menu",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tlmenu",
+        description: "add menu for Terminal-Job mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tlnoremenu",
+        description: "like \":noremenu\" but for Terminal-Job mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tlunmenu",
+        description: "remove menu for Terminal-Job mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tmenu",
+        description: "define menu tooltip",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tunmenu",
+        description: "remove menu tooltip",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unmenu",
+        description: "remove menu",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vmenu",
+        description: "add menu for Visual+Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vnoremenu",
+        description: "like \":noremenu\" but for Visual+Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vunmenu",
+        description: "remove menu for Visual+Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xmenu",
+        description: "add menu for Visual mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xnoremenu",
+        description: "like \":noremenu\" but for Visual mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xunmenu",
+        description: "remove menu for Visual mode",
+        availability: Availability::Common,
+    },
+    // Map clear commands
+    BuiltinCommand {
+        name: "cmapclear",
+        description: "clear all mappings for Command-line mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "imapclear",
+        description: "like \":mapclear\" but for Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lmapclear",
+        description: "like \":mapclear!\" but includes Lang-Arg mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nmapclear",
+        description: "clear all mappings for Normal mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "omapclear",
+        description: "remove all mappings for Operator-pending mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "smapclear",
+        description: "remove all mappings for Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tmapclear",
+        description: "remove all mappings for Terminal-Job mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vmapclear",
+        description: "remove all mappings for Visual+Select mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xmapclear",
+        description: "remove all mappings for Visual mode",
+        availability: Availability::Common,
+    },
+    // Help commands
+    BuiltinCommand {
+        name: "exusage",
+        description: "overview of Ex commands",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "help",
+        description: "open a help window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "helpclose",
+        description: "close one help window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "helpfind",
+        description: "dialog to open a help window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "helpgrep",
+        description: "like \":grep\" but searches help files",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "helptags",
+        description: "generate help tags for a directory",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "intro",
+        description: "print the introductory message",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "messages",
+        description: "view previously displayed messages",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "version",
+        description: "print version number and other info",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "viusage",
+        description: "overview of Normal mode commands",
+        availability: Availability::Common,
+    },
+    // Search/grep commands
+    BuiltinCommand {
+        name: "grep",
+        description: "run 'grepprg' and jump to first match",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "grepadd",
+        description: "like :grep, but append to current list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "make",
+        description: "execute external command 'makeprg' and parse",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nohlsearch",
+        description: "suspend 'hlsearch' highlighting",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "smagic",
+        description: ":substitute with 'magic'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "snomagic",
+        description: ":substitute with 'nomagic'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vimgrep",
+        description: "search for pattern in files",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vimgrepadd",
+        description: "like :vimgrep, but append to current list",
+        availability: Availability::Common,
+    },
+    // Identifier search
+    BuiltinCommand {
+        name: "checkpath",
+        description: "list included files",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "djump",
+        description: "jump to #define",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "dl",
+        description: "short for :delete with the 'l' flag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "dlist",
+        description: "list #defines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "dp",
+        description: "short for :delete with the 'p' flag",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "dsearch",
+        description: "list one #define",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "dsplit",
+        description: "split window and jump to #define",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ijump",
+        description: "jump to definition of identifier",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ilist",
+        description: "list lines where identifier matches",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "iput",
+        description: "like :put, but adjust the indent",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "isearch",
+        description: "list one line where identifier matches",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "isplit",
+        description: "split window and jump to definition of identifier",
+        availability: Availability::Common,
+    },
+    // Spell commands
+    BuiltinCommand {
+        name: "mkspell",
+        description: "produce .spl spell file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spelldump",
+        description: "split window and fill with all correct words",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spellgood",
+        description: "add good word for spelling",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spellinfo",
+        description: "show info about loaded spell files",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spellrare",
+        description: "add rare word for spelling",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spellrepall",
+        description: "replace all bad words like last |z=|",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spellundo",
+        description: "remove good or bad word",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "spellwrong",
+        description: "add spelling mistake",
+        availability: Availability::Common,
+    },
+    // Debug commands
+    BuiltinCommand {
+        name: "breakadd",
+        description: "add a debugger breakpoint",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "breakdel",
+        description: "delete a debugger breakpoint",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "breaklist",
+        description: "list debugger breakpoints",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "debug",
+        description: "run a command in debugging mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "debuggreedy",
+        description: "read debug mode commands from normal input",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "profile",
+        description: "profiling functions and scripts",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "profdel",
+        description: "stop profiling a function or script",
+        availability: Availability::Common,
+    },
+    // Script commands
+    BuiltinCommand {
+        name: "delfunction",
+        description: "delete a user function",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "scriptencoding",
+        description: "encoding used in sourced Vim script",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "scriptnames",
+        description: "list names of all sourced Vim scripts",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "scriptversion",
+        description: "version of Vim script used",
+        availability: Availability::Common,
+    },
+    // Misc commands
+    BuiltinCommand {
+        name: "behave",
+        description: "set mouse and selection behavior",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "checktime",
+        description: "check timestamp of loaded buffers",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "clipreset",
+        description: "reset 'clipmethod'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "compiler",
+        description: "do settings for a specific compiler",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "defer",
+        description: "call function when current function is done",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "digraphs",
+        description: "show or enter digraphs",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "eval",
+        description: "evaluate an expression and discard the result",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "filter",
+        description: "filter output of following command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "fixdel",
+        description: "set key code of <Del>",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "goto",
+        description: "go to byte in the buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "hardcopy",
+        description: "send text to the printer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "history",
+        description: "print a history list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "keepalt",
+        description: "following command keeps the alternate file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "keepjumps",
+        description: "following command keeps jumplist and marks",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "keepmarks",
+        description: "following command keeps marks where they are",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "keeppatterns",
+        description: "following command keeps search pattern history",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "language",
+        description: "set the language (locale)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "legacy",
+        description: "make following command use legacy script syntax",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "loadkeymap",
+        description: "load the following keymaps until EOF",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lockmarks",
+        description: "following command keeps marks where they are",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lsp",
+        description: "LSP client command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "match",
+        description: "define a match to highlight",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mode",
+        description: "show or change the screen mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "noautocmd",
+        description: "following commands don't trigger autocommands",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "noswapfile",
+        description: "following commands don't create a swap file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "open",
+        description: "start open mode (not implemented)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "options",
+        description: "open the options-window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ownsyntax",
+        description: "set new local syntax highlight for this window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "packadd",
+        description: "add a plugin from 'packpath'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "packloadall",
+        description: "load all packages under 'packpath'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "range",
+        description: "go to last line in {range}",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "redir",
+        description: "redirect messages to a file or register",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "redrawstatus",
+        description: "force a redraw of the status line(s)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "redrawtabline",
+        description: "force a redraw of the tabline",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "redrawtabpanel",
+        description: "force a redraw of the tabpanel",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "restart",
+        description: "restart Vim",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sandbox",
+        description: "execute a command in the sandbox",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "setfiletype",
+        description: "set 'filetype', unless it was set already",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "shell",
+        description: "escape to a shell",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sign",
+        description: "manipulate signs",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sleep!",
+        description: "do nothing for a few seconds, without the cursor visible",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "smile",
+        description: "make the user happy",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "star",
+        description: "use the last Visual area, like :'<,'>",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "startgreplace",
+        description: "start Virtual Replace mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "startinsert",
+        description: "start Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "startreplace",
+        description: "start Replace mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "stop",
+        description: "suspend the editor or escape to a shell",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "stopinsert",
+        description: "stop Insert mode",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "suspend",
+        description: "same as \":stop\"",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "syncbind",
+        description: "sync scroll binding",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "syntime",
+        description: "measure syntax highlighting speed",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unsilent",
+        description: "run a command not silently",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "verbose",
+        description: "execute command with 'verbose' set",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echoconsole",
+        description: "like :echomsg but write to stdout",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "fclose",
+        description: "close file dialog",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "gui",
+        description: "start the GUI",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "gvim",
+        description: "start the GUI",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "promptfind",
+        description: "open GUI dialog for searching",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "promptrepl",
+        description: "open GUI dialog for search/replace",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "simalt",
+        description: "Win32 GUI: simulate Windows ALT key",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wlrestore",
+        description: "restore the Wayland compositor connection",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xrestore",
+        description: "restores the X server connection",
+        availability: Availability::Common,
+    },
+    // Scripting languages - Perl
+    BuiltinCommand {
+        name: "perl",
+        description: "execute Perl command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "perldo",
+        description: "execute Perl command for each line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "perlfile",
+        description: "execute Perl script file",
+        availability: Availability::Common,
+    },
+    // Scripting languages - Python
+    BuiltinCommand {
+        name: "py3",
+        description: "execute Python 3 command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "py3do",
+        description: "execute Python 3 command for each line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "py3file",
+        description: "execute Python 3 script file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pydo",
+        description: "execute Python command for each line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pyfile",
+        description: "execute Python script file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "python",
+        description: "execute Python command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "python3",
+        description: "same as :py3",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pythonx",
+        description: "same as :pyx",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pyx",
+        description: "execute python_x command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pyxdo",
+        description: "execute python_x command for each line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "pyxfile",
+        description: "execute python_x script file",
+        availability: Availability::Common,
+    },
+    // Scripting languages - Ruby
+    BuiltinCommand {
+        name: "ruby",
+        description: "execute Ruby command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "rubydo",
+        description: "execute Ruby command for each line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "rubyfile",
+        description: "execute Ruby script file",
+        availability: Availability::Common,
+    },
+    // Scripting languages - Tcl
+    BuiltinCommand {
+        name: "tcl",
+        description: "execute Tcl command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tcldo",
+        description: "execute Tcl command for each line",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tclfile",
+        description: "execute Tcl script file",
+        availability: Availability::Common,
+    },
+    // Scripting languages - MzScheme
+    BuiltinCommand {
+        name: "mzfile",
+        description: "execute MzScheme script file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mzscheme",
+        description: "execute MzScheme command",
+        availability: Availability::Common,
+    },
+    // Netbeans
+    BuiltinCommand {
+        name: "nbclose",
+        description: "close the current Netbeans session",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nbkey",
+        description: "pass a key to Netbeans",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nbstart",
+        description: "start a new Netbeans session",
+        availability: Availability::Common,
+    },
+    // Neovim only commands
+    BuiltinCommand {
+        name: "checkhealth",
+        description: "run health checks",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "terminal",
+        description: "open a terminal window",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "rshada",
+        description: "read from shada file",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "wshada",
+        description: "write to shada file",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "detach",
+        description: "detach the current UI",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "trust",
+        description: "manage trusted files",
+        availability: Availability::NeovimOnly,
+    },
+    // Vim9 only commands
+    BuiltinCommand {
+        name: "abstract",
+        description: "declare a Vim9 abstract class",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "class",
+        description: "start of a class declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "def",
+        description: "define a Vim9 user function",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "defcompile",
+        description: "compile Vim9 user functions in current script",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "disassemble",
+        description: "disassemble Vim9 user function",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "endclass",
+        description: "end of a class declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "enddef",
+        description: "end of a user function started with :def",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "endenum",
+        description: "end of an enum declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "endinterface",
+        description: "end of an interface declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "enum",
+        description: "start of an enum declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "export",
+        description: "Vim9: export an item from a script",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "final",
+        description: "declare an immutable variable in Vim9",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "import",
+        description: "Vim9: import an item from another script",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "interface",
+        description: "start of an interface declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "public",
+        description: "prefix for a class or object member",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "static",
+        description: "prefix for a class member or function",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "this",
+        description: "prefix for an object member during declaration",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "type",
+        description: "create a type alias",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "var",
+        description: "variable declaration in Vim9",
+        availability: Availability::VimOnly,
+    },
+    BuiltinCommand {
+        name: "vim9cmd",
+        description: "make following command use Vim9 script syntax",
+        availability: Availability::VimOnly,
+    },
 ];
 
 // ============================================================================
@@ -4848,6 +7389,222 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         name: "SafeStateAgain",
         description: "SafeState triggered again",
         availability: Availability::VimOnly,
+    },
+    // Additional events
+    AutocmdEvent {
+        name: "BufCreate",
+        description: "After creating a new buffer (alias for BufAdd)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufFilePost",
+        description: "After changing the name of the current buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufFilePre",
+        description: "Before changing the name of the current buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufWipeout",
+        description: "Before completely deleting a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CmdUndefined",
+        description: "When a user command is used but not defined",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CmdlineLeavePre",
+        description: "Just before leaving the command line",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CursorMovedC",
+        description: "After cursor moved in command-line mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "DiffUpdated",
+        description: "After diffs have been updated",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "EncodingChanged",
+        description: "After 'encoding' option has been changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "ExitPre",
+        description: "When using a command that may make Vim exit",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileAppendCmd",
+        description: "Before appending to a file (replaces append)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileAppendPost",
+        description: "After appending to a file",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileAppendPre",
+        description: "Before appending to a file",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileChangedRO",
+        description: "Before making first change to read-only file",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileChangedShell",
+        description: "When Vim notices a file changed since editing started",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileChangedShellPost",
+        description: "After handling a file changed since editing started",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileReadCmd",
+        description: "Before reading a file with :read (replaces read)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileWriteCmd",
+        description: "Before writing a file (replaces write)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FilterReadPost",
+        description: "After reading a file from a filter command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FilterReadPre",
+        description: "Before reading a file from a filter command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FilterWritePost",
+        description: "After writing a file for a filter command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FilterWritePre",
+        description: "Before writing a file for a filter command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FuncUndefined",
+        description: "When a user function is used but not defined",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "GUIEnter",
+        description: "After starting the GUI successfully",
+        availability: Availability::VimOnly,
+    },
+    AutocmdEvent {
+        name: "GUIFailed",
+        description: "After starting the GUI failed",
+        availability: Availability::VimOnly,
+    },
+    AutocmdEvent {
+        name: "InsertChange",
+        description: "When typing <Insert> in Insert or Replace mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "KeyInputPre",
+        description: "Just before a key is processed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "MenuPopup",
+        description: "Just before showing the popup menu",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "ModeChanged",
+        description: "After changing the mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "QuitPre",
+        description: "When using :quit, before deciding whether to exit",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "RemoteReply",
+        description: "When a reply from a server Vim was received",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SessionWritePost",
+        description: "After writing a session file with :mksession",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "ShellFilterPost",
+        description: "After executing a shell filter command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SpellFileMissing",
+        description: "When a spell file is used but can't be found",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "StdinReadPre",
+        description: "Before reading from stdin into the buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SwapExists",
+        description: "When an existing swap file is detected",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TabClosedPre",
+        description: "Before closing a tab page",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TermChanged",
+        description: "After the value of 'term' has changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TermResponse",
+        description: "After the terminal response to t_RV is received",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TermResponseAll",
+        description: "After terminal responses to t_RV and others are received",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TerminalOpen",
+        description: "After a terminal buffer was created",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "TerminalWinOpen",
+        description: "After a terminal buffer was created in a new window",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "WinNewPre",
+        description: "Before creating a new window",
+        availability: Availability::Common,
     },
 ];
 
