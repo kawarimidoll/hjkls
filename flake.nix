@@ -135,7 +135,6 @@
               dprint
               actionlint
               convco
-              typos
               neovim-test
               vim-dev
             ];
