@@ -55,7 +55,6 @@ pub struct BuiltinFunction {
 /// List of Vim built-in functions
 /// Reference: :help function-list
 pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
-    // String functions
     BuiltinFunction {
         name: "strlen",
         signature: "strlen({string})",
@@ -194,7 +193,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return match and submatches as List",
         availability: Availability::Common,
     },
-    // List functions
     BuiltinFunction {
         name: "len",
         signature: "len({expr})",
@@ -309,7 +307,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Flatten nested lists",
         availability: Availability::Common,
     },
-    // Dictionary functions
     BuiltinFunction {
         name: "keys",
         signature: "keys({dict})",
@@ -334,7 +331,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return TRUE if {dict} has {key}",
         availability: Availability::Common,
     },
-    // Type checking
     BuiltinFunction {
         name: "type",
         signature: "type({expr})",
@@ -347,7 +343,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return the type name of {expr}",
         availability: Availability::Common,
     },
-    // Buffer/Window/Tab functions
     BuiltinFunction {
         name: "bufnr",
         signature: "bufnr([{expr} [, {create}]])",
@@ -426,7 +421,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return List of buffer numbers in tab",
         availability: Availability::Common,
     },
-    // Cursor/Position functions
     BuiltinFunction {
         name: "line",
         signature: "line({expr} [, {winid}])",
@@ -487,7 +481,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Append {text} after line {lnum}",
         availability: Availability::Common,
     },
-    // Search functions
     BuiltinFunction {
         name: "search",
         signature: "search({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])",
@@ -512,7 +505,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Search for matching pair, return [lnum, col]",
         availability: Availability::Common,
     },
-    // File functions
     BuiltinFunction {
         name: "expand",
         signature: "expand({string} [, {nosuf} [, {list}]])",
@@ -597,7 +589,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Change current directory",
         availability: Availability::Common,
     },
-    // System functions
     BuiltinFunction {
         name: "system",
         signature: "system({cmd} [, {input}])",
@@ -640,7 +631,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set environment variable",
         availability: Availability::Common,
     },
-    // Misc functions
     BuiltinFunction {
         name: "exists",
         signature: "exists({expr})",
@@ -713,7 +703,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Echo as error message",
         availability: Availability::Common,
     },
-    // Function-related
     BuiltinFunction {
         name: "call",
         signature: "call({func}, {arglist} [, {dict}])",
@@ -732,7 +721,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return Funcref like function()",
         availability: Availability::Common,
     },
-    // JSON
     BuiltinFunction {
         name: "json_encode",
         signature: "json_encode({expr})",
@@ -745,7 +733,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Decode JSON {string}",
         availability: Availability::Common,
     },
-    // Timer
     BuiltinFunction {
         name: "timer_start",
         signature: "timer_start({time}, {callback} [, {options}])",
@@ -764,7 +751,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Stop all timers",
         availability: Availability::Common,
     },
-    // Math functions
     BuiltinFunction {
         name: "abs",
         signature: "abs({expr})",
@@ -909,7 +895,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Convert String to Number",
         availability: Availability::Common,
     },
-    // Character/byte conversion
     BuiltinFunction {
         name: "char2nr",
         signature: "char2nr({string} [, {utf8}])",
@@ -970,7 +955,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return String from List of numbers",
         availability: Availability::Common,
     },
-    // Window functions
     BuiltinFunction {
         name: "winheight",
         signature: "winheight({nr})",
@@ -1073,7 +1057,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return command to restore window sizes",
         availability: Availability::Common,
     },
-    // Buffer info functions
     BuiltinFunction {
         name: "getbufinfo",
         signature: "getbufinfo([{buf}])",
@@ -1152,7 +1135,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set variable in window of tab",
         availability: Availability::Common,
     },
-    // Time functions
     BuiltinFunction {
         name: "localtime",
         signature: "localtime()",
@@ -1189,7 +1171,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return Float from reltime",
         availability: Availability::Common,
     },
-    // System info
     BuiltinFunction {
         name: "getpid",
         signature: "getpid()",
@@ -1208,7 +1189,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return name of a temp file",
         availability: Availability::Common,
     },
-    // Input functions
     BuiltinFunction {
         name: "getchar",
         signature: "getchar([{expr}])",
@@ -1257,7 +1237,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Like input() but in a GUI dialog",
         availability: Availability::Common,
     },
-    // Match functions
     BuiltinFunction {
         name: "matchadd",
         signature: "matchadd({group}, {pattern} [, {priority} [, {id} [, {dict}]]])",
@@ -1312,7 +1291,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return fuzzy matches with positions",
         availability: Availability::Common,
     },
-    // Cursor/mark functions
     BuiltinFunction {
         name: "getcharpos",
         signature: "getcharpos({expr})",
@@ -1349,7 +1327,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return list of marks",
         availability: Availability::Common,
     },
-    // File info functions
     BuiltinFunction {
         name: "getfsize",
         signature: "getfsize({fname})",
@@ -1416,7 +1393,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return list of file info in directory",
         availability: Availability::Common,
     },
-    // List functions
     BuiltinFunction {
         name: "min",
         signature: "min({expr})",
@@ -1459,7 +1435,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return index where {expr} is true",
         availability: Availability::Common,
     },
-    // Quickfix/location list
     BuiltinFunction {
         name: "getqflist",
         signature: "getqflist([{what}])",
@@ -1484,7 +1459,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set location list",
         availability: Availability::Common,
     },
-    // Jump/change list
     BuiltinFunction {
         name: "getjumplist",
         signature: "getjumplist([{winnr} [, {tabnr}]])",
@@ -1497,7 +1471,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return change list",
         availability: Availability::Common,
     },
-    // Tag functions
     BuiltinFunction {
         name: "taglist",
         signature: "taglist({expr} [, {filename}])",
@@ -1522,7 +1495,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set tag stack",
         availability: Availability::Common,
     },
-    // Register functions
     BuiltinFunction {
         name: "getreg",
         signature: "getreg([{regname} [, 1 [, {list}]]])",
@@ -1547,7 +1519,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return info about register",
         availability: Availability::Common,
     },
-    // Syntax/highlight functions
     BuiltinFunction {
         name: "synID",
         signature: "synID({lnum}, {col}, {trans})",
@@ -1602,7 +1573,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set highlight definitions",
         availability: Availability::Common,
     },
-    // Completion functions
     BuiltinFunction {
         name: "complete",
         signature: "complete({startcol}, {matches})",
@@ -1639,7 +1609,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return position of popup menu",
         availability: Availability::Common,
     },
-    // Command line functions
     BuiltinFunction {
         name: "getcmdline",
         signature: "getcmdline()",
@@ -1682,7 +1651,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return command line completions",
         availability: Availability::Common,
     },
-    // Misc functions
     BuiltinFunction {
         name: "and",
         signature: "and({expr}, {expr})",
@@ -1863,7 +1831,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return cursor screen row",
         availability: Availability::Common,
     },
-    // Neovim-only functions
     BuiltinFunction {
         name: "stdpath",
         signature: "stdpath({what})",
@@ -1876,7 +1843,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return API metadata",
         availability: Availability::NeovimOnly,
     },
-    // Sign functions
     BuiltinFunction {
         name: "sign_define",
         signature: "sign_define({name} [, {dict}])",
@@ -1931,7 +1897,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Unplace multiple signs",
         availability: Availability::Common,
     },
-    // Text property functions
     BuiltinFunction {
         name: "prop_add",
         signature: "prop_add({lnum}, {col}, {props})",
@@ -1998,7 +1963,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return list of text property types",
         availability: Availability::Common,
     },
-    // Spell functions
     BuiltinFunction {
         name: "spellbadword",
         signature: "spellbadword([{sentence}])",
@@ -2011,7 +1975,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return spelling suggestions",
         availability: Availability::Common,
     },
-    // History functions
     BuiltinFunction {
         name: "histadd",
         signature: "histadd({history}, {item})",
@@ -2036,7 +1999,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return number of items in history",
         availability: Availability::Common,
     },
-    // Assert functions
     BuiltinFunction {
         name: "assert_equal",
         signature: "assert_equal({expected}, {actual} [, {msg}])",
@@ -2109,7 +2071,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Report a test failure",
         availability: Availability::Common,
     },
-    // Listener functions
     BuiltinFunction {
         name: "listener_add",
         signature: "listener_add({callback} [, {buf}])",
@@ -2128,7 +2089,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Remove a listener",
         availability: Availability::Common,
     },
-    // Mapping functions
     BuiltinFunction {
         name: "maparg",
         signature: "maparg({name} [, {mode} [, {abbr} [, {dict}]]])",
@@ -2159,7 +2119,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Check if mapping to {what} exists",
         availability: Availability::Common,
     },
-    // Autocommand functions
     BuiltinFunction {
         name: "autocmd_add",
         signature: "autocmd_add({acmds})",
@@ -2178,21 +2137,18 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return list of autocommands",
         availability: Availability::Common,
     },
-    // Changenr/undo
     BuiltinFunction {
         name: "changenr",
         signature: "changenr()",
         description: "Return current change number",
         availability: Availability::Common,
     },
-    // Encoding
     BuiltinFunction {
         name: "iconv",
         signature: "iconv({string}, {from}, {to})",
         description: "Convert encoding of {string}",
         availability: Availability::Common,
     },
-    // Server functions
     BuiltinFunction {
         name: "serverlist",
         signature: "serverlist()",
@@ -2235,7 +2191,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Start server with {name}",
         availability: Availability::Common,
     },
-    // Scripting/evaluation
     BuiltinFunction {
         name: "libcall",
         signature: "libcall({lib}, {func}, {arg})",
@@ -2284,7 +2239,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Evaluate Ruby expression",
         availability: Availability::VimOnly,
     },
-    // Vim-only: Popup functions
     BuiltinFunction {
         name: "popup_create",
         signature: "popup_create({what}, {options})",
@@ -2411,7 +2365,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return popup ID at screen position",
         availability: Availability::VimOnly,
     },
-    // Vim-only: Channel functions
     BuiltinFunction {
         name: "ch_canread",
         signature: "ch_canread({handle})",
@@ -2520,7 +2473,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return status of channel",
         availability: Availability::VimOnly,
     },
-    // Vim-only: Job functions
     BuiltinFunction {
         name: "job_getchannel",
         signature: "job_getchannel({job})",
@@ -2557,7 +2509,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Stop a job",
         availability: Availability::VimOnly,
     },
-    // Vim-only: Terminal functions
     BuiltinFunction {
         name: "term_start",
         signature: "term_start({cmd} [, {options}])",
@@ -2690,7 +2641,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return cursor position in terminal",
         availability: Availability::VimOnly,
     },
-    // Neovim-only: Floating window / extmark functions
     BuiltinFunction {
         name: "nvim_create_buf",
         signature: "nvim_create_buf({listed}, {scratch})",
@@ -2781,7 +2731,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Get highlight definition",
         availability: Availability::NeovimOnly,
     },
-    // More common utility functions
     BuiltinFunction {
         name: "matchstrpos",
         signature: "matchstrpos({string}, {pattern} [, {start} [, {count}]])",
@@ -2956,7 +2905,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Convert virtual column to byte column",
         availability: Availability::Common,
     },
-    // Blob functions
     BuiltinFunction {
         name: "blob2list",
         signature: "blob2list({blob})",
@@ -2969,7 +2917,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Convert list of numbers to blob",
         availability: Availability::Common,
     },
-    // Sound functions (Vim-only)
     BuiltinFunction {
         name: "sound_clear",
         signature: "sound_clear()",
@@ -2994,7 +2941,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Stop playing a sound",
         availability: Availability::VimOnly,
     },
-    // Digraph functions
     BuiltinFunction {
         name: "digraph_get",
         signature: "digraph_get({chars})",
@@ -3019,7 +2965,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set multiple digraphs",
         availability: Availability::Common,
     },
-    // Prompt buffer functions
     BuiltinFunction {
         name: "prompt_getprompt",
         signature: "prompt_getprompt({buf})",
@@ -3044,7 +2989,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Set prompt text for buffer",
         availability: Availability::Common,
     },
-    // Timer functions (missing)
     BuiltinFunction {
         name: "timer_info",
         signature: "timer_info([{id}])",
@@ -3057,7 +3001,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Pause or unpause a timer",
         availability: Availability::Common,
     },
-    // Register functions
     BuiltinFunction {
         name: "reg_executing",
         signature: "reg_executing()",
@@ -3070,7 +3013,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return register being recorded to",
         availability: Availability::Common,
     },
-    // GUI/Browse functions (Vim-only)
     BuiltinFunction {
         name: "browse",
         signature: "browse({save}, {title}, {initdir}, {default})",
@@ -3083,14 +3025,12 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Open directory browser dialog",
         availability: Availability::VimOnly,
     },
-    // Menu functions
     BuiltinFunction {
         name: "menu_info",
         signature: "menu_info({name} [, {mode}])",
         description: "Return information about a menu",
         availability: Availability::Common,
     },
-    // Event/interrupt functions
     BuiltinFunction {
         name: "eventhandler",
         signature: "eventhandler()",
@@ -3103,7 +3043,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Interrupt script execution",
         availability: Availability::Common,
     },
-    // Window movement functions
     BuiltinFunction {
         name: "win_move_separator",
         signature: "win_move_separator({nr}, {offset})",
@@ -3116,7 +3055,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Move window status line",
         availability: Availability::Common,
     },
-    // Other scripting functions
     BuiltinFunction {
         name: "mzeval",
         signature: "mzeval({expr})",
@@ -3129,7 +3067,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Interrupt process for debugging",
         availability: Availability::VimOnly,
     },
-    // Balloon functions (Vim-only)
     BuiltinFunction {
         name: "balloon_gettext",
         signature: "balloon_gettext()",
@@ -3148,21 +3085,18 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Split message for balloon",
         availability: Availability::VimOnly,
     },
-    // IM status
     BuiltinFunction {
         name: "getimstatus",
         signature: "getimstatus()",
         description: "Return IM status",
         availability: Availability::Common,
     },
-    // ID function
     BuiltinFunction {
         name: "id",
         signature: "id({expr})",
         description: "Return unique identifier for reference",
         availability: Availability::Common,
     },
-    // More Neovim API functions
     BuiltinFunction {
         name: "nvim_win_set_cursor",
         signature: "nvim_win_set_cursor({window}, {pos})",
@@ -3409,7 +3343,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Delete buffer-local keymap",
         availability: Availability::NeovimOnly,
     },
-    // Argument list functions
     BuiltinFunction {
         name: "argc",
         signature: "argc([{winid}])",
@@ -3434,7 +3367,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return argument from argument list",
         availability: Availability::Common,
     },
-    // Base64 functions
     BuiltinFunction {
         name: "base64_decode",
         signature: "base64_decode({string})",
@@ -3447,7 +3379,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Encode blob to base64 string",
         availability: Availability::Common,
     },
-    // Blob/string conversion
     BuiltinFunction {
         name: "blob2str",
         signature: "blob2str({blob})",
@@ -3460,14 +3391,12 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Convert string to blob",
         availability: Availability::Common,
     },
-    // Buffer/window
     BuiltinFunction {
         name: "bufwinnr",
         signature: "bufwinnr({buf})",
         description: "Return window number of buffer",
         availability: Availability::Common,
     },
-    // Indent functions
     BuiltinFunction {
         name: "cindent",
         signature: "cindent({lnum})",
@@ -3486,42 +3415,36 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return indent of line",
         availability: Availability::Common,
     },
-    // Command line
     BuiltinFunction {
         name: "cmdcomplete_info",
         signature: "cmdcomplete_info([{what}])",
         description: "Return command line completion info",
         availability: Availability::Common,
     },
-    // Cscope
     BuiltinFunction {
         name: "cscope_connection",
         signature: "cscope_connection([{num} [, {dbpath} [, {prepend}]]])",
         description: "Check cscope connection",
         availability: Availability::VimOnly,
     },
-    // File type detection
     BuiltinFunction {
         name: "did_filetype",
         signature: "did_filetype()",
         description: "Return TRUE if FileType autocommand was used",
         availability: Availability::Common,
     },
-    // Diff
     BuiltinFunction {
         name: "diff",
         signature: "diff({fromlist}, {tolist} [, {options}])",
         description: "Return diff between two lists",
         availability: Availability::Common,
     },
-    // Expand command
     BuiltinFunction {
         name: "expandcmd",
         signature: "expandcmd({string} [, {options}])",
         description: "Expand special items in command string",
         availability: Availability::Common,
     },
-    // Find file/dir
     BuiltinFunction {
         name: "finddir",
         signature: "finddir({name} [, {path} [, {count}]])",
@@ -3534,35 +3457,30 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Find file in path",
         availability: Availability::Common,
     },
-    // Foreground (GUI)
     BuiltinFunction {
         name: "foreground",
         signature: "foreground()",
         description: "Bring Vim window to foreground",
         availability: Availability::VimOnly,
     },
-    // Garbage collection
     BuiltinFunction {
         name: "garbagecollect",
         signature: "garbagecollect([{atexit}])",
         description: "Free unused memory",
         availability: Availability::Common,
     },
-    // GUI font
     BuiltinFunction {
         name: "getfontname",
         signature: "getfontname([{name}])",
         description: "Return name of current font",
         availability: Availability::VimOnly,
     },
-    // Mouse shape
     BuiltinFunction {
         name: "getmouseshape",
         signature: "getmouseshape()",
         description: "Return current mouse shape name",
         availability: Availability::VimOnly,
     },
-    // Region functions (Vim 9.1+)
     BuiltinFunction {
         name: "getregion",
         signature: "getregion({pos1}, {pos2} [, {opts}])",
@@ -3575,7 +3493,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return positions of region",
         availability: Availability::Common,
     },
-    // Window position
     BuiltinFunction {
         name: "getwinpos",
         signature: "getwinpos([{timeout}])",
@@ -3594,21 +3511,18 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return Y position of GUI Vim window",
         availability: Availability::Common,
     },
-    // Glob to regex
     BuiltinFunction {
         name: "glob2regpat",
         signature: "glob2regpat({string})",
         description: "Convert glob pattern to regex",
         availability: Availability::Common,
     },
-    // Local directory
     BuiltinFunction {
         name: "haslocaldir",
         signature: "haslocaldir([{winnr} [, {tabnr}]])",
         description: "Return TRUE if local directory is set",
         availability: Availability::Common,
     },
-    // Type checking
     BuiltinFunction {
         name: "instanceof",
         signature: "instanceof({object}, {class})",
@@ -3627,7 +3541,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return TRUE if value is NaN",
         availability: Availability::Common,
     },
-    // Match functions
     BuiltinFunction {
         name: "matchbufline",
         signature: "matchbufline({buf}, {pat}, {lnum}, {end} [, {dict}])",
@@ -3640,56 +3553,48 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return all matches in list of strings",
         availability: Availability::Common,
     },
-    // Popup echo (Vim-only)
     BuiltinFunction {
         name: "popup_findecho",
         signature: "popup_findecho()",
         description: "Return echo popup window ID",
         availability: Availability::VimOnly,
     },
-    // Read blob
     BuiltinFunction {
         name: "readblob",
         signature: "readblob({fname} [, {offset} [, {size}]])",
         description: "Read file as blob",
         availability: Availability::Common,
     },
-    // Server to client
     BuiltinFunction {
         name: "server2client",
         signature: "server2client({clientid}, {string})",
         description: "Send reply to client",
         availability: Availability::Common,
     },
-    // Slice
     BuiltinFunction {
         name: "slice",
         signature: "slice({expr}, {start} [, {end}])",
         description: "Return slice of list or blob",
         availability: Availability::Common,
     },
-    // Sound fold
     BuiltinFunction {
         name: "soundfold",
         signature: "soundfold({word})",
         description: "Return sound-folded word",
         availability: Availability::Common,
     },
-    // String conversion
     BuiltinFunction {
         name: "string",
         signature: "string({expr})",
         description: "Convert expression to string",
         availability: Availability::Common,
     },
-    // String transform
     BuiltinFunction {
         name: "strtrans",
         signature: "strtrans({string})",
         description: "Translate unprintable characters",
         availability: Availability::Common,
     },
-    // Swap file functions
     BuiltinFunction {
         name: "swapfilelist",
         signature: "swapfilelist()",
@@ -3708,7 +3613,6 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return swap file name for buffer",
         availability: Availability::Common,
     },
-    // Terminal functions (Vim-only, missing)
     BuiltinFunction {
         name: "term_getaltscreen",
         signature: "term_getaltscreen({buf})",
@@ -3721,40 +3625,1145 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
         description: "Return terminal screen contents",
         availability: Availability::VimOnly,
     },
-    // UTF-16 index
     BuiltinFunction {
         name: "utf16idx",
         signature: "utf16idx({string}, {idx} [, {countcc} [, {charidx}]])",
         description: "Return UTF-16 index of byte index",
         availability: Availability::Common,
     },
-    // Assert (missing)
     BuiltinFunction {
         name: "assert_equalfile",
         signature: "assert_equalfile({fname1}, {fname2} [, {msg}])",
         description: "Assert two files have equal contents",
         availability: Availability::Common,
     },
-    // Internationalization
     BuiltinFunction {
         name: "bindtextdomain",
         signature: "bindtextdomain({package}, {path})",
         description: "Set path for message translations",
         availability: Availability::Common,
     },
-    // Wildmenu mode
     BuiltinFunction {
         name: "wildmenumode",
         signature: "wildmenumode()",
         description: "Return TRUE if wildmenu is active",
         availability: Availability::Common,
     },
-    // Windows version
     BuiltinFunction {
         name: "windowsversion",
         signature: "windowsversion()",
         description: "Return Windows version string",
         availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "chanclose",
+        signature: "chanclose({id} [, {stream}])",
+        description: "Close a channel or a specific stream",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "chansend",
+        signature: "chansend({id}, {data})",
+        description: "Send data to channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "jobpid",
+        signature: "jobpid({job})",
+        description: "Return the PID of a job",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "jobresize",
+        signature: "jobresize({job}, {width}, {height})",
+        description: "Resize the pseudo terminal window of a job",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "jobstart",
+        signature: "jobstart({cmd} [, {opts}])",
+        description: "Spawn a job",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "jobstop",
+        signature: "jobstop({id})",
+        description: "Stop a job",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "jobwait",
+        signature: "jobwait({jobs} [, {timeout}])",
+        description: "Wait for jobs to complete",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "rpcnotify",
+        signature: "rpcnotify({channel}, {event} [, {args}...])",
+        description: "Send RPC notification to channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "rpcrequest",
+        signature: "rpcrequest({channel}, {method} [, {args}...])",
+        description: "Send RPC request to channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "serverstart",
+        signature: "serverstart([{address}])",
+        description: "Start listening for RPC messages",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "serverstop",
+        signature: "serverstop({address})",
+        description: "Stop listening on address",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "sockconnect",
+        signature: "sockconnect({mode}, {address} [, {opts}])",
+        description: "Connect a socket to an address",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "stdioopen",
+        signature: "stdioopen({opts})",
+        description: "Open stdin and stdout as a channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "msgpackdump",
+        signature: "msgpackdump({list} [, {type}])",
+        description: "Convert list to msgpack",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "msgpackparse",
+        signature: "msgpackparse({data})",
+        description: "Convert msgpack to list",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "ctxget",
+        signature: "ctxget([{index}])",
+        description: "Return context at index from context stack",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "ctxpop",
+        signature: "ctxpop()",
+        description: "Pop and restore context from stack",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "ctxpush",
+        signature: "ctxpush([{types}])",
+        description: "Push current context on stack",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "ctxset",
+        signature: "ctxset({context} [, {index}])",
+        description: "Set context at index on stack",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "ctxsize",
+        signature: "ctxsize()",
+        description: "Return size of context stack",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "dictwatcheradd",
+        signature: "dictwatcheradd({dict}, {pattern}, {callback})",
+        description: "Add a watcher to a dictionary",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "dictwatcherdel",
+        signature: "dictwatcherdel({dict}, {pattern}, {callback})",
+        description: "Remove a watcher from a dictionary",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "wait",
+        signature: "wait({timeout}, {condition} [, {interval}])",
+        description: "Wait until condition is true or timeout",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "err_teapot",
+        signature: "err_teapot([{expr}])",
+        description: "Produce error E418 or E503",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "exists_compiled",
+        signature: "exists_compiled({expr})",
+        description: "Check if expression exists at compile time",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "filecopy",
+        signature: "filecopy({from}, {to})",
+        description: "Copy file from one location to another",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "foreach",
+        signature: "foreach({expr1}, {expr2})",
+        description: "Call function for each item without modifying",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "getcellpixels",
+        signature: "getcellpixels()",
+        description: "Return terminal cell pixel size",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "getcmdcomplpat",
+        signature: "getcmdcomplpat()",
+        description: "Return completion pattern of command-line",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "getcmdprompt",
+        signature: "getcmdprompt()",
+        description: "Return current command-line prompt",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "getcompletiontype",
+        signature: "getcompletiontype({pat})",
+        description: "Return type of command-line completion",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "getstacktrace",
+        signature: "getstacktrace()",
+        description: "Return current stack trace",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "js_decode",
+        signature: "js_decode({string})",
+        description: "Decode JS style JSON",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "js_encode",
+        signature: "js_encode({expr})",
+        description: "Encode JS style JSON",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "menu_get",
+        signature: "menu_get({path} [, {modes}])",
+        description: "Return list of menus matching path",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "ngettext",
+        signature: "ngettext({single}, {plural}, {number} [, {domain}])",
+        description: "Return translated string based on number",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "popup_setbuf",
+        signature: "popup_setbuf({id}, {buf})",
+        description: "Set buffer for popup window",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "preinserted",
+        signature: "preinserted()",
+        description: "Return if text is pre-inserted after cursor",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "prompt_getinput",
+        signature: "prompt_getinput({buf})",
+        description: "Get input from prompt buffer",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "redraw_listener_add",
+        signature: "redraw_listener_add({callback})",
+        description: "Add a callback for redraw events",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "redraw_listener_remove",
+        signature: "redraw_listener_remove({id})",
+        description: "Remove a redraw listener callback",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "reg_recorded",
+        signature: "reg_recorded()",
+        description: "Return name of last recorded register",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "terminalprops",
+        signature: "terminalprops()",
+        description: "Return terminal properties dictionary",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_alloc_fail",
+        signature: "test_alloc_fail({id}, {countdown}, {repeat})",
+        description: "Make memory allocation fail for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_autochdir",
+        signature: "test_autochdir()",
+        description: "Enable autochdir during startup for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_feedinput",
+        signature: "test_feedinput({string})",
+        description: "Add key sequence to input buffer for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_garbagecollect_now",
+        signature: "test_garbagecollect_now()",
+        description: "Free memory immediately for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_garbagecollect_soon",
+        signature: "test_garbagecollect_soon()",
+        description: "Free memory soon for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_getvalue",
+        signature: "test_getvalue({string})",
+        description: "Get value of internal variable for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_gui_event",
+        signature: "test_gui_event({event}, {args})",
+        description: "Generate GUI event for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_ignore_error",
+        signature: "test_ignore_error({expr})",
+        description: "Ignore specific error for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_mswin_event",
+        signature: "test_mswin_event({event}, {args})",
+        description: "Generate MS-Windows event for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_blob",
+        signature: "test_null_blob()",
+        description: "Return null blob for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_channel",
+        signature: "test_null_channel()",
+        description: "Return null channel for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_dict",
+        signature: "test_null_dict()",
+        description: "Return null dict for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_function",
+        signature: "test_null_function()",
+        description: "Return null function for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_job",
+        signature: "test_null_job()",
+        description: "Return null job for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_list",
+        signature: "test_null_list()",
+        description: "Return null list for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_partial",
+        signature: "test_null_partial()",
+        description: "Return null partial for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_string",
+        signature: "test_null_string()",
+        description: "Return null string for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_null_tuple",
+        signature: "test_null_tuple()",
+        description: "Return null tuple for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_option_not_set",
+        signature: "test_option_not_set({name})",
+        description: "Reset flag indicating option was set",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_override",
+        signature: "test_override({expr}, {val})",
+        description: "Override Vim internal for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_refcount",
+        signature: "test_refcount({expr})",
+        description: "Get reference count for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_setmouse",
+        signature: "test_setmouse({row}, {col})",
+        description: "Set mouse position for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_settime",
+        signature: "test_settime({expr})",
+        description: "Set current time for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_srand_seed",
+        signature: "test_srand_seed([{seed}])",
+        description: "Set seed for srand testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_unknown",
+        signature: "test_unknown()",
+        description: "Return unknown value for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "test_void",
+        signature: "test_void()",
+        description: "Return void value for testing",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "uri_decode",
+        signature: "uri_decode({string})",
+        description: "URI-decode a string",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "uri_encode",
+        signature: "uri_encode({string})",
+        description: "URI-encode a string",
+        availability: Availability::VimOnly,
+    },
+    BuiltinFunction {
+        name: "wildtrigger",
+        signature: "wildtrigger()",
+        description: "Start wildcard expansion in command-line",
+        availability: Availability::Common,
+    },
+    BuiltinFunction {
+        name: "nvim__complete_set",
+        signature: "nvim__complete_set({index}, {opts})",
+        description: "Set info for completion item at given index (experimental)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__exec_lua_fast",
+        signature: "nvim__exec_lua_fast({code}, {args})",
+        description: "Execute Lua code during api-fast contexts (experimental)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__get_runtime",
+        signature: "nvim__get_runtime({pat}, {all}, {opts})",
+        description: "Find files in runtime directories",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__id",
+        signature: "nvim__id({obj})",
+        description: "Returns object given as argument (testing)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__id_array",
+        signature: "nvim__id_array({arr})",
+        description: "Returns array given as argument (testing)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__id_dict",
+        signature: "nvim__id_dict({dct})",
+        description: "Returns dict given as argument (testing)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__id_float",
+        signature: "nvim__id_float({flt})",
+        description: "Returns floating-point value given as argument (testing)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__inspect_cell",
+        signature: "nvim__inspect_cell({grid}, {row}, {col})",
+        description: "Inspect a cell in the grid",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__invalidate_glyph_cache",
+        signature: "nvim__invalidate_glyph_cache()",
+        description: "Force a glyph cache clear (testing)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__ns_get",
+        signature: "nvim__ns_get({ns_id})",
+        description: "Get the properties for namespace (experimental)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__ns_set",
+        signature: "nvim__ns_set({ns_id}, {opts})",
+        description: "Set some properties for namespace (experimental)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__redraw",
+        signature: "nvim__redraw({opts})",
+        description: "Instruct Nvim to redraw various components (experimental)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim__stats",
+        signature: "nvim__stats()",
+        description: "Gets internal stats",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_attach",
+        signature: "nvim_buf_attach({buffer}, {send_buffer}, {opts})",
+        description: "Activates buffer-update events on a channel or as Lua callbacks",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_call",
+        signature: "nvim_buf_call({buffer}, {fun})",
+        description: "Call a function with buffer as temporary current buffer",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_clear_namespace",
+        signature: "nvim_buf_clear_namespace({buffer}, {ns_id}, {line_start}, {line_end})",
+        description: "Clears namespaced objects from a region",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_create_user_command",
+        signature: "nvim_buf_create_user_command({buffer}, {name}, {command}, {opts})",
+        description: "Creates a buffer-local command",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_del_mark",
+        signature: "nvim_buf_del_mark({buffer}, {name})",
+        description: "Deletes a named mark in the buffer",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_del_user_command",
+        signature: "nvim_buf_del_user_command({buffer}, {name})",
+        description: "Delete a buffer-local user-defined command",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_del_var",
+        signature: "nvim_buf_del_var({buffer}, {name})",
+        description: "Removes a buffer-scoped (b:) variable",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_detach",
+        signature: "nvim_buf_detach({buffer})",
+        description: "Deactivates buffer-update events on the channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_get_changedtick",
+        signature: "nvim_buf_get_changedtick({buffer})",
+        description: "Gets a changed tick of a buffer",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_get_commands",
+        signature: "nvim_buf_get_commands({buffer}, {opts})",
+        description: "Gets a map of buffer-local user-commands",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_get_extmark_by_id",
+        signature: "nvim_buf_get_extmark_by_id({buffer}, {ns_id}, {id}, {opts})",
+        description: "Gets the position of an extmark",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_get_keymap",
+        signature: "nvim_buf_get_keymap({buffer}, {mode})",
+        description: "Gets a list of buffer-local mapping definitions",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_get_mark",
+        signature: "nvim_buf_get_mark({buffer}, {name})",
+        description: "Returns a (row,col) tuple representing the position of the named mark",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_get_offset",
+        signature: "nvim_buf_get_offset({buffer}, {index})",
+        description: "Returns the byte offset of a line (0-indexed)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_is_loaded",
+        signature: "nvim_buf_is_loaded({buffer})",
+        description: "Checks if a buffer is valid and loaded",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_buf_set_mark",
+        signature: "nvim_buf_set_mark({buffer}, {name}, {line}, {col}, {opts})",
+        description: "Sets a named mark in the given buffer",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_call_dict_function",
+        signature: "nvim_call_dict_function({dict}, {fn}, {args})",
+        description: "Calls a Vimscript Dictionary-function with the given arguments",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_chan_send",
+        signature: "nvim_chan_send({chan}, {data})",
+        description: "Sends raw data to channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_clear_autocmds",
+        signature: "nvim_clear_autocmds({opts})",
+        description: "Clears all autocommands selected by opts",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_cmd",
+        signature: "nvim_cmd({cmd}, {opts})",
+        description: "Executes an Ex command (structured Dict)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_create_user_command",
+        signature: "nvim_create_user_command({name}, {command}, {opts})",
+        description: "Creates a global user-commands command",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_del_current_line",
+        signature: "nvim_del_current_line()",
+        description: "Deletes the current line",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_del_mark",
+        signature: "nvim_del_mark({name})",
+        description: "Deletes an uppercase/file named mark",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_del_user_command",
+        signature: "nvim_del_user_command({name})",
+        description: "Delete a user-defined command",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_error_event",
+        signature: "nvim_error_event({type}, {msg})",
+        description: "Emitted on the client channel if an async API request responds with an error",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_eval_statusline",
+        signature: "nvim_eval_statusline({str}, {opts})",
+        description: "Evaluates statusline string",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_exec_autocmds",
+        signature: "nvim_exec_autocmds({event}, {opts})",
+        description: "Execute all autocommands for event that match the corresponding opts",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_all_options_info",
+        signature: "nvim_get_all_options_info()",
+        description: "Gets the option information for all options",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_api_info",
+        signature: "nvim_get_api_info()",
+        description: "Returns a 2-tuple (Array) with channel id and api-metadata map",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_autocmds",
+        signature: "nvim_get_autocmds({opts})",
+        description: "Get all autocommands that match the corresponding opts",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_chan_info",
+        signature: "nvim_get_chan_info({chan})",
+        description: "Gets information about a channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_color_by_name",
+        signature: "nvim_get_color_by_name({name})",
+        description: "Returns the 24-bit RGB value of a color name or #rrggbb string",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_color_map",
+        signature: "nvim_get_color_map()",
+        description: "Returns a map of color names and RGB values",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_commands",
+        signature: "nvim_get_commands({opts})",
+        description: "Gets a map of global (non-buffer-local) Ex commands",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_context",
+        signature: "nvim_get_context({opts})",
+        description: "Gets a map of the current editor state",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_current_line",
+        signature: "nvim_get_current_line()",
+        description: "Gets the current line",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_current_tabpage",
+        signature: "nvim_get_current_tabpage()",
+        description: "Gets the current tabpage",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_hl_id_by_name",
+        signature: "nvim_get_hl_id_by_name({name})",
+        description: "Gets a highlight group by name",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_hl_ns",
+        signature: "nvim_get_hl_ns({opts})",
+        description: "Gets the active highlight namespace",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_keymap",
+        signature: "nvim_get_keymap({mode})",
+        description: "Gets a list of global (non-buffer-local) mapping definitions",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_mark",
+        signature: "nvim_get_mark({name}, {opts})",
+        description: "Returns a (row, col, buffer, buffername) tuple for uppercase/file mark",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_namespaces",
+        signature: "nvim_get_namespaces()",
+        description: "Gets existing, non-anonymous namespaces",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_proc",
+        signature: "nvim_get_proc({pid})",
+        description: "Gets info describing process pid",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_proc_children",
+        signature: "nvim_get_proc_children({pid})",
+        description: "Gets the immediate children of process pid",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_runtime_file",
+        signature: "nvim_get_runtime_file({name}, {all})",
+        description: "Finds files in runtime directories, in runtimepath order",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_get_vvar",
+        signature: "nvim_get_vvar({name})",
+        description: "Gets a v: variable",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_input_mouse",
+        signature: "nvim_input_mouse({button}, {action}, {modifier}, {grid}, {row}, {col})",
+        description: "Send mouse event from GUI",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_list_chans",
+        signature: "nvim_list_chans()",
+        description: "Get information about all open channels",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_list_runtime_paths",
+        signature: "nvim_list_runtime_paths()",
+        description: "Gets the paths contained in runtime-search-path",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_list_tabpages",
+        signature: "nvim_list_tabpages()",
+        description: "Gets the current list of tab-IDs",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_list_uis",
+        signature: "nvim_list_uis()",
+        description: "Gets a list of dictionaries representing attached UIs",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_load_context",
+        signature: "nvim_load_context({dict})",
+        description: "Sets the current editor state from the given context map",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_open_term",
+        signature: "nvim_open_term({buffer}, {opts})",
+        description: "Open a terminal instance in a buffer",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_parse_cmd",
+        signature: "nvim_parse_cmd({str}, {opts})",
+        description: "Parse command line",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_parse_expression",
+        signature: "nvim_parse_expression({expr}, {flags}, {highlight})",
+        description: "Parse a Vimscript expression",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_paste",
+        signature: "nvim_paste({data}, {crlf}, {phase})",
+        description: "Pastes at cursor (in any mode), and sets redo so dot will repeat",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_put",
+        signature: "nvim_put({lines}, {type}, {after}, {follow})",
+        description: "Puts text at cursor, in any mode",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_select_popupmenu_item",
+        signature: "nvim_select_popupmenu_item({item}, {insert}, {finish}, {opts})",
+        description: "Selects an item in the completion popup menu",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_client_info",
+        signature: "nvim_set_client_info({name}, {version}, {type}, {methods}, {attributes})",
+        description: "Self-identifies the client, and sets optional flags on the channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_current_dir",
+        signature: "nvim_set_current_dir({dir})",
+        description: "Changes the global working directory",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_current_line",
+        signature: "nvim_set_current_line({line})",
+        description: "Sets the text on the current line",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_current_tabpage",
+        signature: "nvim_set_current_tabpage({tabpage})",
+        description: "Sets the current tabpage",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_decoration_provider",
+        signature: "nvim_set_decoration_provider({ns_id}, {opts})",
+        description: "Set or change decoration provider for a namespace",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_hl_ns",
+        signature: "nvim_set_hl_ns({ns_id})",
+        description: "Set active namespace for highlights defined with nvim_set_hl()",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_hl_ns_fast",
+        signature: "nvim_set_hl_ns_fast({ns_id})",
+        description: "Set active namespace for highlights while redrawing",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_set_vvar",
+        signature: "nvim_set_vvar({name}, {value})",
+        description: "Sets a v: variable, if it is not readonly",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_strwidth",
+        signature: "nvim_strwidth({text})",
+        description: "Calculates the number of display cells occupied by text",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_del_var",
+        signature: "nvim_tabpage_del_var({tabpage}, {name})",
+        description: "Removes a tab-scoped (t:) variable",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_get_number",
+        signature: "nvim_tabpage_get_number({tabpage})",
+        description: "Gets the tabpage number",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_get_var",
+        signature: "nvim_tabpage_get_var({tabpage}, {name})",
+        description: "Gets a tab-scoped (t:) variable",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_get_win",
+        signature: "nvim_tabpage_get_win({tabpage})",
+        description: "Gets the current window in a tabpage",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_is_valid",
+        signature: "nvim_tabpage_is_valid({tabpage})",
+        description: "Checks if a tabpage is valid",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_list_wins",
+        signature: "nvim_tabpage_list_wins({tabpage})",
+        description: "Gets the windows in a tabpage",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_set_var",
+        signature: "nvim_tabpage_set_var({tabpage}, {name}, {value})",
+        description: "Sets a tab-scoped (t:) variable",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_tabpage_set_win",
+        signature: "nvim_tabpage_set_win({tabpage}, {win})",
+        description: "Sets the current window in a tabpage",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_attach",
+        signature: "nvim_ui_attach({width}, {height}, {options})",
+        description: "Activates UI events on the channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_detach",
+        signature: "nvim_ui_detach()",
+        description: "Deactivates UI events on the channel",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_pum_set_bounds",
+        signature: "nvim_ui_pum_set_bounds({width}, {height}, {row}, {col})",
+        description: "Tells Nvim the geometry of the popupmenu",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_pum_set_height",
+        signature: "nvim_ui_pum_set_height({height})",
+        description: "Tells Nvim the number of elements displaying in the popupmenu",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_send",
+        signature: "nvim_ui_send({content})",
+        description: "Sends arbitrary data to a UI (experimental)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_set_focus",
+        signature: "nvim_ui_set_focus({gained})",
+        description: "Tells the nvim server if focus was gained or lost by the GUI",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_set_option",
+        signature: "nvim_ui_set_option({name}, {value})",
+        description: "Sets a UI option",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_term_event",
+        signature: "nvim_ui_term_event({event}, {value})",
+        description: "Emitted by the TUI client to signal when a host-terminal event occurred",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_try_resize",
+        signature: "nvim_ui_try_resize({width}, {height})",
+        description: "Try to resize the UI",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_ui_try_resize_grid",
+        signature: "nvim_ui_try_resize_grid({grid}, {width}, {height})",
+        description: "Tell Nvim to resize a grid",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_call",
+        signature: "nvim_win_call({window}, {fun})",
+        description: "Calls a function with window as temporary current window",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_del_var",
+        signature: "nvim_win_del_var({window}, {name})",
+        description: "Removes a window-scoped (w:) variable",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_get_buf",
+        signature: "nvim_win_get_buf({window})",
+        description: "Gets the current buffer in a window",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_get_height",
+        signature: "nvim_win_get_height({window})",
+        description: "Gets the window height",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_get_number",
+        signature: "nvim_win_get_number({window})",
+        description: "Gets the window number",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_get_position",
+        signature: "nvim_win_get_position({window})",
+        description: "Gets the window position in display cells",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_get_tabpage",
+        signature: "nvim_win_get_tabpage({window})",
+        description: "Gets the window tabpage",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_get_width",
+        signature: "nvim_win_get_width({window})",
+        description: "Gets the window width",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_hide",
+        signature: "nvim_win_hide({window})",
+        description: "Closes the window and hide the buffer it contains",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_is_valid",
+        signature: "nvim_win_is_valid({window})",
+        description: "Checks if a window is valid",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_set_buf",
+        signature: "nvim_win_set_buf({window}, {buffer})",
+        description: "Sets the current buffer in a window, without side effects",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_set_height",
+        signature: "nvim_win_set_height({window}, {height})",
+        description: "Sets the window height",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_set_hl_ns",
+        signature: "nvim_win_set_hl_ns({window}, {ns_id})",
+        description: "Set highlight namespace for a window",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_set_width",
+        signature: "nvim_win_set_width({window}, {width})",
+        description: "Sets the window width",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinFunction {
+        name: "nvim_win_text_height",
+        signature: "nvim_win_text_height({window}, {opts})",
+        description: "Computes the number of screen lines occupied by a range of text",
+        availability: Availability::NeovimOnly,
     },
 ];
 
@@ -3772,7 +4781,6 @@ pub struct BuiltinCommand {
 /// List of commonly used Vim Ex commands
 /// Reference: :help ex-cmd-index
 pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
-    // Control flow
     BuiltinCommand {
         name: "if",
         description: "Execute commands when condition is true",
@@ -3848,7 +4856,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Continue loop from start",
         availability: Availability::Common,
     },
-    // Function definition
     BuiltinCommand {
         name: "function",
         description: "Define a function",
@@ -3869,7 +4876,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Call a function",
         availability: Availability::Common,
     },
-    // Variable operations
     BuiltinCommand {
         name: "let",
         description: "Assign value to variable",
@@ -3895,7 +4901,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Unlock variable",
         availability: Availability::Common,
     },
-    // Output
     BuiltinCommand {
         name: "echo",
         description: "Echo expression",
@@ -3931,7 +4936,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Echo in popup window",
         availability: Availability::Common,
     },
-    // Mapping commands
     BuiltinCommand {
         name: "map",
         description: "Define key mapping (all modes)",
@@ -4087,7 +5091,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Clear all mappings (all modes)",
         availability: Availability::Common,
     },
-    // Autocommands
     BuiltinCommand {
         name: "autocmd",
         description: "Define autocommand",
@@ -4108,7 +5111,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Execute autocommands for all buffers",
         availability: Availability::Common,
     },
-    // Settings
     BuiltinCommand {
         name: "set",
         description: "Set option value",
@@ -4124,7 +5126,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Set global option value",
         availability: Availability::Common,
     },
-    // Highlighting
     BuiltinCommand {
         name: "highlight",
         description: "Define highlighting",
@@ -4140,7 +5141,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Load colorscheme",
         availability: Availability::Common,
     },
-    // Command definition
     BuiltinCommand {
         name: "command",
         description: "Define user command",
@@ -4156,7 +5156,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Clear all user commands",
         availability: Availability::Common,
     },
-    // Execution
     BuiltinCommand {
         name: "execute",
         description: "Execute string as Ex command",
@@ -4182,7 +5181,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Stop sourcing current script",
         availability: Availability::Common,
     },
-    // Buffer/Window/Tab
     BuiltinCommand {
         name: "edit",
         description: "Edit a file",
@@ -4258,7 +5256,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Go to previous tab",
         availability: Availability::Common,
     },
-    // File operations
     BuiltinCommand {
         name: "write",
         description: "Write buffer to file",
@@ -4294,7 +5291,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Save buffer to new file",
         availability: Availability::Common,
     },
-    // Search and substitute
     BuiltinCommand {
         name: "substitute",
         description: "Search and replace",
@@ -4310,7 +5306,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Execute command on non-matching lines",
         availability: Availability::Common,
     },
-    // Misc
     BuiltinCommand {
         name: "silent",
         description: "Execute command silently",
@@ -4331,7 +5326,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Set filetype options",
         availability: Availability::Common,
     },
-    // Neovim only
     BuiltinCommand {
         name: "lua",
         description: "Execute Lua code",
@@ -4347,14 +5341,11 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "Execute Lua file",
         availability: Availability::NeovimOnly,
     },
-    // Vim only
     BuiltinCommand {
         name: "vim9script",
         description: "Start Vim9 script",
         availability: Availability::VimOnly,
     },
-    // Additional Ex commands from Vim documentation
-    // Symbol commands
     BuiltinCommand {
         name: "!",
         description: "filter lines or execute an external command",
@@ -4415,7 +5406,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "repeat last \":substitute\"",
         availability: Availability::Common,
     },
-    // Argument list commands
     BuiltinCommand {
         name: "Next",
         description: "go to previous file in the argument list",
@@ -4491,7 +5481,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "go to the first file in the argument list",
         availability: Availability::Common,
     },
-    // Buffer commands
     BuiltinCommand {
         name: "bNext",
         description: "go to previous buffer in the buffer list",
@@ -4567,7 +5556,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "list all buffers",
         availability: Availability::Common,
     },
-    // Window positioning
     BuiltinCommand {
         name: "aboveleft",
         description: "make split window appear left or above",
@@ -4628,7 +5616,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "make following command split vertically",
         availability: Availability::Common,
     },
-    // Quickfix commands
     BuiltinCommand {
         name: "cNext",
         description: "go to previous error",
@@ -4799,7 +5786,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "open or close quickfix window",
         availability: Availability::Common,
     },
-    // Location list commands
     BuiltinCommand {
         name: "lNext",
         description: "go to previous entry in location list",
@@ -5000,7 +5986,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "open or close location window",
         availability: Availability::Common,
     },
-    // Directory commands
     BuiltinCommand {
         name: "cd",
         description: "change directory",
@@ -5036,7 +6021,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "change directory for tab page",
         availability: Availability::Common,
     },
-    // Text manipulation
     BuiltinCommand {
         name: "Print",
         description: "print lines",
@@ -5147,7 +6131,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "print some lines",
         availability: Availability::Common,
     },
-    // Undo/Redo
     BuiltinCommand {
         name: "earlier",
         description: "go to older change, undo",
@@ -5188,7 +6171,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "write undo information to a file",
         availability: Availability::Common,
     },
-    // Mark commands
     BuiltinCommand {
         name: "changes",
         description: "print the change list",
@@ -5224,7 +6206,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "list all marks",
         availability: Availability::Common,
     },
-    // Register/display
     BuiltinCommand {
         name: "ascii",
         description: "print ascii value of character under the cursor",
@@ -5240,7 +6221,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "display the contents of registers",
         availability: Availability::Common,
     },
-    // Tag commands
     BuiltinCommand {
         name: "cscope",
         description: "execute cscope command",
@@ -5376,7 +6356,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "list matching tags and select one",
         availability: Availability::Common,
     },
-    // Tab commands
     BuiltinCommand {
         name: "tabNext",
         description: "go to previous tab page",
@@ -5427,7 +6406,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "list the tab pages and what they contain",
         availability: Availability::Common,
     },
-    // Split window commands
     BuiltinCommand {
         name: "all",
         description: "open a window for each file in the argument list",
@@ -5588,7 +6566,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "get or set window size (obsolete)",
         availability: Availability::Common,
     },
-    // File/session commands
     BuiltinCommand {
         name: "X",
         description: "ask for encryption key",
@@ -5719,7 +6696,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "write if buffer changed and close window",
         availability: Availability::Common,
     },
-    // Diff commands
     BuiltinCommand {
         name: "diffget",
         description: "remove differences in current buffer",
@@ -5755,7 +6731,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "update 'diff' buffers",
         availability: Availability::Common,
     },
-    // Fold commands
     BuiltinCommand {
         name: "fold",
         description: "create a fold",
@@ -5781,7 +6756,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "open folds",
         availability: Availability::Common,
     },
-    // Abbreviation commands
     BuiltinCommand {
         name: "abbreviate",
         description: "enter abbreviation",
@@ -5842,7 +6816,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "remove abbreviation",
         availability: Availability::Common,
     },
-    // Menu commands
     BuiltinCommand {
         name: "amenu",
         description: "enter new menu item for all modes",
@@ -6023,7 +6996,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "remove menu for Visual mode",
         availability: Availability::Common,
     },
-    // Map clear commands
     BuiltinCommand {
         name: "cmapclear",
         description: "clear all mappings for Command-line mode",
@@ -6069,7 +7041,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "remove all mappings for Visual mode",
         availability: Availability::Common,
     },
-    // Help commands
     BuiltinCommand {
         name: "exusage",
         description: "overview of Ex commands",
@@ -6120,7 +7091,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "overview of Normal mode commands",
         availability: Availability::Common,
     },
-    // Search/grep commands
     BuiltinCommand {
         name: "grep",
         description: "run 'grepprg' and jump to first match",
@@ -6161,7 +7131,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "like :vimgrep, but append to current list",
         availability: Availability::Common,
     },
-    // Identifier search
     BuiltinCommand {
         name: "checkpath",
         description: "list included files",
@@ -6222,7 +7191,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "split window and jump to definition of identifier",
         availability: Availability::Common,
     },
-    // Spell commands
     BuiltinCommand {
         name: "mkspell",
         description: "produce .spl spell file",
@@ -6263,7 +7231,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "add spelling mistake",
         availability: Availability::Common,
     },
-    // Debug commands
     BuiltinCommand {
         name: "breakadd",
         description: "add a debugger breakpoint",
@@ -6299,7 +7266,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "stop profiling a function or script",
         availability: Availability::Common,
     },
-    // Script commands
     BuiltinCommand {
         name: "delfunction",
         description: "delete a user function",
@@ -6320,7 +7286,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "version of Vim script used",
         availability: Availability::Common,
     },
-    // Misc commands
     BuiltinCommand {
         name: "behave",
         description: "set mouse and selection behavior",
@@ -6631,7 +7596,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "restores the X server connection",
         availability: Availability::Common,
     },
-    // Scripting languages - Perl
     BuiltinCommand {
         name: "perl",
         description: "execute Perl command",
@@ -6647,7 +7611,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "execute Perl script file",
         availability: Availability::Common,
     },
-    // Scripting languages - Python
     BuiltinCommand {
         name: "py3",
         description: "execute Python 3 command",
@@ -6703,7 +7666,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "execute python_x script file",
         availability: Availability::Common,
     },
-    // Scripting languages - Ruby
     BuiltinCommand {
         name: "ruby",
         description: "execute Ruby command",
@@ -6719,7 +7681,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "execute Ruby script file",
         availability: Availability::Common,
     },
-    // Scripting languages - Tcl
     BuiltinCommand {
         name: "tcl",
         description: "execute Tcl command",
@@ -6735,7 +7696,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "execute Tcl script file",
         availability: Availability::Common,
     },
-    // Scripting languages - MzScheme
     BuiltinCommand {
         name: "mzfile",
         description: "execute MzScheme script file",
@@ -6746,7 +7706,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "execute MzScheme command",
         availability: Availability::Common,
     },
-    // Netbeans
     BuiltinCommand {
         name: "nbclose",
         description: "close the current Netbeans session",
@@ -6762,7 +7721,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "start a new Netbeans session",
         availability: Availability::Common,
     },
-    // Neovim only commands
     BuiltinCommand {
         name: "checkhealth",
         description: "run health checks",
@@ -6793,7 +7751,6 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         description: "manage trusted files",
         availability: Availability::NeovimOnly,
     },
-    // Vim9 only commands
     BuiltinCommand {
         name: "abstract",
         description: "declare a Vim9 abstract class",
@@ -6910,7 +7867,6 @@ pub struct AutocmdEvent {
 /// List of autocmd events
 /// Reference: :help autocmd-events
 pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
-    // Reading
     AutocmdEvent {
         name: "BufNewFile",
         description: "Starting to edit a file that doesn't exist",
@@ -6951,7 +7907,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After reading from stdin",
         availability: Availability::Common,
     },
-    // Writing
     AutocmdEvent {
         name: "BufWrite",
         description: "Starting to write the buffer",
@@ -6982,7 +7937,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "Before writing with :write",
         availability: Availability::Common,
     },
-    // Buffer
     AutocmdEvent {
         name: "BufAdd",
         description: "After adding a buffer to the list",
@@ -7033,7 +7987,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After 'modified' option changes",
         availability: Availability::Common,
     },
-    // File type
     AutocmdEvent {
         name: "FileType",
         description: "When 'filetype' option is set",
@@ -7044,7 +7997,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "When 'syntax' option is set",
         availability: Availability::Common,
     },
-    // Window
     AutocmdEvent {
         name: "WinEnter",
         description: "After entering a window",
@@ -7075,7 +8027,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After window size changed",
         availability: Availability::Common,
     },
-    // Tab
     AutocmdEvent {
         name: "TabEnter",
         description: "After entering a tab page",
@@ -7096,7 +8047,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After closing a tab page",
         availability: Availability::Common,
     },
-    // Cursor
     AutocmdEvent {
         name: "CursorHold",
         description: "Cursor hasn't moved for 'updatetime'",
@@ -7117,7 +8067,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After cursor moved in Insert mode",
         availability: Availability::Common,
     },
-    // Insert mode
     AutocmdEvent {
         name: "InsertEnter",
         description: "Just before entering Insert mode",
@@ -7138,7 +8087,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "Before inserting a character",
         availability: Availability::Common,
     },
-    // Text changes
     AutocmdEvent {
         name: "TextChanged",
         description: "After text changed in Normal mode",
@@ -7164,7 +8112,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After yanking or deleting text",
         availability: Availability::Common,
     },
-    // Vim events
     AutocmdEvent {
         name: "VimEnter",
         description: "After Vim startup",
@@ -7195,7 +8142,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "Before Vim is suspended",
         availability: Availability::Common,
     },
-    // Completion
     AutocmdEvent {
         name: "CompleteDone",
         description: "After completion is done",
@@ -7211,7 +8157,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "After completion menu item changed",
         availability: Availability::Common,
     },
-    // Command line
     AutocmdEvent {
         name: "CmdlineEnter",
         description: "After entering command-line mode",
@@ -7237,7 +8182,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "Before leaving command-line window",
         availability: Availability::Common,
     },
-    // Misc
     AutocmdEvent {
         name: "ColorScheme",
         description: "After loading a colorscheme",
@@ -7313,7 +8257,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "User-defined autocommand",
         availability: Availability::Common,
     },
-    // Neovim only
     AutocmdEvent {
         name: "LspAttach",
         description: "After LSP client attaches to buffer",
@@ -7379,7 +8322,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "When stopping to record a macro",
         availability: Availability::NeovimOnly,
     },
-    // Vim only
     AutocmdEvent {
         name: "SafeState",
         description: "Nothing pending, going to wait for input",
@@ -7390,7 +8332,6 @@ pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
         description: "SafeState triggered again",
         availability: Availability::VimOnly,
     },
-    // Additional events
     AutocmdEvent {
         name: "BufCreate",
         description: "After creating a new buffer (alias for BufAdd)",
@@ -7624,7 +8565,6 @@ pub struct BuiltinOption {
 /// Reference: :help option-list
 pub static BUILTIN_OPTIONS: &[BuiltinOption] = &[
     // ============================================================================
-    // Common options (available in both Vim and Neovim)
     // ============================================================================
     BuiltinOption {
         name: "allowrevins",
@@ -9619,7 +10559,6 @@ pub static BUILTIN_OPTIONS: &[BuiltinOption] = &[
         availability: Availability::Common,
     },
     // ============================================================================
-    // Vim-only options
     // ============================================================================
     BuiltinOption {
         name: "aleph",
@@ -10306,7 +11245,6 @@ pub static BUILTIN_OPTIONS: &[BuiltinOption] = &[
         availability: Availability::VimOnly,
     },
     // ============================================================================
-    // Neovim-only options
     // ============================================================================
     BuiltinOption {
         name: "busy",
@@ -10469,7 +11407,6 @@ pub static HAS_VERSION_PREFIXES: &[&str] = &["patch-", "nvim-"];
 /// List of has() features
 /// Reference: :help feature-list
 pub static HAS_FEATURES: &[HasFeature] = &[
-    // === Neovim-only features ===
     HasFeature {
         name: "nvim",
         description: "Running on Neovim",
@@ -10480,7 +11417,6 @@ pub static HAS_FEATURES: &[HasFeature] = &[
         description: "Windows Subsystem for Linux",
         availability: Availability::NeovimOnly,
     },
-    // === Common features (both Vim and Neovim) ===
     HasFeature {
         name: "acl",
         description: "ACL support",
@@ -10571,7 +11507,6 @@ pub static HAS_FEATURES: &[HasFeature] = &[
         description: "Windows system (64 bit)",
         availability: Availability::Common,
     },
-    // === Vim-only features ===
     HasFeature {
         name: "all_builtin_terms",
         description: "Compiled with all builtin terminals enabled",
@@ -11525,17 +12460,14 @@ mod tests {
 
     #[test]
     fn test_availability_is_compatible() {
-        // EditorMode::Both allows everything
         assert!(Availability::Common.is_compatible(EditorMode::Both));
         assert!(Availability::VimOnly.is_compatible(EditorMode::Both));
         assert!(Availability::NeovimOnly.is_compatible(EditorMode::Both));
 
-        // EditorMode::VimOnly excludes NeovimOnly
         assert!(Availability::Common.is_compatible(EditorMode::VimOnly));
         assert!(Availability::VimOnly.is_compatible(EditorMode::VimOnly));
         assert!(!Availability::NeovimOnly.is_compatible(EditorMode::VimOnly));
 
-        // EditorMode::NeovimOnly excludes VimOnly
         assert!(Availability::Common.is_compatible(EditorMode::NeovimOnly));
         assert!(!Availability::VimOnly.is_compatible(EditorMode::NeovimOnly));
         assert!(Availability::NeovimOnly.is_compatible(EditorMode::NeovimOnly));
