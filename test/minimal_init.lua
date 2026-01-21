@@ -54,13 +54,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- shortcut (default: <C-]>)
     vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, opts) -- normal mode shortcut
 
-    -- Enable autocompletion with LSP omnifunc
-    -- 'autocomplete' (boolean) triggers completion as you type
-    -- 'complete' with 'o' flag uses omnifunc (set by LSP)
-    -- 'completeopt' with 'noselect' prevents auto-selecting first item
-    vim.bo[args.buf].complete = ".,o"
-    vim.bo[args.buf].autocomplete = true
-    vim.opt.completeopt = { "menuone", "noselect" }
+    -- Enable autocompletion (Neovim 0.11+)
+    vim.opt.completeopt = { "menuone", "noselect", "fuzzy" }
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if client and client:supports_method("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
+    end
+  end,
 })
 
 -- Document Highlight: highlight references to the symbol under cursor

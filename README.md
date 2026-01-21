@@ -81,12 +81,48 @@ vim.lsp.enable("hjkls")
 
 #### Optional: Enable autocompletion
 
+Neovim 0.11:
+
 ```lua
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
+    vim.opt.completeopt = { "menuone", "noselect", "fuzzy" }
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if client and client:supports_method("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
+    end
+  end,
+})
+```
+
+Neovim 0.12+ (nightly):
+
+```lua
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    -- 'complete' with 'o' flag: include omnifunc (LSP) in CTRL-N/P completion
+    -- 'autocomplete': trigger completion automatically as you type
     vim.bo[args.buf].complete = ".,o"
     vim.bo[args.buf].autocomplete = true
-    vim.opt.completeopt = { "menuone", "noselect" }
+    vim.opt.completeopt = { "menuone", "noselect", "fuzzy" }
+  end,
+})
+```
+
+#### Optional: Enable document highlight
+
+```lua
+-- Highlight references to the symbol under cursor
+vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+  callback = function()
+    if #vim.lsp.get_clients({ bufnr = 0 }) > 0 then
+      vim.lsp.buf.document_highlight()
+    end
+  end,
+})
+vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+  callback = function()
+    vim.lsp.buf.clear_references()
   end,
 })
 ```
