@@ -14,13 +14,33 @@ use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
 
-use builtins::{BUILTIN_FUNCTIONS, EditorMode};
+use builtins::{
+    AUTOCMD_EVENTS, BUILTIN_COMMANDS, BUILTIN_FUNCTIONS, BUILTIN_OPTIONS, EditorMode, HAS_FEATURES,
+    MAP_OPTIONS,
+};
 use db::{HjklsDatabase, SourceFile};
 use salsa::Setter;
 use symbols::{
     SymbolKind, find_call_at_position, find_identifier_at_position, find_references,
     find_references_with_kind,
 };
+
+/// Completion context based on cursor position
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CompletionContext {
+    /// Line start or command position -> Ex commands
+    Command,
+    /// After autocmd -> event names
+    AutocmdEvent,
+    /// After set/setlocal -> option names
+    Option,
+    /// After map command, typing <... -> map options
+    MapOption,
+    /// Inside has('...') -> feature names
+    HasFeature,
+    /// Expression/function call context -> functions and variables
+    Function,
+}
 
 /// Document state holding text and syntax tree
 struct Document {
@@ -560,6 +580,226 @@ impl Backend {
 
         diagnostics
     }
+
+    /// Build Ex command completions
+    fn build_command_completions(&self, edit_range: Range) -> Vec<CompletionItem> {
+        BUILTIN_COMMANDS
+            .iter()
+            .filter(|cmd| cmd.availability.is_compatible(self.editor_mode))
+            .map(|cmd| {
+                let label_suffix = cmd.availability.label_suffix();
+                let documentation = if label_suffix.is_empty() {
+                    cmd.description.to_string()
+                } else {
+                    format!("{}\n{}", label_suffix.trim(), cmd.description)
+                };
+                CompletionItem {
+                    label: cmd.name.to_string(),
+                    kind: Some(CompletionItemKind::KEYWORD),
+                    documentation: Some(Documentation::String(documentation)),
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: cmd.name.to_string(),
+                    })),
+                    ..Default::default()
+                }
+            })
+            .collect()
+    }
+
+    /// Build autocmd event completions
+    fn build_autocmd_event_completions(&self, edit_range: Range) -> Vec<CompletionItem> {
+        AUTOCMD_EVENTS
+            .iter()
+            .filter(|event| event.availability.is_compatible(self.editor_mode))
+            .map(|event| {
+                let label_suffix = event.availability.label_suffix();
+                let documentation = if label_suffix.is_empty() {
+                    event.description.to_string()
+                } else {
+                    format!("{}\n{}", label_suffix.trim(), event.description)
+                };
+                CompletionItem {
+                    label: event.name.to_string(),
+                    kind: Some(CompletionItemKind::EVENT),
+                    documentation: Some(Documentation::String(documentation)),
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: event.name.to_string(),
+                    })),
+                    ..Default::default()
+                }
+            })
+            .collect()
+    }
+
+    /// Build option completions
+    fn build_option_completions(&self, edit_range: Range, _line: &str) -> Vec<CompletionItem> {
+        BUILTIN_OPTIONS
+            .iter()
+            .filter(|opt| opt.availability.is_compatible(self.editor_mode))
+            .flat_map(|opt| {
+                let label_suffix = opt.availability.label_suffix();
+                let documentation = if label_suffix.is_empty() {
+                    opt.description.to_string()
+                } else {
+                    format!("{}\n{}", label_suffix.trim(), opt.description)
+                };
+
+                let mut items = vec![CompletionItem {
+                    label: opt.name.to_string(),
+                    kind: Some(CompletionItemKind::PROPERTY),
+                    detail: opt.short.map(|s| format!("short: {}", s)),
+                    documentation: Some(Documentation::String(documentation.clone())),
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: opt.name.to_string(),
+                    })),
+                    ..Default::default()
+                }];
+
+                // Also add short form if available
+                if let Some(short) = opt.short {
+                    items.push(CompletionItem {
+                        label: short.to_string(),
+                        kind: Some(CompletionItemKind::PROPERTY),
+                        detail: Some(format!("long: {}", opt.name)),
+                        documentation: Some(Documentation::String(documentation)),
+                        text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                            range: edit_range,
+                            new_text: short.to_string(),
+                        })),
+                        ..Default::default()
+                    });
+                }
+
+                items
+            })
+            .collect()
+    }
+
+    /// Build map option completions
+    fn build_map_option_completions(&self, edit_range: Range) -> Vec<CompletionItem> {
+        MAP_OPTIONS
+            .iter()
+            .map(|opt| CompletionItem {
+                label: opt.name.to_string(),
+                kind: Some(CompletionItemKind::KEYWORD),
+                documentation: Some(Documentation::String(opt.description.to_string())),
+                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                    range: edit_range,
+                    new_text: opt.name.to_string(),
+                })),
+                ..Default::default()
+            })
+            .collect()
+    }
+
+    /// Build has() feature completions
+    fn build_has_feature_completions(&self, edit_range: Range) -> Vec<CompletionItem> {
+        HAS_FEATURES
+            .iter()
+            .filter(|feat| feat.availability.is_compatible(self.editor_mode))
+            .map(|feat| {
+                let label_suffix = feat.availability.label_suffix();
+                let documentation = if label_suffix.is_empty() {
+                    feat.description.to_string()
+                } else {
+                    format!("{}\n{}", label_suffix.trim(), feat.description)
+                };
+                CompletionItem {
+                    label: feat.name.to_string(),
+                    kind: Some(CompletionItemKind::CONSTANT),
+                    documentation: Some(Documentation::String(documentation)),
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: feat.name.to_string(),
+                    })),
+                    ..Default::default()
+                }
+            })
+            .collect()
+    }
+
+    /// Build function/variable completions (original behavior)
+    fn build_function_completions(
+        &self,
+        edit_range: Range,
+        uri_str: &str,
+        content: &str,
+        input_has_scope: bool,
+    ) -> Vec<CompletionItem> {
+        // 1. Built-in functions (filtered by editor mode, with availability labels)
+        let mut items: Vec<CompletionItem> = BUILTIN_FUNCTIONS
+            .iter()
+            .filter(|func| func.availability.is_compatible(self.editor_mode))
+            .map(|func| {
+                let label_suffix = func.availability.label_suffix();
+                let documentation = if label_suffix.is_empty() {
+                    func.description.to_string()
+                } else {
+                    format!("{}\n{}", label_suffix.trim(), func.description)
+                };
+                CompletionItem {
+                    label: func.name.to_string(),
+                    kind: Some(CompletionItemKind::FUNCTION),
+                    detail: Some(func.signature.to_string()),
+                    documentation: Some(Documentation::String(documentation)),
+                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                        range: edit_range,
+                        new_text: func.name.to_string(),
+                    })),
+                    ..Default::default()
+                }
+            })
+            .collect();
+
+        // 2. User-defined symbols from current document
+        let symbols = self.get_symbols(uri_str, content);
+        for sym in symbols {
+            // Skip parameters and empty names
+            if sym.kind == SymbolKind::Parameter || sym.name.is_empty() {
+                continue;
+            }
+            let kind = match sym.kind {
+                SymbolKind::Function => CompletionItemKind::FUNCTION,
+                SymbolKind::Variable => CompletionItemKind::VARIABLE,
+                SymbolKind::Parameter => continue,
+            };
+            let detail = sym.signature.clone().or_else(|| {
+                if sym.kind == SymbolKind::Variable {
+                    Some(format!(
+                        "{} variable",
+                        sym.scope.as_str().trim_end_matches(':')
+                    ))
+                } else {
+                    None
+                }
+            });
+            let full_name = sym.full_name();
+            let has_scope = !sym.scope.as_str().is_empty();
+
+            let filter_text = if has_scope && !input_has_scope {
+                Some(sym.name.clone())
+            } else {
+                None
+            };
+
+            items.push(CompletionItem {
+                label: full_name.clone(),
+                filter_text,
+                kind: Some(kind),
+                detail,
+                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                    range: edit_range,
+                    new_text: full_name,
+                })),
+                ..Default::default()
+            });
+        }
+
+        items
+    }
 }
 
 /// Background workspace indexing function
@@ -899,6 +1139,98 @@ fn count_call_arguments(node: tree_sitter::Node, _source: &str) -> usize {
     count
 }
 
+/// Determine what kind of completion is appropriate based on cursor context
+fn get_completion_context(line: &str, col: usize) -> CompletionContext {
+    let before_cursor = &line[..col.min(line.len())];
+    let trimmed = before_cursor.trim_start();
+
+    // Empty line or only whitespace -> command context
+    if trimmed.is_empty() {
+        return CompletionContext::Command;
+    }
+
+    // Check for specific command patterns
+    // autocmd [group] EVENT -> autocmd event completion
+    if let Some(rest) = trimmed
+        .strip_prefix("autocmd")
+        .or_else(|| trimmed.strip_prefix("au "))
+    {
+        let rest = rest.trim_start();
+        // Skip optional group name (if it doesn't look like an event)
+        // Events are typically CamelCase, groups can be anything
+        let parts: Vec<&str> = rest.split_whitespace().collect();
+        // If we have 0 or 1 parts, we're likely typing the event (or group then event)
+        if parts.len() <= 1 {
+            return CompletionContext::AutocmdEvent;
+        }
+        // If 2+ parts, check if cursor is still in the "event" area
+        // This is a simplification - we assume event comes after optional group
+    }
+
+    // set/setlocal/setglobal OPTION -> option completion
+    if trimmed.starts_with("set ")
+        || trimmed.starts_with("setlocal ")
+        || trimmed.starts_with("setglobal ")
+        || trimmed.starts_with("se ")
+        || trimmed.starts_with("setl ")
+        || trimmed.starts_with("setg ")
+    {
+        return CompletionContext::Option;
+    }
+
+    // map commands with < suggesting map option
+    let map_commands = [
+        "map", "nmap", "vmap", "xmap", "smap", "imap", "cmap", "omap", "lmap", "tmap", "noremap",
+        "nnoremap", "vnoremap", "xnoremap", "snoremap", "inoremap", "cnoremap", "onoremap",
+        "lnoremap", "tnoremap",
+    ];
+    for cmd in &map_commands {
+        if let Some(rest) = trimmed.strip_prefix(cmd) {
+            if rest.starts_with(' ') || rest.is_empty() {
+                let rest = rest.trim_start();
+                // If typing <... it's a map option
+                if rest.ends_with('<')
+                    || rest
+                        .split_whitespace()
+                        .last()
+                        .is_some_and(|s| s.starts_with('<'))
+                {
+                    return CompletionContext::MapOption;
+                }
+            }
+        }
+    }
+
+    // has('... -> feature completion
+    if before_cursor.contains("has('") || before_cursor.contains("has(\"") {
+        // Check if we're inside the has() call
+        let last_has = before_cursor.rfind("has(");
+        if let Some(pos) = last_has {
+            let after_has = &before_cursor[pos..];
+            // If there's an opening quote but no closing quote, we're inside
+            if (after_has.contains('\'') && after_has.matches('\'').count() == 1)
+                || (after_has.contains('"') && after_has.matches('"').count() == 1)
+            {
+                return CompletionContext::HasFeature;
+            }
+        }
+    }
+
+    // Check if line starts with a command (no = or function call pattern)
+    // This is a heuristic: if the line doesn't have = and doesn't look like an expression
+    let first_word = trimmed.split_whitespace().next().unwrap_or("");
+    if !trimmed.contains('=') && !trimmed.contains('(') && !first_word.is_empty() {
+        // If typing the first word, it's likely a command
+        let first_word_end = trimmed.find(char::is_whitespace).unwrap_or(trimmed.len());
+        if col <= before_cursor.len() - trimmed.len() + first_word_end {
+            return CompletionContext::Command;
+        }
+    }
+
+    // Default: function/expression context
+    CompletionContext::Function
+}
+
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         // Capture workspace roots for cross-file features
@@ -1022,8 +1354,8 @@ impl LanguageServer for Backend {
         let uri = params.text_document_position.text_document.uri;
         let position = params.text_document_position.position;
 
-        // Get document content and find the completion token range
-        let (uri_str, content, token_start, input_has_scope) = {
+        // Get document content and determine completion context
+        let (uri_str, content, token_start, input_has_scope, context, line_text) = {
             let docs = self.documents.lock().unwrap();
             let Some(doc) = docs.get(&uri) else {
                 return Ok(Some(CompletionResponse::Array(vec![])));
@@ -1031,15 +1363,29 @@ impl LanguageServer for Backend {
             let content = doc.text.text.clone();
 
             // Find token start position (including scope prefix like s:, g:)
-            let line = content.lines().nth(position.line as usize).unwrap_or("");
+            let line = content
+                .lines()
+                .nth(position.line as usize)
+                .unwrap_or("")
+                .to_string();
             let col = position.character as usize;
-            let token_start = find_completion_token_start(line, col);
+            let token_start = find_completion_token_start(&line, col);
 
             // Check if current input contains a scope prefix (e.g., "g:", "s:")
             let current_input = &line[token_start..col.min(line.len())];
             let input_has_scope = current_input.contains(':');
 
-            (uri.to_string(), content, token_start, input_has_scope)
+            // Determine completion context based on cursor position
+            let context = get_completion_context(&line, col);
+
+            (
+                uri.to_string(),
+                content,
+                token_start,
+                input_has_scope,
+                context,
+                line,
+            )
         };
 
         // Create text edit range for replacing the current token
@@ -1051,81 +1397,33 @@ impl LanguageServer for Backend {
             end: position,
         };
 
-        // 1. Built-in functions (filtered by editor mode, with availability labels)
-        let mut items: Vec<CompletionItem> = BUILTIN_FUNCTIONS
-            .iter()
-            .filter(|func| func.availability.is_compatible(self.editor_mode))
-            .map(|func| {
-                // Add availability label to documentation (e.g., "[Vim only]\n\nDescription...")
-                let label_suffix = func.availability.label_suffix();
-                let documentation = if label_suffix.is_empty() {
-                    func.description.to_string()
-                } else {
-                    format!("{}\n{}", label_suffix.trim(), func.description)
-                };
-                CompletionItem {
-                    label: func.name.to_string(),
-                    kind: Some(CompletionItemKind::FUNCTION),
-                    detail: Some(func.signature.to_string()),
-                    documentation: Some(Documentation::String(documentation)),
-                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
-                        range: edit_range,
-                        new_text: func.name.to_string(),
-                    })),
-                    ..Default::default()
-                }
-            })
-            .collect();
-
-        // 2. User-defined symbols from current document
-        let symbols = self.get_symbols(&uri_str, &content);
-        for sym in symbols {
-            // Skip parameters and empty names
-            if sym.kind == SymbolKind::Parameter || sym.name.is_empty() {
-                continue;
+        // Build completions based on context
+        let items: Vec<CompletionItem> = match context {
+            CompletionContext::Command => {
+                // Ex commands completion
+                self.build_command_completions(edit_range)
             }
-            let kind = match sym.kind {
-                SymbolKind::Function => CompletionItemKind::FUNCTION,
-                SymbolKind::Variable => CompletionItemKind::VARIABLE,
-                SymbolKind::Parameter => continue, // already handled above
-            };
-            let detail = sym.signature.clone().or_else(|| {
-                // For variables, show scope as detail
-                if sym.kind == SymbolKind::Variable {
-                    Some(format!(
-                        "{} variable",
-                        sym.scope.as_str().trim_end_matches(':')
-                    ))
-                } else {
-                    None
-                }
-            });
-            let full_name = sym.full_name();
-            let has_scope = !sym.scope.as_str().is_empty();
-
-            // For scoped symbols, choose filter strategy based on user input:
-            // - If user typed scope prefix (e.g., "g:"), match by full name
-            // - If user typed without scope (e.g., "m"), match by name only
-            let filter_text = if has_scope && !input_has_scope {
-                // User typing without scope -> filter by name only
-                Some(sym.name.clone())
-            } else {
-                // User typing with scope or symbol has no scope -> filter by label (full_name)
-                None
-            };
-
-            items.push(CompletionItem {
-                label: full_name.clone(),
-                filter_text,
-                kind: Some(kind),
-                detail,
-                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
-                    range: edit_range,
-                    new_text: full_name,
-                })),
-                ..Default::default()
-            });
-        }
+            CompletionContext::AutocmdEvent => {
+                // Autocmd event completion
+                self.build_autocmd_event_completions(edit_range)
+            }
+            CompletionContext::Option => {
+                // Option completion
+                self.build_option_completions(edit_range, &line_text)
+            }
+            CompletionContext::MapOption => {
+                // Map option completion
+                self.build_map_option_completions(edit_range)
+            }
+            CompletionContext::HasFeature => {
+                // has() feature completion
+                self.build_has_feature_completions(edit_range)
+            }
+            CompletionContext::Function => {
+                // Function/expression context - original behavior
+                self.build_function_completions(edit_range, &uri_str, &content, input_has_scope)
+            }
+        };
 
         Ok(Some(CompletionResponse::Array(items)))
     }
@@ -2064,4 +2362,111 @@ async fn main() {
 
     let (service, socket) = LspService::new(|client| Backend::new(client, editor_mode));
     Server::new(stdin, stdout, socket).serve(service).await;
+}
+
+#[cfg(test)]
+mod completion_context_tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_line_returns_command() {
+        assert_eq!(get_completion_context("", 0), CompletionContext::Command);
+        assert_eq!(
+            get_completion_context("    ", 4),
+            CompletionContext::Command
+        );
+    }
+
+    #[test]
+    fn test_autocmd_event_context() {
+        // "autocmd " followed by typing event name
+        assert_eq!(
+            get_completion_context("autocmd Buf", 11),
+            CompletionContext::AutocmdEvent
+        );
+        assert_eq!(
+            get_completion_context("autocmd ", 8),
+            CompletionContext::AutocmdEvent
+        );
+        // "au " shorthand
+        assert_eq!(
+            get_completion_context("au FileType", 11),
+            CompletionContext::AutocmdEvent
+        );
+    }
+
+    #[test]
+    fn test_set_option_context() {
+        // "set " followed by option name
+        assert_eq!(
+            get_completion_context("set nu", 6),
+            CompletionContext::Option
+        );
+        assert_eq!(
+            get_completion_context("setlocal expandtab", 18),
+            CompletionContext::Option
+        );
+        assert_eq!(
+            get_completion_context("setg ", 5),
+            CompletionContext::Option
+        );
+    }
+
+    #[test]
+    fn test_map_option_context() {
+        // Map commands with <...> options
+        assert_eq!(
+            get_completion_context("nnoremap <silent", 16),
+            CompletionContext::MapOption
+        );
+        assert_eq!(
+            get_completion_context("nmap <buf", 9),
+            CompletionContext::MapOption
+        );
+        assert_eq!(
+            get_completion_context("inoremap <", 10),
+            CompletionContext::MapOption
+        );
+    }
+
+    #[test]
+    fn test_has_feature_context() {
+        // Inside has('...') call
+        assert_eq!(
+            get_completion_context("if has('nvi", 11),
+            CompletionContext::HasFeature
+        );
+        assert_eq!(
+            get_completion_context("if has(\"py", 10),
+            CompletionContext::HasFeature
+        );
+        assert_eq!(
+            get_completion_context("  has('", 7),
+            CompletionContext::HasFeature
+        );
+    }
+
+    #[test]
+    fn test_command_context() {
+        // Line start with command
+        assert_eq!(get_completion_context("ech", 3), CompletionContext::Command);
+        assert_eq!(get_completion_context("let", 3), CompletionContext::Command);
+    }
+
+    #[test]
+    fn test_function_context() {
+        // Expression context
+        assert_eq!(
+            get_completion_context("let x = str", 11),
+            CompletionContext::Function
+        );
+        assert_eq!(
+            get_completion_context("call MyFunc(arg", 15),
+            CompletionContext::Function
+        );
+        assert_eq!(
+            get_completion_context("return strlen(s", 15),
+            CompletionContext::Function
+        );
+    }
 }

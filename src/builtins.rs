@@ -3758,6 +3758,1898 @@ pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
     },
 ];
 
+// ============================================================================
+// Ex Commands
+// ============================================================================
+
+/// Information about a built-in Ex command
+pub struct BuiltinCommand {
+    pub name: &'static str,
+    pub description: &'static str,
+    pub availability: Availability,
+}
+
+/// List of commonly used Vim Ex commands
+/// Reference: :help ex-cmd-index
+pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
+    // Control flow
+    BuiltinCommand {
+        name: "if",
+        description: "Execute commands when condition is true",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "else",
+        description: "Execute commands when 'if' condition is false",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "elseif",
+        description: "Execute commands when condition is true",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "endif",
+        description: "End 'if' block",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "for",
+        description: "Loop over a list",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "endfor",
+        description: "End 'for' loop",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "while",
+        description: "Loop while condition is true",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "endwhile",
+        description: "End 'while' loop",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "try",
+        description: "Start try block for exception handling",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "catch",
+        description: "Catch exceptions",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "finally",
+        description: "Execute commands regardless of exception",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "endtry",
+        description: "End 'try' block",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "throw",
+        description: "Throw an exception",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "break",
+        description: "Break out of loop",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "continue",
+        description: "Continue loop from start",
+        availability: Availability::Common,
+    },
+    // Function definition
+    BuiltinCommand {
+        name: "function",
+        description: "Define a function",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "endfunction",
+        description: "End function definition",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "return",
+        description: "Return from function",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "call",
+        description: "Call a function",
+        availability: Availability::Common,
+    },
+    // Variable operations
+    BuiltinCommand {
+        name: "let",
+        description: "Assign value to variable",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "const",
+        description: "Define a constant",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unlet",
+        description: "Delete variable",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lockvar",
+        description: "Lock variable",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unlockvar",
+        description: "Unlock variable",
+        availability: Availability::Common,
+    },
+    // Output
+    BuiltinCommand {
+        name: "echo",
+        description: "Echo expression",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echom",
+        description: "Echo message and save in history",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echomsg",
+        description: "Echo message and save in history",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echoerr",
+        description: "Echo error message",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echon",
+        description: "Echo without newline",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echohl",
+        description: "Set highlight group for echo",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "echowindow",
+        description: "Echo in popup window",
+        availability: Availability::Common,
+    },
+    // Mapping commands
+    BuiltinCommand {
+        name: "map",
+        description: "Define key mapping (all modes)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nmap",
+        description: "Define normal mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vmap",
+        description: "Define visual mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xmap",
+        description: "Define visual (not select) mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "smap",
+        description: "Define select mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "imap",
+        description: "Define insert mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cmap",
+        description: "Define command-line mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "omap",
+        description: "Define operator-pending mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lmap",
+        description: "Define language mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tmap",
+        description: "Define terminal mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "noremap",
+        description: "Define non-recursive mapping (all modes)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nnoremap",
+        description: "Define non-recursive normal mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vnoremap",
+        description: "Define non-recursive visual mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xnoremap",
+        description: "Define non-recursive visual (not select) mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "snoremap",
+        description: "Define non-recursive select mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "inoremap",
+        description: "Define non-recursive insert mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cnoremap",
+        description: "Define non-recursive command-line mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "onoremap",
+        description: "Define non-recursive operator-pending mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lnoremap",
+        description: "Define non-recursive language mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tnoremap",
+        description: "Define non-recursive terminal mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "unmap",
+        description: "Remove mapping (all modes)",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "nunmap",
+        description: "Remove normal mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vunmap",
+        description: "Remove visual mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "xunmap",
+        description: "Remove visual (not select) mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sunmap",
+        description: "Remove select mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "iunmap",
+        description: "Remove insert mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "cunmap",
+        description: "Remove command-line mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "ounmap",
+        description: "Remove operator-pending mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "lunmap",
+        description: "Remove language mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tunmap",
+        description: "Remove terminal mode mapping",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "mapclear",
+        description: "Clear all mappings (all modes)",
+        availability: Availability::Common,
+    },
+    // Autocommands
+    BuiltinCommand {
+        name: "autocmd",
+        description: "Define autocommand",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "augroup",
+        description: "Define autocommand group",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "doautocmd",
+        description: "Execute autocommands",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "doautoall",
+        description: "Execute autocommands for all buffers",
+        availability: Availability::Common,
+    },
+    // Settings
+    BuiltinCommand {
+        name: "set",
+        description: "Set option value",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "setlocal",
+        description: "Set local option value",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "setglobal",
+        description: "Set global option value",
+        availability: Availability::Common,
+    },
+    // Highlighting
+    BuiltinCommand {
+        name: "highlight",
+        description: "Define highlighting",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "syntax",
+        description: "Define syntax highlighting",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "colorscheme",
+        description: "Load colorscheme",
+        availability: Availability::Common,
+    },
+    // Command definition
+    BuiltinCommand {
+        name: "command",
+        description: "Define user command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "delcommand",
+        description: "Delete user command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "comclear",
+        description: "Clear all user commands",
+        availability: Availability::Common,
+    },
+    // Execution
+    BuiltinCommand {
+        name: "execute",
+        description: "Execute string as Ex command",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "normal",
+        description: "Execute normal mode commands",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "source",
+        description: "Read and execute commands from file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "runtime",
+        description: "Source files from 'runtimepath'",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "finish",
+        description: "Stop sourcing current script",
+        availability: Availability::Common,
+    },
+    // Buffer/Window/Tab
+    BuiltinCommand {
+        name: "edit",
+        description: "Edit a file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "enew",
+        description: "Edit a new unnamed buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "buffer",
+        description: "Go to buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bdelete",
+        description: "Delete buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "bwipeout",
+        description: "Wipe out buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "split",
+        description: "Split window horizontally",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vsplit",
+        description: "Split window vertically",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "new",
+        description: "Create new window with empty buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vnew",
+        description: "Create new vertical window with empty buffer",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "close",
+        description: "Close window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "only",
+        description: "Close all other windows",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabnew",
+        description: "Create new tab",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabclose",
+        description: "Close tab",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabnext",
+        description: "Go to next tab",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "tabprevious",
+        description: "Go to previous tab",
+        availability: Availability::Common,
+    },
+    // File operations
+    BuiltinCommand {
+        name: "write",
+        description: "Write buffer to file",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wall",
+        description: "Write all buffers",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "quit",
+        description: "Quit window",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "qall",
+        description: "Quit all windows",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wq",
+        description: "Write and quit",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "wqall",
+        description: "Write all and quit",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "saveas",
+        description: "Save buffer to new file",
+        availability: Availability::Common,
+    },
+    // Search and substitute
+    BuiltinCommand {
+        name: "substitute",
+        description: "Search and replace",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "global",
+        description: "Execute command on matching lines",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "vglobal",
+        description: "Execute command on non-matching lines",
+        availability: Availability::Common,
+    },
+    // Misc
+    BuiltinCommand {
+        name: "silent",
+        description: "Execute command silently",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "redraw",
+        description: "Redraw screen",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "sleep",
+        description: "Pause execution",
+        availability: Availability::Common,
+    },
+    BuiltinCommand {
+        name: "filetype",
+        description: "Set filetype options",
+        availability: Availability::Common,
+    },
+    // Neovim only
+    BuiltinCommand {
+        name: "lua",
+        description: "Execute Lua code",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "luado",
+        description: "Execute Lua for each line",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinCommand {
+        name: "luafile",
+        description: "Execute Lua file",
+        availability: Availability::NeovimOnly,
+    },
+    // Vim only
+    BuiltinCommand {
+        name: "vim9script",
+        description: "Start Vim9 script",
+        availability: Availability::VimOnly,
+    },
+];
+
+// ============================================================================
+// Autocmd Events
+// ============================================================================
+
+/// Information about an autocmd event
+pub struct AutocmdEvent {
+    pub name: &'static str,
+    pub description: &'static str,
+    pub availability: Availability,
+}
+
+/// List of autocmd events
+/// Reference: :help autocmd-events
+pub static AUTOCMD_EVENTS: &[AutocmdEvent] = &[
+    // Reading
+    AutocmdEvent {
+        name: "BufNewFile",
+        description: "Starting to edit a file that doesn't exist",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufRead",
+        description: "Starting to edit a new buffer (after reading)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufReadPost",
+        description: "After reading a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufReadPre",
+        description: "Before reading a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufReadCmd",
+        description: "Before reading a buffer (replaces read)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileReadPost",
+        description: "After reading a file with :read",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileReadPre",
+        description: "Before reading a file with :read",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "StdinReadPost",
+        description: "After reading from stdin",
+        availability: Availability::Common,
+    },
+    // Writing
+    AutocmdEvent {
+        name: "BufWrite",
+        description: "Starting to write the buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufWritePost",
+        description: "After writing the buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufWritePre",
+        description: "Before writing the buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufWriteCmd",
+        description: "Before writing buffer (replaces write)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileWritePost",
+        description: "After writing with :write",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FileWritePre",
+        description: "Before writing with :write",
+        availability: Availability::Common,
+    },
+    // Buffer
+    AutocmdEvent {
+        name: "BufAdd",
+        description: "After adding a buffer to the list",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufDelete",
+        description: "Before deleting a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufEnter",
+        description: "After entering a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufLeave",
+        description: "Before leaving a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufWinEnter",
+        description: "After buffer is displayed in a window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufWinLeave",
+        description: "Before buffer is removed from window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufUnload",
+        description: "Before unloading a buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufHidden",
+        description: "Before buffer becomes hidden",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufNew",
+        description: "After creating a new buffer",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "BufModifiedSet",
+        description: "After 'modified' option changes",
+        availability: Availability::Common,
+    },
+    // File type
+    AutocmdEvent {
+        name: "FileType",
+        description: "When 'filetype' option is set",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "Syntax",
+        description: "When 'syntax' option is set",
+        availability: Availability::Common,
+    },
+    // Window
+    AutocmdEvent {
+        name: "WinEnter",
+        description: "After entering a window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "WinLeave",
+        description: "Before leaving a window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "WinNew",
+        description: "After creating a new window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "WinClosed",
+        description: "After closing a window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "WinScrolled",
+        description: "After window scrolled or resized",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "WinResized",
+        description: "After window size changed",
+        availability: Availability::Common,
+    },
+    // Tab
+    AutocmdEvent {
+        name: "TabEnter",
+        description: "After entering a tab page",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TabLeave",
+        description: "Before leaving a tab page",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TabNew",
+        description: "After creating a new tab page",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TabClosed",
+        description: "After closing a tab page",
+        availability: Availability::Common,
+    },
+    // Cursor
+    AutocmdEvent {
+        name: "CursorHold",
+        description: "Cursor hasn't moved for 'updatetime'",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CursorHoldI",
+        description: "Cursor hasn't moved in Insert mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CursorMoved",
+        description: "After cursor moved in Normal mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CursorMovedI",
+        description: "After cursor moved in Insert mode",
+        availability: Availability::Common,
+    },
+    // Insert mode
+    AutocmdEvent {
+        name: "InsertEnter",
+        description: "Just before entering Insert mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "InsertLeave",
+        description: "Just after leaving Insert mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "InsertLeavePre",
+        description: "Just before leaving Insert mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "InsertCharPre",
+        description: "Before inserting a character",
+        availability: Availability::Common,
+    },
+    // Text changes
+    AutocmdEvent {
+        name: "TextChanged",
+        description: "After text changed in Normal mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TextChangedI",
+        description: "After text changed in Insert mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TextChangedP",
+        description: "After text changed during completion",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TextChangedT",
+        description: "After text changed in Terminal mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "TextYankPost",
+        description: "After yanking or deleting text",
+        availability: Availability::Common,
+    },
+    // Vim events
+    AutocmdEvent {
+        name: "VimEnter",
+        description: "After Vim startup",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "VimLeave",
+        description: "Before exiting Vim",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "VimLeavePre",
+        description: "Before exiting Vim (before VimLeave)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "VimResized",
+        description: "After Vim window size changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "VimResume",
+        description: "After Vim resumed from suspend",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "VimSuspend",
+        description: "Before Vim is suspended",
+        availability: Availability::Common,
+    },
+    // Completion
+    AutocmdEvent {
+        name: "CompleteDone",
+        description: "After completion is done",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CompleteDonePre",
+        description: "After completion, before clearing info",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CompleteChanged",
+        description: "After completion menu item changed",
+        availability: Availability::Common,
+    },
+    // Command line
+    AutocmdEvent {
+        name: "CmdlineEnter",
+        description: "After entering command-line mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CmdlineLeave",
+        description: "Before leaving command-line mode",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CmdlineChanged",
+        description: "After command-line text changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CmdwinEnter",
+        description: "After entering command-line window",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "CmdwinLeave",
+        description: "Before leaving command-line window",
+        availability: Availability::Common,
+    },
+    // Misc
+    AutocmdEvent {
+        name: "ColorScheme",
+        description: "After loading a colorscheme",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "ColorSchemePre",
+        description: "Before loading a colorscheme",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "DirChanged",
+        description: "After current directory changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "DirChangedPre",
+        description: "Before current directory changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FocusGained",
+        description: "Vim got input focus",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "FocusLost",
+        description: "Vim lost input focus",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "OptionSet",
+        description: "After option value changed",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "QuickFixCmdPre",
+        description: "Before quickfix command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "QuickFixCmdPost",
+        description: "After quickfix command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SessionLoadPost",
+        description: "After loading session file",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "ShellCmdPost",
+        description: "After executing shell command",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SourcePre",
+        description: "Before sourcing a script",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SourcePost",
+        description: "After sourcing a script",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "SourceCmd",
+        description: "When sourcing (replaces source)",
+        availability: Availability::Common,
+    },
+    AutocmdEvent {
+        name: "User",
+        description: "User-defined autocommand",
+        availability: Availability::Common,
+    },
+    // Neovim only
+    AutocmdEvent {
+        name: "LspAttach",
+        description: "After LSP client attaches to buffer",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "LspDetach",
+        description: "After LSP client detaches from buffer",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "LspRequest",
+        description: "After LSP request is started",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "LspProgress",
+        description: "When LSP progress is updated",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "LspTokenUpdate",
+        description: "After LSP semantic token updated",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "TermOpen",
+        description: "After opening terminal buffer",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "TermClose",
+        description: "After closing terminal buffer",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "TermEnter",
+        description: "After entering Terminal mode",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "TermLeave",
+        description: "After leaving Terminal mode",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "UIEnter",
+        description: "After UI connects",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "UILeave",
+        description: "After UI disconnects",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "RecordingEnter",
+        description: "When starting to record a macro",
+        availability: Availability::NeovimOnly,
+    },
+    AutocmdEvent {
+        name: "RecordingLeave",
+        description: "When stopping to record a macro",
+        availability: Availability::NeovimOnly,
+    },
+    // Vim only
+    AutocmdEvent {
+        name: "SafeState",
+        description: "Nothing pending, going to wait for input",
+        availability: Availability::VimOnly,
+    },
+    AutocmdEvent {
+        name: "SafeStateAgain",
+        description: "SafeState triggered again",
+        availability: Availability::VimOnly,
+    },
+];
+
+// ============================================================================
+// Options
+// ============================================================================
+
+/// Information about a Vim option
+pub struct BuiltinOption {
+    pub name: &'static str,
+    pub short: Option<&'static str>,
+    pub description: &'static str,
+    pub availability: Availability,
+}
+
+/// List of commonly used Vim options
+/// Reference: :help option-list
+pub static BUILTIN_OPTIONS: &[BuiltinOption] = &[
+    // Display
+    BuiltinOption {
+        name: "number",
+        short: Some("nu"),
+        description: "Show line numbers",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "relativenumber",
+        short: Some("rnu"),
+        description: "Show relative line numbers",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "wrap",
+        short: None,
+        description: "Wrap long lines",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "linebreak",
+        short: Some("lbr"),
+        description: "Wrap at word boundaries",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "list",
+        short: None,
+        description: "Show invisible characters",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "listchars",
+        short: Some("lcs"),
+        description: "Characters for 'list' mode",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "cursorline",
+        short: Some("cul"),
+        description: "Highlight cursor line",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "cursorcolumn",
+        short: Some("cuc"),
+        description: "Highlight cursor column",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "signcolumn",
+        short: Some("scl"),
+        description: "When to show sign column",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "colorcolumn",
+        short: Some("cc"),
+        description: "Columns to highlight",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "laststatus",
+        short: Some("ls"),
+        description: "When to show status line",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "showtabline",
+        short: Some("stal"),
+        description: "When to show tab line",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "showmode",
+        short: Some("smd"),
+        description: "Show mode in command line",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "showcmd",
+        short: Some("sc"),
+        description: "Show partial command",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "ruler",
+        short: Some("ru"),
+        description: "Show cursor position",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "title",
+        short: None,
+        description: "Set window title",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "background",
+        short: Some("bg"),
+        description: "Background color brightness",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "termguicolors",
+        short: Some("tgc"),
+        description: "Use GUI colors in terminal",
+        availability: Availability::Common,
+    },
+    // Indentation
+    BuiltinOption {
+        name: "tabstop",
+        short: Some("ts"),
+        description: "Number of spaces for tab",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "shiftwidth",
+        short: Some("sw"),
+        description: "Indent width",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "softtabstop",
+        short: Some("sts"),
+        description: "Spaces for tab in editing",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "expandtab",
+        short: Some("et"),
+        description: "Use spaces instead of tabs",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "autoindent",
+        short: Some("ai"),
+        description: "Copy indent from current line",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "smartindent",
+        short: Some("si"),
+        description: "Smart autoindenting",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "cindent",
+        short: Some("cin"),
+        description: "C-style indenting",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "indentexpr",
+        short: Some("inde"),
+        description: "Expression for indent",
+        availability: Availability::Common,
+    },
+    // Search
+    BuiltinOption {
+        name: "hlsearch",
+        short: Some("hls"),
+        description: "Highlight search matches",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "incsearch",
+        short: Some("is"),
+        description: "Incremental search",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "ignorecase",
+        short: Some("ic"),
+        description: "Ignore case in search",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "smartcase",
+        short: Some("scs"),
+        description: "Override 'ignorecase' if uppercase",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "wrapscan",
+        short: Some("ws"),
+        description: "Search wraps around file",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "magic",
+        short: None,
+        description: "Special characters in patterns",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "gdefault",
+        short: Some("gd"),
+        description: "Global substitute by default",
+        availability: Availability::Common,
+    },
+    // Editing
+    BuiltinOption {
+        name: "hidden",
+        short: Some("hid"),
+        description: "Allow hidden buffers",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "autoread",
+        short: Some("ar"),
+        description: "Auto-read changed files",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "autowrite",
+        short: Some("aw"),
+        description: "Auto-write before commands",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "backup",
+        short: Some("bk"),
+        description: "Keep backup file",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "backupdir",
+        short: Some("bdir"),
+        description: "Directory for backup files",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "swapfile",
+        short: Some("swf"),
+        description: "Use swap file",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "directory",
+        short: Some("dir"),
+        description: "Directory for swap files",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "undofile",
+        short: Some("udf"),
+        description: "Save undo history to file",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "undodir",
+        short: Some("udir"),
+        description: "Directory for undo files",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "undolevels",
+        short: Some("ul"),
+        description: "Maximum undo levels",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "modifiable",
+        short: Some("ma"),
+        description: "Allow modifications",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "readonly",
+        short: Some("ro"),
+        description: "Buffer is read-only",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "textwidth",
+        short: Some("tw"),
+        description: "Maximum line width",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "formatoptions",
+        short: Some("fo"),
+        description: "Auto-formatting options",
+        availability: Availability::Common,
+    },
+    // Completion
+    BuiltinOption {
+        name: "completeopt",
+        short: Some("cot"),
+        description: "Completion options",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "complete",
+        short: Some("cpt"),
+        description: "Completion sources",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "pumheight",
+        short: Some("ph"),
+        description: "Popup menu height",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "pumwidth",
+        short: Some("pw"),
+        description: "Popup menu width",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "wildmenu",
+        short: Some("wmnu"),
+        description: "Command-line completion menu",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "wildmode",
+        short: Some("wim"),
+        description: "Completion mode for wildmenu",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "wildignore",
+        short: Some("wig"),
+        description: "Patterns to ignore in wildmenu",
+        availability: Availability::Common,
+    },
+    // Encoding
+    BuiltinOption {
+        name: "encoding",
+        short: Some("enc"),
+        description: "Internal encoding",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "fileencoding",
+        short: Some("fenc"),
+        description: "File encoding",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "fileencodings",
+        short: Some("fencs"),
+        description: "Encoding detection list",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "fileformat",
+        short: Some("ff"),
+        description: "File line ending format",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "fileformats",
+        short: Some("ffs"),
+        description: "Line ending detection list",
+        availability: Availability::Common,
+    },
+    // Misc
+    BuiltinOption {
+        name: "mouse",
+        short: None,
+        description: "Enable mouse support",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "clipboard",
+        short: Some("cb"),
+        description: "Clipboard integration",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "timeout",
+        short: Some("to"),
+        description: "Timeout for mapped keys",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "timeoutlen",
+        short: Some("tm"),
+        description: "Timeout length in ms",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "ttimeout",
+        short: None,
+        description: "Timeout for key codes",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "ttimeoutlen",
+        short: Some("ttm"),
+        description: "Timeout for key codes in ms",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "updatetime",
+        short: Some("ut"),
+        description: "Swap write and CursorHold delay",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "spell",
+        short: None,
+        description: "Enable spell checking",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "spelllang",
+        short: Some("spl"),
+        description: "Languages for spell checking",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "syntax",
+        short: Some("syn"),
+        description: "Syntax highlighting",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "filetype",
+        short: Some("ft"),
+        description: "File type",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "compatible",
+        short: Some("cp"),
+        description: "Vi compatibility mode",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "belloff",
+        short: Some("bo"),
+        description: "Disable bell for events",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "visualbell",
+        short: Some("vb"),
+        description: "Use visual bell",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "errorbells",
+        short: Some("eb"),
+        description: "Ring bell on errors",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "virtualedit",
+        short: Some("ve"),
+        description: "Allow cursor past end of line",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "scrolloff",
+        short: Some("so"),
+        description: "Lines to keep above/below cursor",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "sidescrolloff",
+        short: Some("siso"),
+        description: "Columns to keep left/right of cursor",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "splitbelow",
+        short: Some("sb"),
+        description: "New window below current",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "splitright",
+        short: Some("spr"),
+        description: "New window right of current",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "equalalways",
+        short: Some("ea"),
+        description: "Make windows equal size",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "foldmethod",
+        short: Some("fdm"),
+        description: "Folding method",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "foldlevel",
+        short: Some("fdl"),
+        description: "Close folds with level",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "foldexpr",
+        short: Some("fde"),
+        description: "Expression for fold level",
+        availability: Availability::Common,
+    },
+    BuiltinOption {
+        name: "foldcolumn",
+        short: Some("fdc"),
+        description: "Width of fold column",
+        availability: Availability::Common,
+    },
+    // Neovim only
+    BuiltinOption {
+        name: "inccommand",
+        short: Some("icm"),
+        description: "Live preview of :substitute",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinOption {
+        name: "winblend",
+        short: None,
+        description: "Window transparency",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinOption {
+        name: "pumblend",
+        short: None,
+        description: "Popup menu transparency",
+        availability: Availability::NeovimOnly,
+    },
+];
+
+// ============================================================================
+// Mapping Options
+// ============================================================================
+
+/// Information about a mapping option
+pub struct MapOption {
+    pub name: &'static str,
+    pub description: &'static str,
+}
+
+/// List of mapping options
+/// Reference: :help :map-arguments
+pub static MAP_OPTIONS: &[MapOption] = &[
+    MapOption {
+        name: "<buffer>",
+        description: "Mapping is local to buffer",
+    },
+    MapOption {
+        name: "<nowait>",
+        description: "Don't wait for longer mappings",
+    },
+    MapOption {
+        name: "<silent>",
+        description: "Don't show mapping in command line",
+    },
+    MapOption {
+        name: "<script>",
+        description: "Only remap script-local mappings",
+    },
+    MapOption {
+        name: "<expr>",
+        description: "RHS is an expression to evaluate",
+    },
+    MapOption {
+        name: "<unique>",
+        description: "Fail if mapping already exists",
+    },
+];
+
+// ============================================================================
+// has() Features
+// ============================================================================
+
+/// Information about a has() feature
+pub struct HasFeature {
+    pub name: &'static str,
+    pub description: &'static str,
+    pub availability: Availability,
+}
+
+/// Version prefixes for has() that should not be warned about
+/// Reference: :help has()
+/// Note: Will be used for diagnostics to allow patch/version checks
+#[allow(dead_code)]
+pub static HAS_VERSION_PREFIXES: &[&str] = &["patch-", "nvim-"];
+
+/// List of has() features
+/// Reference: :help feature-list
+pub static HAS_FEATURES: &[HasFeature] = &[
+    // Editor
+    HasFeature {
+        name: "nvim",
+        description: "Running on Neovim",
+        availability: Availability::NeovimOnly,
+    },
+    HasFeature {
+        name: "vim9script",
+        description: "Vim9 script support",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "vim_starting",
+        description: "True during startup",
+        availability: Availability::Common,
+    },
+    // Language support
+    HasFeature {
+        name: "python3",
+        description: "Python 3 support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "lua",
+        description: "Lua support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "ruby",
+        description: "Ruby support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "perl",
+        description: "Perl support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "tcl",
+        description: "Tcl support",
+        availability: Availability::Common,
+    },
+    // UI
+    HasFeature {
+        name: "gui_running",
+        description: "GUI is running",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "gui",
+        description: "GUI support compiled in",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "termguicolors",
+        description: "True color support",
+        availability: Availability::Common,
+    },
+    // OS
+    HasFeature {
+        name: "unix",
+        description: "Unix-like system",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "win32",
+        description: "32-bit Windows",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "win64",
+        description: "64-bit Windows",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "mac",
+        description: "macOS",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "macunix",
+        description: "macOS with Unix features",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "linux",
+        description: "Linux",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "bsd",
+        description: "BSD",
+        availability: Availability::Common,
+    },
+    // Features
+    HasFeature {
+        name: "clipboard",
+        description: "Clipboard support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "clipboard_working",
+        description: "Clipboard is working",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "conceal",
+        description: "Conceal support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "folding",
+        description: "Folding support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "syntax",
+        description: "Syntax highlighting",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "spell",
+        description: "Spell checking",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "virtualedit",
+        description: "Virtual editing",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "signs",
+        description: "Sign support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "mouse",
+        description: "Mouse support",
+        availability: Availability::Common,
+    },
+    // Core features
+    HasFeature {
+        name: "eval",
+        description: "Expression evaluation",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "float",
+        description: "Floating point support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "job",
+        description: "Job support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "channel",
+        description: "Channel support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "timers",
+        description: "Timer support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "lambda",
+        description: "Lambda expressions",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "packages",
+        description: "Package support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "terminal",
+        description: "Terminal support",
+        availability: Availability::Common,
+    },
+    HasFeature {
+        name: "textprop",
+        description: "Text properties",
+        availability: Availability::VimOnly,
+    },
+    HasFeature {
+        name: "popupwin",
+        description: "Popup window support",
+        availability: Availability::VimOnly,
+    },
+];
+
 #[cfg(test)]
 mod tests {
     use super::*;
