@@ -301,6 +301,103 @@ impl Backend {
         }
     }
 
+    /// Collect warnings for scope violations (l: or a: used outside functions)
+    fn collect_scope_violations(&self, tree: &Tree, source: &str) -> Vec<Diagnostic> {
+        let mut diagnostics = Vec::new();
+        let root = tree.root_node();
+        self.collect_scope_violations_recursive(&root, source, false, &mut diagnostics);
+        diagnostics
+    }
+
+    fn collect_scope_violations_recursive(
+        &self,
+        node: &tree_sitter::Node,
+        source: &str,
+        inside_function: bool,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        // Check if we're entering a function definition
+        let is_function = node.kind() == "function_definition";
+        let in_func = inside_function || is_function;
+
+        // Check for scoped identifiers with l: scope (e.g., let l:var = 1)
+        if node.kind() == "scoped_identifier" {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            if let Some(scope_node) = children.iter().find(|c| c.kind() == "scope") {
+                if let Ok(scope_text) = scope_node.utf8_text(source.as_bytes()) {
+                    // l: is only valid inside functions
+                    if scope_text == "l:" && !in_func {
+                        let start = node.start_position();
+                        let end = node.end_position();
+                        let var_name = node.utf8_text(source.as_bytes()).unwrap_or("?");
+
+                        diagnostics.push(Diagnostic {
+                            range: Range {
+                                start: Position {
+                                    line: start.row as u32,
+                                    character: start.column as u32,
+                                },
+                                end: Position {
+                                    line: end.row as u32,
+                                    character: end.column as u32,
+                                },
+                            },
+                            severity: Some(DiagnosticSeverity::WARNING),
+                            source: Some("hjkls".to_string()),
+                            message: format!(
+                                "Scope violation: '{}' uses local scope (l:) outside of a function",
+                                var_name
+                            ),
+                            ..Default::default()
+                        });
+                    }
+                }
+            }
+        }
+
+        // Check for a: scope usage outside functions
+        // tree-sitter parses a:var as [argument] -> [a:] + [identifier]
+        // or in some contexts as a standalone reference
+        if node.kind() == "a:" && !in_func {
+            // Find the full variable name by looking at the parent and siblings
+            let parent = node.parent();
+            let (start, end, var_name) = if let Some(parent) = parent {
+                let text = parent.utf8_text(source.as_bytes()).unwrap_or("a:?");
+                (parent.start_position(), parent.end_position(), text)
+            } else {
+                (node.start_position(), node.end_position(), "a:?")
+            };
+
+            diagnostics.push(Diagnostic {
+                range: Range {
+                    start: Position {
+                        line: start.row as u32,
+                        character: start.column as u32,
+                    },
+                    end: Position {
+                        line: end.row as u32,
+                        character: end.column as u32,
+                    },
+                },
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some("hjkls".to_string()),
+                message: format!(
+                    "Scope violation: '{}' uses argument scope (a:) outside of a function",
+                    var_name
+                ),
+                ..Default::default()
+            });
+        }
+
+        // Recurse into children
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            self.collect_scope_violations_recursive(&child, source, in_func, diagnostics);
+        }
+    }
+
     /// Find autoload file in workspace or relative to a document
     fn find_autoload_file(
         &self,
@@ -371,6 +468,10 @@ impl Backend {
         let arity_warnings = self.collect_arity_warnings(&tree, &text.text, &uri);
         diagnostics.extend(arity_warnings);
 
+        // Collect scope violation warnings (l: or a: outside functions)
+        let scope_warnings = self.collect_scope_violations(&tree, &text.text);
+        diagnostics.extend(scope_warnings);
+
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
 
@@ -411,6 +512,10 @@ impl Backend {
         // Collect arity warnings (argument count mismatch)
         let arity_warnings = self.collect_arity_warnings(&tree, &text.text, uri);
         diagnostics.extend(arity_warnings);
+
+        // Collect scope violation warnings (l: or a: outside functions)
+        let scope_warnings = self.collect_scope_violations(&tree, &text.text);
+        diagnostics.extend(scope_warnings);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });

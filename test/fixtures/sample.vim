@@ -68,7 +68,21 @@ call search("pattern")
 call search("pattern", "n")
 call search("pattern", "n", 100)
 
+" === Scope violations (should show warnings) ===
+
+" l: and a: are only valid inside functions
+" These should trigger scope violation warnings:
+let l:invalid_local = 1
+echo a:invalid_arg
+
+" Valid: l: inside function
+function! ValidLocalScope()
+  let l:valid = 1
+  return l:valid
+endfunction
+
 " === Invalid syntax (should show errors) ===
+" NOTE: Everything after this section may be affected by syntax errors
 
 " Unclosed function
 function! Broken(

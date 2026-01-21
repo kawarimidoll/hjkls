@@ -32,13 +32,13 @@ T["diagnostics"]["detects syntax errors"] = function()
 
   local diagnostics = H.get_diagnostics(child)
 
-  -- Line 73: function! Broken( - unclosed parenthesis
-  local broken_func = find_diagnostic_at_line(diagnostics, 73)
-  MiniTest.expect.equality(broken_func ~= nil, true, "Expected syntax error on line 74 (0-indexed: 73)")
+  -- Line 88: function! Broken( - unclosed parenthesis (0-indexed: 87)
+  local broken_func = find_diagnostic_at_line(diagnostics, 87)
+  MiniTest.expect.equality(broken_func ~= nil, true, "Expected syntax error on line 88 (0-indexed: 87)")
 
-  -- Line 77: if 1 without endif
-  local missing_endif = find_diagnostic_at_line(diagnostics, 77)
-  MiniTest.expect.equality(missing_endif ~= nil, true, "Expected syntax error on line 78 (0-indexed: 77)")
+  -- Line 92: if 1 without endif (0-indexed: 91)
+  local missing_endif = find_diagnostic_at_line(diagnostics, 91)
+  MiniTest.expect.equality(missing_endif ~= nil, true, "Expected syntax error on line 92 (0-indexed: 91)")
 
   child.stop()
 end
@@ -102,6 +102,33 @@ T["diagnostics"]["reports multiple errors"] = function()
 
   -- Should have multiple diagnostics total
   MiniTest.expect.equality(#diagnostics >= 5, true, "Expected at least 5 diagnostics in sample.vim")
+
+  child.stop()
+end
+
+T["diagnostics"]["detects scope violations"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 75: let l:invalid_local = 1 (0-indexed: 74)
+  local local_err = find_diagnostic_at_line(diagnostics, 74)
+  MiniTest.expect.equality(local_err ~= nil, true, "Expected scope violation for l: outside function")
+
+  -- Line 76: echo a:invalid_arg (0-indexed: 75)
+  local arg_err = find_diagnostic_at_line(diagnostics, 75)
+  MiniTest.expect.equality(arg_err ~= nil, true, "Expected scope violation for a: outside function")
+
+  -- Line 80-81: l:valid inside function should NOT have error (0-indexed: 79-80)
+  local valid_local_79 = find_diagnostic_at_line(diagnostics, 79)
+  local valid_local_80 = find_diagnostic_at_line(diagnostics, 80)
+  -- These should be nil (no error for valid usage inside function)
+  local has_false_positive = (valid_local_79 ~= nil and valid_local_79.message:match("scope")) or
+                             (valid_local_80 ~= nil and valid_local_80.message:match("scope"))
+  MiniTest.expect.equality(has_false_positive, false, "Expected no scope violation for l: inside function")
 
   child.stop()
 end
