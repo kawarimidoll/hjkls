@@ -1,5 +1,5 @@
 {
-  description = "Language Server Protocol implementation for Vim script";
+  description = "Vim script Language Server";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

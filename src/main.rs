@@ -1977,10 +1977,52 @@ impl LanguageServer for Backend {
     }
 }
 
+fn print_version() {
+    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+}
+
+fn print_help() {
+    println!(
+        "{} - {}
+
+Usage: {} [OPTIONS]
+
+Options:
+  -V, --version      Show version information
+      --log=<PATH>   Enable debug logging to specified file
+  -h, --help         Show this help message
+
+This is an LSP server for Vim script. It communicates via stdin/stdout
+using the Language Server Protocol.",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_DESCRIPTION"),
+        env!("CARGO_PKG_NAME")
+    );
+}
+
 #[tokio::main]
 async fn main() {
+    // Parse CLI arguments
+    let args: Vec<String> = std::env::args().collect();
+
+    for arg in &args[1..] {
+        match arg.as_str() {
+            "-V" | "--version" => {
+                print_version();
+                return;
+            }
+            "-h" | "--help" => {
+                print_help();
+                return;
+            }
+            _ => {}
+        }
+    }
+
     // Parse --log=PATH argument
-    let log_path = std::env::args().find_map(|arg| arg.strip_prefix("--log=").map(String::from));
+    let log_path = args
+        .iter()
+        .find_map(|arg| arg.strip_prefix("--log=").map(String::from));
     logger::init(log_path);
 
     let stdin = tokio::io::stdin();

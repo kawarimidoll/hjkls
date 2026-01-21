@@ -3,7 +3,7 @@ name = "hjkls"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-description = "Language Server Protocol implementation for Vim script"
+description = "Vim script Language Server"
 license = "MIT"
 repository = "https://github.com/kawarimidoll/hjkls"
 
