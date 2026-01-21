@@ -201,13 +201,12 @@ impl Backend {
         let uri_str = uri.to_string();
         let symbols = self.get_symbols(&uri_str, source);
 
-        self.collect_arity_warnings_recursive(&mut cursor, source, &symbols, &mut diagnostics);
+        Self::collect_arity_warnings_recursive(&mut cursor, source, &symbols, &mut diagnostics);
 
         diagnostics
     }
 
     fn collect_arity_warnings_recursive(
-        &self,
         cursor: &mut tree_sitter::TreeCursor,
         source: &str,
         symbols: &[symbols::Symbol],
@@ -291,7 +290,7 @@ impl Backend {
 
             // Recurse into children
             if cursor.goto_first_child() {
-                self.collect_arity_warnings_recursive(cursor, source, symbols, diagnostics);
+                Self::collect_arity_warnings_recursive(cursor, source, symbols, diagnostics);
                 cursor.goto_parent();
             }
 
@@ -305,12 +304,11 @@ impl Backend {
     fn collect_scope_violations(&self, tree: &Tree, source: &str) -> Vec<Diagnostic> {
         let mut diagnostics = Vec::new();
         let root = tree.root_node();
-        self.collect_scope_violations_recursive(&root, source, false, &mut diagnostics);
+        Self::collect_scope_violations_recursive(&root, source, false, &mut diagnostics);
         diagnostics
     }
 
     fn collect_scope_violations_recursive(
-        &self,
         node: &tree_sitter::Node,
         source: &str,
         inside_function: bool,
@@ -394,7 +392,7 @@ impl Backend {
         // Recurse into children
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
-            self.collect_scope_violations_recursive(&child, source, in_func, diagnostics);
+            Self::collect_scope_violations_recursive(&child, source, in_func, diagnostics);
         }
     }
 
@@ -1761,10 +1759,8 @@ impl LanguageServer for Backend {
         };
 
         // Don't allow renaming built-in functions
-        if reference.is_call {
-            if BUILTIN_FUNCTIONS.iter().any(|f| f.name == reference.name) {
-                return Ok(None);
-            }
+        if reference.is_call && BUILTIN_FUNCTIONS.iter().any(|f| f.name == reference.name) {
+            return Ok(None);
         }
 
         // For autoload functions, return the full name
