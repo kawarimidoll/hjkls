@@ -37,33 +37,42 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 - Rust 1.85+
 - Nix (optional, for development environment)
 
-## Development
+## Installation
 
-### Setup with Nix (recommended)
+### Try without installing
 
 ```bash
-cp .envrc.sample .envrc
-direnv allow
+nix run github:kawarimidoll/hjkls
 ```
 
-### Build
+### Home Manager (Flakes)
 
-```bash
-cargo build          # Debug build
-cargo build --release # Release build
+Add to your `flake.nix` inputs:
+
+```nix
+{
+  inputs = {
+    hjkls.url = "github:kawarimidoll/hjkls";
+    # ...
+  };
+}
 ```
 
-### Test with Neovim
+Then add to your home configuration:
 
-```bash
-nvim -u test/minimal_init.lua test/test.vim
+```nix
+{ inputs, pkgs, ... }:
+{
+  home.packages = [
+    inputs.hjkls.packages.${pkgs.system}.default
+  ];
+}
 ```
 
-### Lint
+### Cargo
 
 ```bash
-cargo clippy
-cargo fmt --check
+cargo install --git https://github.com/kawarimidoll/hjkls
 ```
 
 ## Editor Setup
@@ -142,6 +151,28 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end
   end,
 })
+```
+
+## Development
+
+### Setup
+
+```bash
+cp .envrc.sample .envrc
+direnv allow
+```
+
+### Commands
+
+```bash
+just          # Show available commands
+just build    # Build debug binary
+just release  # Build release binary
+just check    # Run clippy and check
+just fmt      # Format code (Rust, Markdown, YAML, Nix)
+just test     # Run tests
+just dev-nvim # Open sample file in Neovim for manual testing
+just dev-vim  # Open sample file in Vim for manual testing
 ```
 
 ## License
