@@ -78,6 +78,12 @@ function! s:on_lsp_buffer_enabled() abort
   setlocal complete=.,o
   setlocal completeopt=menuone,noselect
   setlocal autocomplete
+
+  " Folding (zc=close, zo=open, zR=open all, zM=close all)
+  setlocal foldmethod=expr
+  setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
+  setlocal foldtext=lsp#ui#vim#folding#foldtext()
+  setlocal foldlevel=99
 endfunction
 
 augroup lsp_install

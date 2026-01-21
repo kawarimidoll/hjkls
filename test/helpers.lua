@@ -201,4 +201,25 @@ function M.get_signature_help(child)
   return normalize(child.lua_get("_G._test_result"))
 end
 
+--- Get folding ranges for the current buffer
+---@param child table MiniTest child process
+---@return table List of folding ranges {start_line, end_line, kind}
+function M.get_folding_ranges(child)
+  child.lua([[
+    local params = { textDocument = vim.lsp.util.make_text_document_params() }
+    local results = vim.lsp.buf_request_sync(0, 'textDocument/foldingRange', params, 3000)
+    _G._test_result = {}
+    if results and results[1] and results[1].result then
+      for _, range in ipairs(results[1].result) do
+        table.insert(_G._test_result, {
+          start_line = range.startLine,
+          end_line = range.endLine,
+          kind = range.kind,
+        })
+      end
+    end
+  ]])
+  return child.lua_get("_G._test_result")
+end
+
 return M

@@ -14,6 +14,7 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 - [x] Signature help (parameter info on function calls)
 - [x] Workspace symbols (project-wide symbol search)
 - [x] Document highlight (highlight symbol under cursor)
+- [x] Folding range (function/if/for/while/try/augroup)
 
 ## Builtin Function Coverage
 
@@ -123,6 +124,22 @@ vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
   callback = function()
     vim.lsp.buf.clear_references()
+  end,
+})
+```
+
+#### Optional: Enable LSP-based folding
+
+```lua
+-- Enable LSP folding (zc=close, zo=open, zR=open all, zM=close all)
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if client and client:supports_method("textDocument/foldingRange") then
+      vim.wo[args.buf].foldmethod = "expr"
+      vim.wo[args.buf].foldexpr = "v:lua.vim.lsp.foldexpr()"
+      vim.wo[args.buf].foldlevel = 99 -- start with all folds open
+    end
   end,
 })
 ```

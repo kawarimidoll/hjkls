@@ -396,6 +396,43 @@ impl Backend {
         }
     }
 
+    /// Collect folding ranges from tree-sitter AST
+    fn collect_folding_ranges(node: &tree_sitter::Node, ranges: &mut Vec<FoldingRange>) {
+        // Node types that define foldable regions
+        let foldable_kinds = [
+            "function_definition",
+            "if_statement",
+            "for_loop",
+            "while_loop",
+            "try_statement",
+            "augroup",
+        ];
+
+        // Check if current node is foldable
+        if foldable_kinds.contains(&node.kind()) {
+            let start_line = node.start_position().row as u32;
+            let end_line = node.end_position().row as u32;
+
+            // Only create fold if it spans multiple lines
+            if end_line > start_line {
+                ranges.push(FoldingRange {
+                    start_line,
+                    start_character: None,
+                    end_line,
+                    end_character: None,
+                    kind: Some(FoldingRangeKind::Region),
+                    collapsed_text: None,
+                });
+            }
+        }
+
+        // Recurse into children
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            Self::collect_folding_ranges(&child, ranges);
+        }
+    }
+
     /// Find autoload file in workspace or relative to a document
     fn find_autoload_file(
         &self,
@@ -893,6 +930,7 @@ impl LanguageServer for Backend {
                     work_done_progress_options: Default::default(),
                 })),
                 document_highlight_provider: Some(OneOf::Left(true)),
+                folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -1595,6 +1633,26 @@ impl LanguageServer for Backend {
         );
 
         Ok(Some(highlights))
+    }
+
+    async fn folding_range(&self, params: FoldingRangeParams) -> Result<Option<Vec<FoldingRange>>> {
+        let uri = params.text_document.uri;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        let mut ranges = Vec::new();
+        Self::collect_folding_ranges(&doc.tree.root_node(), &mut ranges);
+
+        log_debug!("folding_range: found {} foldable regions", ranges.len());
+
+        if ranges.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(ranges))
+        }
     }
 
     async fn document_symbol(
