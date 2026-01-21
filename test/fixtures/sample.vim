@@ -81,6 +81,25 @@ function! ValidLocalScope()
   return l:valid
 endfunction
 
+" === Undefined function calls (should show warnings) ===
+
+" Undefined script-local function
+call s:NonExistentHelper()
+
+" Undefined global function (capital)
+call UndefinedGlobalFunc()
+
+" Undefined lowercase function (not a built-in)
+call notabuiltin()
+
+" Valid: defined functions should NOT show warnings
+call Hello()
+call s:PrivateHelper()
+
+" Valid: built-in functions should NOT show warnings
+call strlen("test")
+call empty([])
+
 " === Invalid syntax (should show errors) ===
 " NOTE: Everything after this section may be affected by syntax errors
 

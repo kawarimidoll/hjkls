@@ -63,10 +63,12 @@ struct Backend {
     indexing_complete: Arc<AtomicBool>,
     /// Editor mode for filtering completions
     editor_mode: EditorMode,
+    /// Vim runtime path for autoload resolution
+    vimruntime: Option<PathBuf>,
 }
 
 impl Backend {
-    fn new(client: Client, editor_mode: EditorMode) -> Self {
+    fn new(client: Client, editor_mode: EditorMode, vimruntime: Option<PathBuf>) -> Self {
         let mut parser = Parser::new();
         parser
             .set_language(&tree_sitter_vim::language())
@@ -81,6 +83,7 @@ impl Backend {
             source_files: Arc::new(Mutex::new(HashMap::new())),
             indexing_complete: Arc::new(AtomicBool::new(false)),
             editor_mode,
+            vimruntime,
         }
     }
 
@@ -419,6 +422,174 @@ impl Backend {
         }
     }
 
+    /// Collect warnings for undefined function calls.
+    ///
+    /// Checks:
+    /// - Built-in functions (786 in BUILTIN_FUNCTIONS)
+    /// - Script-local functions (s:) - must be defined in the same file
+    /// - Global functions - checked in local symbols and workspace
+    ///
+    /// Skips:
+    /// - Autoload functions (contain #) - handled by collect_autoload_warnings
+    fn collect_undefined_function_warnings(
+        &self,
+        tree: &Tree,
+        source: &str,
+        uri: &Uri,
+    ) -> Vec<Diagnostic> {
+        let mut diagnostics = Vec::new();
+        let mut cursor = tree.walk();
+
+        // Get symbols from current document
+        let uri_str = uri.to_string();
+        let local_symbols = self.get_symbols(&uri_str, source);
+
+        // Get all workspace functions (if indexing is complete)
+        let workspace_functions: Vec<String> = if self.indexing_complete.load(Ordering::SeqCst) {
+            let source_files = self.source_files.lock().unwrap();
+            let db = self.salsa_db.lock().unwrap();
+            source_files
+                .iter()
+                .filter(|(file_uri, _)| *file_uri != &uri_str)
+                .flat_map(|(_, sf)| {
+                    db::parse_symbols(&*db, *sf)
+                        .iter()
+                        .filter(|s| s.kind == symbols::SymbolKind::Function)
+                        .filter(|s| {
+                            // Only include global functions (not s:)
+                            s.scope != symbols::VimScope::Script
+                        })
+                        .map(|s| s.full_name())
+                        .collect::<Vec<_>>()
+                })
+                .collect()
+        } else {
+            vec![]
+        };
+
+        self.collect_undefined_function_warnings_recursive(
+            &mut cursor,
+            source,
+            &local_symbols,
+            &workspace_functions,
+            &mut diagnostics,
+        );
+
+        diagnostics
+    }
+
+    fn collect_undefined_function_warnings_recursive(
+        &self,
+        cursor: &mut tree_sitter::TreeCursor,
+        source: &str,
+        local_symbols: &[symbols::Symbol],
+        workspace_functions: &[String],
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        loop {
+            let node = cursor.node();
+
+            if node.kind() == "call_expression" {
+                if let Some(func_node) = node.child(0) {
+                    let func_name = func_node.utf8_text(source.as_bytes()).unwrap_or("");
+
+                    // Skip empty names and autoload functions (handled separately)
+                    if !func_name.is_empty() && !func_name.contains('#') {
+                        let is_undefined = self.check_if_function_undefined(
+                            func_name,
+                            local_symbols,
+                            workspace_functions,
+                        );
+
+                        if is_undefined {
+                            let start = func_node.start_position();
+                            let end = func_node.end_position();
+
+                            diagnostics.push(Diagnostic {
+                                range: Range {
+                                    start: Position {
+                                        line: start.row as u32,
+                                        character: start.column as u32,
+                                    },
+                                    end: Position {
+                                        line: end.row as u32,
+                                        character: end.column as u32,
+                                    },
+                                },
+                                severity: Some(DiagnosticSeverity::WARNING),
+                                source: Some("hjkls".to_string()),
+                                message: format!("Undefined function: {}", func_name),
+                                ..Default::default()
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Recurse into children
+            if cursor.goto_first_child() {
+                self.collect_undefined_function_warnings_recursive(
+                    cursor,
+                    source,
+                    local_symbols,
+                    workspace_functions,
+                    diagnostics,
+                );
+                cursor.goto_parent();
+            }
+
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+
+    /// Check if a function is undefined
+    /// Returns true if the function should be reported as undefined
+    fn check_if_function_undefined(
+        &self,
+        func_name: &str,
+        local_symbols: &[symbols::Symbol],
+        workspace_functions: &[String],
+    ) -> bool {
+        // Check built-in functions first
+        if BUILTIN_FUNCTIONS.iter().any(|f| f.name == func_name) {
+            return false;
+        }
+
+        // Script-local functions (s:Func) - must be in local symbols
+        if func_name.starts_with("s:") {
+            return !local_symbols
+                .iter()
+                .any(|s| s.kind == symbols::SymbolKind::Function && s.full_name() == func_name);
+        }
+
+        // Global functions with g: prefix
+        if func_name.starts_with("g:") {
+            // Check local symbols
+            if local_symbols
+                .iter()
+                .any(|s| s.kind == symbols::SymbolKind::Function && s.full_name() == func_name)
+            {
+                return false;
+            }
+            // Check workspace
+            return !workspace_functions.contains(&func_name.to_string());
+        }
+
+        // For all other functions (including lowercase not in built-ins),
+        // check local symbols and workspace
+        if local_symbols
+            .iter()
+            .any(|s| s.kind == symbols::SymbolKind::Function && s.full_name() == func_name)
+        {
+            return false;
+        }
+
+        // Check workspace
+        !workspace_functions.contains(&func_name.to_string())
+    }
+
     /// Collect folding ranges from tree-sitter AST
     fn collect_folding_ranges(node: &tree_sitter::Node, ranges: &mut Vec<FoldingRange>) {
         // Node types that define foldable regions
@@ -485,6 +656,15 @@ impl Backend {
                 return Some(full_path);
             }
         }
+
+        // Finally, try $VIMRUNTIME
+        if let Some(runtime) = &self.vimruntime {
+            let full_path = runtime.join(&relative_path);
+            if full_path.exists() {
+                return Some(full_path);
+            }
+        }
+
         None
     }
 
@@ -530,6 +710,10 @@ impl Backend {
         let scope_warnings = self.collect_scope_violations(&tree, &text.text);
         diagnostics.extend(scope_warnings);
 
+        // Collect undefined function warnings
+        let undefined_warnings = self.collect_undefined_function_warnings(&tree, &text.text, &uri);
+        diagnostics.extend(undefined_warnings);
+
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
 
@@ -574,6 +758,10 @@ impl Backend {
         // Collect scope violation warnings (l: or a: outside functions)
         let scope_warnings = self.collect_scope_violations(&tree, &text.text);
         diagnostics.extend(scope_warnings);
+
+        // Collect undefined function warnings
+        let undefined_warnings = self.collect_undefined_function_warnings(&tree, &text.text, uri);
+        diagnostics.extend(undefined_warnings);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });
@@ -2299,11 +2487,12 @@ fn print_help() {
 Usage: {} [OPTIONS]
 
 Options:
-  -V, --version      Show version information
-      --vim-only     Show only Vim-compatible functions in completion
-      --neovim-only  Show only Neovim-compatible functions in completion
-      --log=<PATH>   Enable debug logging to specified file
-  -h, --help         Show this help message
+  -V, --version          Show version information
+      --vim-only         Show only Vim-compatible functions in completion
+      --neovim-only      Show only Neovim-compatible functions in completion
+      --vimruntime=<PATH> Override $VIMRUNTIME path for autoload resolution
+      --log=<PATH>       Enable debug logging to specified file
+  -h, --help             Show this help message
 
 This is an LSP server for Vim script. It communicates via stdin/stdout
 using the Language Server Protocol.",
@@ -2357,10 +2546,18 @@ async fn main() {
         .find_map(|arg| arg.strip_prefix("--log=").map(String::from));
     logger::init(log_path);
 
+    // Parse --vimruntime=PATH or get from environment
+    let vimruntime: Option<PathBuf> = args
+        .iter()
+        .find_map(|arg| arg.strip_prefix("--vimruntime=").map(PathBuf::from))
+        .or_else(|| std::env::var("VIMRUNTIME").ok().map(PathBuf::from))
+        .filter(|p| p.exists());
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
-    let (service, socket) = LspService::new(|client| Backend::new(client, editor_mode));
+    let (service, socket) =
+        LspService::new(|client| Backend::new(client, editor_mode, vimruntime.clone()));
     Server::new(stdin, stdout, socket).serve(service).await;
 }
 

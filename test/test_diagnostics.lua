@@ -32,13 +32,13 @@ T["diagnostics"]["detects syntax errors"] = function()
 
   local diagnostics = H.get_diagnostics(child)
 
-  -- Line 88: function! Broken( - unclosed parenthesis (0-indexed: 87)
-  local broken_func = find_diagnostic_at_line(diagnostics, 87)
-  MiniTest.expect.equality(broken_func ~= nil, true, "Expected syntax error on line 88 (0-indexed: 87)")
+  -- Line 107: function! Broken( - unclosed parenthesis (0-indexed: 106)
+  local broken_func = find_diagnostic_at_line(diagnostics, 106)
+  MiniTest.expect.equality(broken_func ~= nil, true, "Expected syntax error on line 107 (0-indexed: 106)")
 
-  -- Line 92: if 1 without endif (0-indexed: 91)
-  local missing_endif = find_diagnostic_at_line(diagnostics, 91)
-  MiniTest.expect.equality(missing_endif ~= nil, true, "Expected syntax error on line 92 (0-indexed: 91)")
+  -- Line 111: if 1 without endif (0-indexed: 110)
+  local missing_endif = find_diagnostic_at_line(diagnostics, 110)
+  MiniTest.expect.equality(missing_endif ~= nil, true, "Expected syntax error on line 111 (0-indexed: 110)")
 
   child.stop()
 end
@@ -129,6 +129,52 @@ T["diagnostics"]["detects scope violations"] = function()
   local has_false_positive = (valid_local_79 ~= nil and valid_local_79.message:match("scope")) or
                              (valid_local_80 ~= nil and valid_local_80.message:match("scope"))
   MiniTest.expect.equality(has_false_positive, false, "Expected no scope violation for l: inside function")
+
+  child.stop()
+end
+
+T["diagnostics"]["detects undefined function calls"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 87: call s:NonExistentHelper() (0-indexed: 86)
+  local script_func_err = find_diagnostic_at_line(diagnostics, 86)
+  MiniTest.expect.equality(script_func_err ~= nil, true, "Expected undefined function warning for s:NonExistentHelper")
+  if script_func_err then
+    MiniTest.expect.equality(script_func_err.message:match("Undefined function") ~= nil, true)
+  end
+
+  -- Line 90: call UndefinedGlobalFunc() (0-indexed: 89)
+  local global_func_err = find_diagnostic_at_line(diagnostics, 89)
+  MiniTest.expect.equality(global_func_err ~= nil, true, "Expected undefined function warning for UndefinedGlobalFunc")
+  if global_func_err then
+    MiniTest.expect.equality(global_func_err.message:match("Undefined function") ~= nil, true)
+  end
+
+  -- Line 93: call notabuiltin() - lowercase undefined function (0-indexed: 92)
+  local lowercase_func_err = find_diagnostic_at_line(diagnostics, 92)
+  MiniTest.expect.equality(lowercase_func_err ~= nil, true, "Expected undefined function warning for notabuiltin")
+  if lowercase_func_err then
+    MiniTest.expect.equality(lowercase_func_err.message:match("Undefined function") ~= nil, true)
+  end
+
+  -- Lines 96-97: valid user-defined functions should NOT have undefined warnings
+  local valid_hello = find_diagnostic_at_line(diagnostics, 95)
+  local valid_private = find_diagnostic_at_line(diagnostics, 96)
+  local has_user_false_positive = (valid_hello ~= nil and valid_hello.message:match("Undefined")) or
+                                  (valid_private ~= nil and valid_private.message:match("Undefined"))
+  MiniTest.expect.equality(has_user_false_positive, false, "Expected no undefined warning for defined functions")
+
+  -- Lines 100-101: built-in functions should NOT have undefined warnings
+  local valid_strlen = find_diagnostic_at_line(diagnostics, 99)
+  local valid_empty = find_diagnostic_at_line(diagnostics, 100)
+  local has_builtin_false_positive = (valid_strlen ~= nil and valid_strlen.message:match("Undefined")) or
+                                     (valid_empty ~= nil and valid_empty.message:match("Undefined"))
+  MiniTest.expect.equality(has_builtin_false_positive, false, "Expected no undefined warning for built-in functions")
 
   child.stop()
 end
