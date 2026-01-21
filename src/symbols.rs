@@ -268,6 +268,84 @@ pub struct SourceLocation {
     pub end: (usize, usize),
 }
 
+/// A reference location with additional information about whether it's a declaration
+#[derive(Debug, Clone)]
+pub struct ReferenceWithKind {
+    pub location: SourceLocation,
+    pub is_declaration: bool,
+}
+
+/// Find all references to a symbol in the syntax tree with declaration info
+pub fn find_references_with_kind(
+    tree: &Tree,
+    source: &str,
+    name: &str,
+    scope: VimScope,
+) -> Vec<ReferenceWithKind> {
+    let mut references = Vec::new();
+    let root = tree.root_node();
+    find_references_with_kind_in_node(&root, source, name, scope, &mut references);
+    references
+}
+
+fn find_references_with_kind_in_node(
+    node: &Node,
+    source: &str,
+    target_name: &str,
+    target_scope: VimScope,
+    references: &mut Vec<ReferenceWithKind>,
+) {
+    match node.kind() {
+        "identifier" => {
+            if let Ok(name) = node.utf8_text(source.as_bytes()) {
+                if name == target_name && target_scope == VimScope::Implicit {
+                    let is_declaration = is_declaration_node(node);
+                    references.push(ReferenceWithKind {
+                        location: SourceLocation {
+                            start: (node.start_position().row, node.start_position().column),
+                            end: (node.end_position().row, node.end_position().column),
+                        },
+                        is_declaration,
+                    });
+                }
+            }
+        }
+        "scoped_identifier" => {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            let scope_node = children.iter().find(|c| c.kind() == "scope");
+            let ident_node = children.iter().find(|c| c.kind() == "identifier");
+
+            if let (Some(scope_node), Some(ident_node)) = (scope_node, ident_node) {
+                if let (Ok(scope_text), Ok(name)) = (
+                    scope_node.utf8_text(source.as_bytes()),
+                    ident_node.utf8_text(source.as_bytes()),
+                ) {
+                    let scope = VimScope::from_str(scope_text);
+                    if name == target_name && scope == target_scope {
+                        let is_declaration = is_declaration_node(node);
+                        references.push(ReferenceWithKind {
+                            location: SourceLocation {
+                                start: (node.start_position().row, node.start_position().column),
+                                end: (node.end_position().row, node.end_position().column),
+                            },
+                            is_declaration,
+                        });
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        find_references_with_kind_in_node(&child, source, target_name, target_scope, references);
+    }
+}
+
 /// Find all references to a symbol in the syntax tree
 pub fn find_references(
     tree: &Tree,

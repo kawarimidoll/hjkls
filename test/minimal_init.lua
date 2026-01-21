@@ -61,6 +61,19 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.bo[args.buf].complete = ".,o"
     vim.bo[args.buf].autocomplete = true
     vim.opt.completeopt = { "menuone", "noselect" }
+})
+
+-- Document Highlight: highlight references to the symbol under cursor
+vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+  callback = function()
+    if #vim.lsp.get_clients({ bufnr = 0 }) > 0 then
+      vim.lsp.buf.document_highlight()
+    end
+  end,
+})
+vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+  callback = function()
+    vim.lsp.buf.clear_references()
   end,
 })
 

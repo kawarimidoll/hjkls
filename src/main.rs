@@ -17,7 +17,10 @@ use tree_sitter::{Parser, Tree};
 use builtins::BUILTIN_FUNCTIONS;
 use db::{HjklsDatabase, SourceFile};
 use salsa::Setter;
-use symbols::{SymbolKind, find_call_at_position, find_identifier_at_position, find_references};
+use symbols::{
+    SymbolKind, find_call_at_position, find_identifier_at_position, find_references,
+    find_references_with_kind,
+};
 
 /// Document state holding text and syntax tree
 struct Document {
@@ -786,6 +789,7 @@ impl LanguageServer for Backend {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
                 })),
+                document_highlight_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -1426,6 +1430,68 @@ impl LanguageServer for Backend {
         }
 
         Ok(Some(result))
+    }
+
+    async fn document_highlight(
+        &self,
+        params: DocumentHighlightParams,
+    ) -> Result<Option<Vec<DocumentHighlight>>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        // Find the identifier at the cursor position
+        let reference = find_identifier_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        );
+
+        let Some(reference) = reference else {
+            return Ok(None);
+        };
+
+        // Find all references in the current file with declaration info
+        let refs =
+            find_references_with_kind(&doc.tree, &doc.text.text, &reference.name, reference.scope);
+
+        if refs.is_empty() {
+            return Ok(None);
+        }
+
+        let highlights: Vec<DocumentHighlight> = refs
+            .into_iter()
+            .map(|r| DocumentHighlight {
+                range: Range {
+                    start: Position {
+                        line: r.location.start.0 as u32,
+                        character: r.location.start.1 as u32,
+                    },
+                    end: Position {
+                        line: r.location.end.0 as u32,
+                        character: r.location.end.1 as u32,
+                    },
+                },
+                kind: Some(if r.is_declaration {
+                    DocumentHighlightKind::WRITE
+                } else {
+                    DocumentHighlightKind::READ
+                }),
+            })
+            .collect();
+
+        log_debug!(
+            "document_highlight: found {} highlights for '{}'",
+            highlights.len(),
+            reference.name
+        );
+
+        Ok(Some(highlights))
     }
 
     async fn document_symbol(

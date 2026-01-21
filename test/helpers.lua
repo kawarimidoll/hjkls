@@ -163,6 +163,23 @@ function M.get_workspace_symbols(child, query)
   return child.lua_get("_G._test_result")
 end
 
+--- Get document highlights at current cursor position
+---@param child table MiniTest child process
+---@return table List of highlight info {line, kind}
+function M.get_document_highlights(child)
+  child.lua([[
+    local params = vim.lsp.util.make_position_params()
+    local results = vim.lsp.buf_request_sync(0, 'textDocument/documentHighlight', params, 3000)
+    _G._test_result = {}
+    if results and results[1] and results[1].result then
+      for _, hl in ipairs(results[1].result) do
+        table.insert(_G._test_result, { line = hl.range.start.line, kind = hl.kind })
+      end
+    end
+  ]])
+  return child.lua_get("_G._test_result")
+end
+
 --- Get signature help at current position
 ---@param child table MiniTest child process
 ---@return table|nil Signature help {label, active_parameter, parameters} or nil

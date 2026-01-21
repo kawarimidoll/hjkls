@@ -13,6 +13,7 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 - [x] Rename (cross-file support)
 - [x] Signature help (parameter info on function calls)
 - [x] Workspace symbols (project-wide symbol search)
+- [x] Document highlight (highlight symbol under cursor)
 
 ## Builtin Function Coverage
 
