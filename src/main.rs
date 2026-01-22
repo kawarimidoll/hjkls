@@ -15,8 +15,8 @@ use tower_lsp_server::{Client, LanguageServer, LspService, Server};
 use tree_sitter::{Parser, Tree};
 
 use builtins::{
-    AUTOCMD_EVENTS, BUILTIN_COMMANDS, BUILTIN_FUNCTIONS, BUILTIN_OPTIONS, EditorMode, HAS_FEATURES,
-    MAP_OPTIONS,
+    AUTOCMD_EVENTS, BUILTIN_COMMANDS, BUILTIN_FUNCTIONS, BUILTIN_OPTIONS, BUILTIN_VARIABLES,
+    EditorMode, HAS_FEATURES, MAP_OPTIONS,
 };
 use db::{HjklsDatabase, SourceFile};
 use salsa::Setter;
@@ -981,6 +981,30 @@ impl Backend {
                 text_edit: Some(CompletionTextEdit::Edit(TextEdit {
                     range: edit_range,
                     new_text: full_name,
+                })),
+                ..Default::default()
+            });
+        }
+
+        // 3. Built-in variables (v:, b: scope)
+        for var in BUILTIN_VARIABLES
+            .iter()
+            .filter(|v| v.availability.is_compatible(self.editor_mode))
+        {
+            let label_suffix = var.availability.label_suffix();
+            let documentation = if label_suffix.is_empty() {
+                var.description.to_string()
+            } else {
+                format!("{}\n{}", label_suffix.trim(), var.description)
+            };
+            items.push(CompletionItem {
+                label: var.name.to_string(),
+                kind: Some(CompletionItemKind::VARIABLE),
+                detail: Some("predefined variable".to_string()),
+                documentation: Some(Documentation::String(documentation)),
+                text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                    range: edit_range,
+                    new_text: var.name.to_string(),
                 })),
                 ..Default::default()
             });

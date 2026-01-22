@@ -52,6 +52,13 @@ pub struct BuiltinFunction {
     pub availability: Availability,
 }
 
+/// Information about a built-in variable (v: scope)
+pub struct BuiltinVariable {
+    pub name: &'static str,
+    pub description: &'static str,
+    pub availability: Availability,
+}
+
 /// List of Vim built-in functions
 /// Reference: :help function-list
 pub static BUILTIN_FUNCTIONS: &[BuiltinFunction] = &[
@@ -12451,6 +12458,759 @@ pub static HAS_FEATURES: &[HasFeature] = &[
         name: "x11",
         description: "Compiled with X11 support",
         availability: Availability::VimOnly,
+    },
+];
+
+/// List of Vim built-in variables (v: scope)
+/// Reference: :help v:var (Vim), :help vvars (Neovim)
+pub static BUILTIN_VARIABLES: &[BuiltinVariable] = &[
+    // === Common (Vim/Neovim) ===
+    BuiltinVariable {
+        name: "v:argv",
+        description: "Command line arguments Vim was invoked with",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:char",
+        description: "Argument for evaluating 'formatexpr' and typed character in abbreviation",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:charconvert_from",
+        description: "Encoding of file to be converted (valid in 'charconvert')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:charconvert_to",
+        description: "Encoding of file after conversion (valid in 'charconvert')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:cmdarg",
+        description: "Extra arguments (++p, ++enc=, ++ff=) given to file read/write command",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:cmdbang",
+        description: "Set to 1 when '!' was used with file read/write command, otherwise 0",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:collate",
+        description: "Current locale setting for collation order (LC_COLLATE)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:completed_item",
+        description: "Dictionary containing complete-items for most recently completed word",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:count",
+        description: "Count given for the last Normal mode command (0 if no count)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:count1",
+        description: "Like v:count, but defaults to 1 when no count is used",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:ctype",
+        description: "Current locale setting for characters (LC_CTYPE)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:dying",
+        description: "Set to 1 when a deadly signal is caught, increases with each signal",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:echospace",
+        description: "Number of screen cells available for :echo message in last line",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:errmsg",
+        description: "Last error message that occurred (modifiable)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:errors",
+        description: "List of errors found by assert functions",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:event",
+        description: "Dictionary of event data for the current autocommand",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:exception",
+        description: "Value of exception most recently caught and not finished",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:exiting",
+        description: "Exit code, or v:null before VimLeavePre/VimLeave autocmds",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:false",
+        description: "Special value for 'false' in JSON/msgpack (converts to 0 as Number)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fcs_choice",
+        description: "What should happen after FileChangedShell event (reload/edit/ask/empty)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fcs_reason",
+        description: "Reason why FileChangedShell was triggered (deleted/conflict/changed/mode/time)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fname",
+        description: "File name detected when evaluating 'includeexpr'",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fname_diff",
+        description: "Name of diff (patch) file (valid in 'patchexpr')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fname_in",
+        description: "Name of input file (valid in 'charconvert', 'diffexpr', 'patchexpr')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fname_new",
+        description: "Name of new version of file (valid in 'diffexpr')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:fname_out",
+        description: "Name of output file (valid in 'charconvert', 'diffexpr', 'patchexpr')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:folddashes",
+        description: "Dashes representing foldlevel of closed fold (for 'foldtext')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:foldend",
+        description: "Last line of closed fold (for 'foldtext')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:foldlevel",
+        description: "Foldlevel of closed fold (for 'foldtext')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:foldstart",
+        description: "First line of closed fold (for 'foldtext')",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:hlsearch",
+        description: "Variable that indicates whether search highlighting is on",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:insertmode",
+        description: "Mode for InsertEnter/InsertChange events (i/r/v)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:key",
+        description: "Key of current Dictionary item (valid in map()/filter())",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:lang",
+        description: "Current locale setting for messages (LC_MESSAGES)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:lc_time",
+        description: "Current locale setting for time messages (LC_TIME)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:lnum",
+        description: "Line number for 'foldexpr', 'formatexpr', 'indentexpr', 'statuscolumn'",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:maxcol",
+        description: "Maximum line length (currently 2147483647)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:mouse_col",
+        description: "Column number for mouse click from getchar()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:mouse_lnum",
+        description: "Line number for mouse click from getchar()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:mouse_win",
+        description: "Window number for mouse click from getchar()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:mouse_winid",
+        description: "Window ID for mouse click from getchar()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:null",
+        description: "Special value for 'null' in JSON/msgpack (converts to 0 as Number)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:numbermax",
+        description: "Maximum value of a Number",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:numbermin",
+        description: "Minimum value of a Number (negative)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:numbersize",
+        description: "Number of bits in a Number (normally 64, sometimes 32)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:oldfiles",
+        description: "List of file names loaded from shada/viminfo file on startup",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:operator",
+        description: "Last operator given in Normal mode",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:option_command",
+        description: "Command used to set option (setlocal/setglobal/set/modeline)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:option_new",
+        description: "New value of option (valid in OptionSet)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:option_old",
+        description: "Old value of option (valid in OptionSet)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:option_oldglobal",
+        description: "Old global value of option (valid in OptionSet)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:option_oldlocal",
+        description: "Old local value of option (valid in OptionSet)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:option_type",
+        description: "Scope of set command: 'global' or 'local' (valid in OptionSet)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:prevcount",
+        description: "Count given for last but one Normal mode command",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:profiling",
+        description: "Set to 1 after using ':profile start'",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:progname",
+        description: "Name by which Vim/Nvim was invoked (path removed)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:progpath",
+        description: "Absolute path to current running Vim/Nvim",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:register",
+        description: "Name of register in effect for current normal mode command",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:scrollstart",
+        description: "String describing script/function that caused screen scroll",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:searchforward",
+        description: "Search direction: 1 after forward search, 0 after backward search",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:servername",
+        description: "Primary listen-address/server name of Vim/Nvim",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:shell_error",
+        description: "Result of last shell command (-1 if command could not be executed)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:stacktrace",
+        description: "Stack trace of exception most recently caught and not finished",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:statusmsg",
+        description: "Last given status message (modifiable)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:swapchoice",
+        description: "SwapExists autocommand choice for handling existing swapfile",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:swapcommand",
+        description: "Normal mode command to execute after file opened from SwapExists",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:swapname",
+        description: "Name of swapfile found (valid during SwapExists event)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_blob",
+        description: "Value of Blob type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_bool",
+        description: "Value of Boolean type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_dict",
+        description: "Value of Dictionary type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_float",
+        description: "Value of Float type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_func",
+        description: "Value of Funcref type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_list",
+        description: "Value of List type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_number",
+        description: "Value of Number type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:t_string",
+        description: "Value of String type for type()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:termrequest",
+        description: "Value of most recent OSC/DCS/APC control sequence from terminal",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:termresponse",
+        description: "Escape sequence returned by terminal for t_RV termcap entry",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:testing",
+        description: "Must be set before using test_garbagecollect_now()",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:this_session",
+        description: "Full filename of last loaded or saved session file",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:throwpoint",
+        description: "Point where exception most recently caught was thrown",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:true",
+        description: "Special value for 'true' in JSON/msgpack (converts to 1 as Number)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:val",
+        description: "Value of current List/Dictionary item (valid in map()/filter())",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:version",
+        description: "Vim version number: major*100 + minor (e.g., 901 for Vim 9.1)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:versionlong",
+        description: "Vim version including patchlevel (e.g., 9010123 for 9.1.123)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:vim_did_enter",
+        description: "0 during startup, 1 just before VimEnter",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:warningmsg",
+        description: "Last given warning message (modifiable)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "v:windowid",
+        description: "Application-specific window handle (not Vim window-ID)",
+        availability: Availability::Common,
+    },
+    // === Vim only ===
+    BuiltinVariable {
+        name: "v:beval_bufnr",
+        description: "Buffer number over which mouse pointer is (for 'balloonexpr')",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:beval_col",
+        description: "Column number (byte index) for balloon eval",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:beval_lnum",
+        description: "Line number for balloon eval",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:beval_text",
+        description: "Text under or after mouse pointer for balloon eval",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:beval_winid",
+        description: "Window ID for balloon eval",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:beval_winnr",
+        description: "Window number for balloon eval",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:clipmethod",
+        description: "Current method of accessing clipboard (wayland/x11)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:clipproviders",
+        description: "List of available clipboard providers",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:colornames",
+        description: "Dictionary that maps color names to hex color strings",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:none",
+        description: "Special value for empty in JSON (evaluates to 'v:none' as String)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:python3_version",
+        description: "Version of Python 3 that Vim was built against",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:sizeofint",
+        description: "Number of bytes in an int",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:sizeoflong",
+        description: "Number of bytes in a long",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:sizeofpointer",
+        description: "Number of bytes in a pointer",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_channel",
+        description: "Value of Channel type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_class",
+        description: "Value of class type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_enum",
+        description: "Value of enum type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_enumvalue",
+        description: "Value of enumvalue type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_job",
+        description: "Value of Job type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_none",
+        description: "Value of None type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_object",
+        description: "Value of object type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_tuple",
+        description: "Value of Tuple type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:t_typealias",
+        description: "Value of typealias type for type()",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termblinkresp",
+        description: "Escape sequence returned by terminal for t_RC (cursor blink)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termda1",
+        description: "Escape sequence returned by primary device attributes (DA1) query",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termosc",
+        description: "Escape sequence of most recent OSC response from terminal",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termrbgresp",
+        description: "Escape sequence returned by terminal for t_RB (background color)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termrfgresp",
+        description: "Escape sequence returned by terminal for t_RF (foreground color)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termstyleresp",
+        description: "Escape sequence returned by terminal for t_RS (cursor shape)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:termu7resp",
+        description: "Escape sequence returned by terminal for t_u7 (ambiguous width)",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:var",
+        description: "Dummy variable used to access v: scope in expressions",
+        availability: Availability::VimOnly,
+    },
+    BuiltinVariable {
+        name: "v:wayland_display",
+        description: "Name of Wayland display that Vim is connected to",
+        availability: Availability::VimOnly,
+    },
+    // === Neovim only ===
+    BuiltinVariable {
+        name: "v:lua",
+        description: "Prefix for calling Lua functions from Vimscript expressions",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "v:msgpack_types",
+        description: "Dictionary containing msgpack types for msgpackparse()/msgpackdump()",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "v:relnum",
+        description: "Relative line number for 'statuscolumn' expression",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "v:stderr",
+        description: "Channel-id corresponding to stderr (always 2)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "v:virtnum",
+        description: "Virtual line number for 'statuscolumn' expression",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "v:vim_did_init",
+        description: "0 during initialization, 1 after sourcing vimrc and before load-plugins",
+        availability: Availability::NeovimOnly,
+    },
+    // === Buffer-local predefined variables (b:) ===
+    BuiltinVariable {
+        name: "b:changedtick",
+        description: "Total number of changes to the current buffer",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "b:current_syntax",
+        description: "Name of the current syntax (set by syntax files)",
+        availability: Availability::Common,
+    },
+    // === Global predefined variables (g:) ===
+    // Common (Vim and Neovim)
+    BuiltinVariable {
+        name: "g:colors_name",
+        description: "Name of the currently active color scheme",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "g:syntax_on",
+        description: "Set when syntax highlighting is enabled",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "g:actual_curbuf",
+        description: "Buffer number of the actual current buffer during statusline evaluation",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "g:actual_curwin",
+        description: "Window ID of the actual current window during statusline evaluation",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "g:statusline_winid",
+        description: "Window ID of the window the statusline belongs to",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "g:mapleader",
+        description: "Key used as <Leader> in mappings (default: backslash)",
+        availability: Availability::Common,
+    },
+    BuiltinVariable {
+        name: "g:maplocalleader",
+        description: "Key used as <LocalLeader> in buffer-local mappings",
+        availability: Availability::Common,
+    },
+    // Vim only
+    BuiltinVariable {
+        name: "g:actual_curtabpage",
+        description: "Tab page number of the actual current tab during tabpanel evaluation",
+        availability: Availability::VimOnly,
+    },
+    // Neovim only
+    BuiltinVariable {
+        name: "g:health",
+        description: "Dictionary for :checkhealth configuration (e.g., style='float')",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:clipboard",
+        description: "Clipboard tool configuration (name or dict with copy/paste commands)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:termfeatures",
+        description: "Dictionary of terminal feature flags (e.g., osc52)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:editorconfig",
+        description: "Enable/disable EditorConfig integration (default: true)",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:did_load_filetypes",
+        description: "Set to disable the builtin filetype detection",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:python3_host_prog",
+        description: "Path to Python 3 executable for the Python provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:loaded_python3_provider",
+        description: "Set to 0 to disable Python 3 provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:ruby_host_prog",
+        description: "Path to Ruby executable for the Ruby provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:loaded_ruby_provider",
+        description: "Set to 0 to disable Ruby provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:perl_host_prog",
+        description: "Path to Perl executable for the Perl provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:loaded_perl_provider",
+        description: "Set to 0 to disable Perl provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:node_host_prog",
+        description: "Path to Node.js executable for the Node provider",
+        availability: Availability::NeovimOnly,
+    },
+    BuiltinVariable {
+        name: "g:loaded_node_provider",
+        description: "Set to 0 to disable Node.js provider",
+        availability: Availability::NeovimOnly,
     },
 ];
 
