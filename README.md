@@ -18,19 +18,25 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 
 ## Builtin Function Coverage
 
-**Total: 600 functions**
+**Total: 786 functions**
 
 | Category | Count | Description |
 |----------|-------|-------------|
 | Common | ~420 | Vim/Neovim shared functions (`strlen`, `expand`, `bufnr`, etc.) |
-| Vim-only | ~90 | `popup_*`, `ch_*`, `job_*`, `term_*`, etc. |
-| Neovim-only | ~56 | `nvim_*` API functions |
+| Vim-only | ~130 | `popup_*`, `ch_*`, `job_*`, `term_*`, `test_*`, etc. |
+| Neovim-only | ~170 | `nvim_*` API functions |
 
-### Not Supported
+## Builtin Variable Coverage
 
-| Category | Reason |
-|----------|--------|
-| `test_*` functions (~25) | Internal testing functions, not used in plugin development |
+**Total: 149 variables**
+
+| Scope | Count | Examples |
+|-------|-------|----------|
+| `v:` | 126 | `v:version`, `v:errmsg`, `v:true`, `v:false` |
+| `b:` | 2 | `b:changedtick`, `b:current_syntax` |
+| `g:` | 21 | `g:colors_name`, `g:mapleader`, `g:clipboard` |
+
+Only variables with help documentation tags are supported. Runtime-defined variables (e.g., `g:markdown_*` syntax options) are excluded due to dynamic naming and noise.
 
 ## Requirements
 
@@ -174,6 +180,14 @@ just test     # Run tests
 just dev-nvim # Open sample file in Neovim for manual testing
 just dev-vim  # Open sample file in Vim for manual testing
 ```
+
+## Related Projects
+
+- [tower-lsp-server](https://github.com/tombi-toml/tower-lsp-server) - LSP server framework for Rust
+- [texter](https://github.com/airblast-dev/texter) - Text management library with tree-sitter integration
+- [tree-sitter-vim](https://github.com/tree-sitter-grammars/tree-sitter-vim) - Vim script grammar for tree-sitter
+- [salsa](https://github.com/salsa-rs/salsa) - Incremental computation framework
+- [vim-language-server](https://github.com/iamcco/vim-language-server) - Prior art: Vim script LSP in TypeScript
 
 ## License
 
