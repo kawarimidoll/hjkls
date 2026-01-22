@@ -627,6 +627,59 @@ impl Backend {
         }
     }
 
+    /// Build a SelectionRange chain from the innermost node to the root
+    fn build_selection_range(
+        tree: &tree_sitter::Tree,
+        position: &Position,
+    ) -> Option<SelectionRange> {
+        let point = tree_sitter::Point {
+            row: position.line as usize,
+            column: position.character as usize,
+        };
+
+        // Get the smallest named node at the position
+        let mut node = tree
+            .root_node()
+            .named_descendant_for_point_range(point, point)?;
+
+        // Collect ranges from innermost to outermost
+        let mut ranges: Vec<Range> = Vec::new();
+
+        loop {
+            let range = Range {
+                start: Position {
+                    line: node.start_position().row as u32,
+                    character: node.start_position().column as u32,
+                },
+                end: Position {
+                    line: node.end_position().row as u32,
+                    character: node.end_position().column as u32,
+                },
+            };
+
+            // Skip duplicate ranges (when parent has same range as child)
+            if ranges.last().is_none_or(|last| *last != range) {
+                ranges.push(range);
+            }
+
+            match node.parent() {
+                Some(parent) => node = parent,
+                None => break,
+            }
+        }
+
+        // Build linked list from outermost to innermost
+        let mut result: Option<SelectionRange> = None;
+        for range in ranges.into_iter().rev() {
+            result = Some(SelectionRange {
+                range,
+                parent: result.map(Box::new),
+            });
+        }
+
+        result
+    }
+
     /// Find autoload file in workspace or relative to a document
     fn find_autoload_file(
         &self,
@@ -1478,6 +1531,7 @@ impl LanguageServer for Backend {
                 })),
                 document_highlight_provider: Some(OneOf::Left(true)),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
+                selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -2497,6 +2551,36 @@ impl LanguageServer for Backend {
             document_changes: None,
             change_annotations: None,
         }))
+    }
+
+    async fn selection_range(
+        &self,
+        params: SelectionRangeParams,
+    ) -> Result<Option<Vec<SelectionRange>>> {
+        let uri = params.text_document.uri;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
+        let ranges: Vec<SelectionRange> = params
+            .positions
+            .iter()
+            .filter_map(|pos| Self::build_selection_range(&doc.tree, pos))
+            .collect();
+
+        log_debug!(
+            "selection_range: {} positions requested, {} ranges returned",
+            params.positions.len(),
+            ranges.len()
+        );
+
+        if ranges.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(ranges))
+        }
     }
 }
 

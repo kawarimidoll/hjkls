@@ -222,4 +222,42 @@ function M.get_folding_ranges(child)
   return child.lua_get("_G._test_result")
 end
 
+--- Get selection ranges at given positions
+---@param child table MiniTest child process
+---@param positions table List of {line, character} positions (0-indexed)
+---@return table List of selection range chains
+function M.get_selection_ranges(child, positions)
+  -- Set positions as global
+  child.lua("_G._test_positions = " .. vim.inspect(positions))
+  child.lua([[
+    local params = {
+      textDocument = vim.lsp.util.make_text_document_params(),
+      positions = {},
+    }
+    for _, pos in ipairs(_G._test_positions) do
+      table.insert(params.positions, { line = pos[1], character = pos[2] })
+    end
+    local results = vim.lsp.buf_request_sync(0, 'textDocument/selectionRange', params, 3000)
+    _G._test_result = {}
+    if results and results[1] and results[1].result then
+      for _, sel in ipairs(results[1].result) do
+        -- Flatten the linked list into an array of ranges
+        local ranges = {}
+        local current = sel
+        while current do
+          table.insert(ranges, {
+            start_line = current.range.start.line,
+            start_char = current.range.start.character,
+            end_line = current.range["end"].line,
+            end_char = current.range["end"].character,
+          })
+          current = current.parent
+        end
+        table.insert(_G._test_result, ranges)
+      end
+    end
+  ]])
+  return child.lua_get("_G._test_result")
+end
+
 return M
