@@ -179,4 +179,133 @@ T["diagnostics"]["detects undefined function calls"] = function()
   child.stop()
 end
 
+T["diagnostics"]["detects suspicious normal without bang"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 106: normal j (0-indexed: 105)
+  local normal_j = find_diagnostic_at_line(diagnostics, 105)
+  MiniTest.expect.equality(normal_j ~= nil, true, "Expected warning for 'normal j' without bang")
+  if normal_j then
+    MiniTest.expect.equality(normal_j.message:match("normal") ~= nil, true)
+    MiniTest.expect.equality(normal_j.message:match("normal!") ~= nil, true)
+  end
+
+  -- Line 107: normal k (0-indexed: 106)
+  local normal_k = find_diagnostic_at_line(diagnostics, 106)
+  MiniTest.expect.equality(normal_k ~= nil, true, "Expected warning for 'normal k' without bang")
+
+  -- Line 110: normal! j should NOT have warning (0-indexed: 109)
+  local normal_bang = find_diagnostic_at_line(diagnostics, 109)
+  local has_normal_false_positive = normal_bang ~= nil and normal_bang.message:match("normal")
+  MiniTest.expect.equality(has_normal_false_positive, false, "Expected no warning for 'normal!' with bang")
+
+  child.stop()
+end
+
+T["diagnostics"]["detects suspicious match without case modifier"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 113: if g:my_var =~ 'pattern' (0-indexed: 112)
+  local match_warn = find_diagnostic_at_line(diagnostics, 112)
+  MiniTest.expect.equality(match_warn ~= nil, true, "Expected warning for '=~' without case modifier")
+  if match_warn then
+    MiniTest.expect.equality(match_warn.message:match("=~") ~= nil, true)
+    MiniTest.expect.equality(match_warn.message:match("ignorecase") ~= nil, true)
+  end
+
+  -- Line 117: =~# should NOT have warning (0-indexed: 116)
+  local match_hash = find_diagnostic_at_line(diagnostics, 116)
+  local has_hash_false_positive = match_hash ~= nil and match_hash.message:match("=~")
+  MiniTest.expect.equality(has_hash_false_positive, false, "Expected no warning for '=~#'")
+
+  -- Line 119: =~? should NOT have warning (0-indexed: 118)
+  local match_question = find_diagnostic_at_line(diagnostics, 118)
+  local has_question_false_positive = match_question ~= nil and match_question.message:match("=~")
+  MiniTest.expect.equality(has_question_false_positive, false, "Expected no warning for '=~?'")
+
+  child.stop()
+end
+
+T["diagnostics"]["detects suspicious autocmd outside augroup"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 123: autocmd FileType vim (0-indexed: 122)
+  local autocmd_standalone = find_diagnostic_at_line(diagnostics, 122)
+  MiniTest.expect.equality(autocmd_standalone ~= nil, true, "Expected warning for autocmd outside augroup (line 123)")
+  if autocmd_standalone then
+    MiniTest.expect.equality(autocmd_standalone.message:match("augroup") ~= nil, true)
+  end
+
+  -- Line 128: autocmd inside augroup should NOT have warning (0-indexed: 127)
+  local autocmd_in_group = find_diagnostic_at_line(diagnostics, 127)
+  local has_augroup_false_positive = autocmd_in_group ~= nil and autocmd_in_group.message:match("augroup")
+  MiniTest.expect.equality(has_augroup_false_positive, false, "Expected no warning for autocmd inside augroup")
+
+  -- Line 132: autocmd with inline group should NOT have warning (0-indexed: 131)
+  local autocmd_inline_group = find_diagnostic_at_line(diagnostics, 131)
+  local has_inline_false_positive = autocmd_inline_group ~= nil and autocmd_inline_group.message:match("augroup")
+  MiniTest.expect.equality(has_inline_false_positive, false, "Expected no warning for autocmd with inline group")
+
+  child.stop()
+end
+
+T["diagnostics"]["detects suspicious set compatible"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 135: set compatible (0-indexed: 134)
+  local compat = find_diagnostic_at_line(diagnostics, 134)
+  MiniTest.expect.equality(compat ~= nil, true, "Expected warning for 'set compatible'")
+  if compat then
+    MiniTest.expect.equality(compat.message:match("Vi%-compatible") ~= nil, true)
+  end
+
+  -- Line 136: set cp (0-indexed: 135)
+  local cp = find_diagnostic_at_line(diagnostics, 135)
+  MiniTest.expect.equality(cp ~= nil, true, "Expected warning for 'set cp'")
+  if cp then
+    MiniTest.expect.equality(cp.message:match("Vi%-compatible") ~= nil, true)
+  end
+
+  child.stop()
+end
+
+T["diagnostics"]["detects vim9script not at start"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/vim9script_errors.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 5: vim9script after other code (0-indexed: 4)
+  local vim9script_warn = find_diagnostic_at_line(diagnostics, 4)
+  MiniTest.expect.equality(vim9script_warn ~= nil, true, "Expected warning for vim9script not at start")
+  if vim9script_warn then
+    MiniTest.expect.equality(vim9script_warn.message:match("vim9script") ~= nil, true)
+    MiniTest.expect.equality(vim9script_warn.message:match("first") ~= nil, true)
+  end
+
+  child.stop()
+end
+
 return T

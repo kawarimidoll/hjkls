@@ -99,3 +99,38 @@ call s:PrivateHelper()
 " Valid: built-in functions should NOT show warnings
 call strlen("test")
 call empty([])
+
+" === Suspicious patterns (should show warnings) ===
+
+" normal_bang: should warn
+normal j
+normal k
+
+" normal_bang: valid (has !)
+normal! j
+
+" match_case: should warn
+if g:my_var =~ 'pattern'
+endif
+
+" match_case: valid
+if g:my_var =~# 'pattern'
+endif
+if g:my_var =~? 'pattern'
+endif
+
+" autocmd_group: should warn
+autocmd FileType vim echo "standalone"
+
+" autocmd_group: valid (augroup block)
+augroup MyTestGroup
+  autocmd!
+  autocmd BufRead * echo "in group"
+augroup END
+
+" autocmd_group: valid (inline group)
+autocmd MyTestGroup BufEnter * echo "inline group"
+
+" set_compatible: should warn
+set compatible
+set cp
