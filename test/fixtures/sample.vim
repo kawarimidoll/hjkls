@@ -99,23 +99,3 @@ call s:PrivateHelper()
 " Valid: built-in functions should NOT show warnings
 call strlen("test")
 call empty([])
-
-" === Invalid syntax (should show errors) ===
-" NOTE: Everything after this section may be affected by syntax errors
-
-" Unclosed function
-function! Broken(
-endfunction
-
-" Missing endif
-if 1
-  echo "oops"
-
-" Invalid let statement
-let = "no variable name"
-
-" === More valid syntax ===
-
-autocmd BufRead *.txt echo "Reading text file"
-
-command! -nargs=1 Greet echo "Hello, " . <q-args>

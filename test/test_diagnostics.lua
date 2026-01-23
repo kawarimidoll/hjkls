@@ -26,19 +26,19 @@ T["diagnostics"] = MiniTest.new_set()
 
 T["diagnostics"]["detects syntax errors"] = function()
   local child = H.create_child()
-  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/syntax_errors.vim")
   H.wait_for_lsp(child)
   H.wait_for_diagnostics(child)
 
   local diagnostics = H.get_diagnostics(child)
 
-  -- Line 107: function! Broken( - unclosed parenthesis (0-indexed: 106)
-  local broken_func = find_diagnostic_at_line(diagnostics, 106)
-  MiniTest.expect.equality(broken_func ~= nil, true, "Expected syntax error on line 107 (0-indexed: 106)")
+  -- Line 5: function! Broken( - unclosed parenthesis (0-indexed: 4)
+  local broken_func = find_diagnostic_at_line(diagnostics, 4)
+  MiniTest.expect.equality(broken_func ~= nil, true, "Expected syntax error on line 5 (0-indexed: 4)")
 
-  -- Line 111: if 1 without endif (0-indexed: 110)
-  local missing_endif = find_diagnostic_at_line(diagnostics, 110)
-  MiniTest.expect.equality(missing_endif ~= nil, true, "Expected syntax error on line 111 (0-indexed: 110)")
+  -- Line 9: if 1 without endif (0-indexed: 8)
+  local missing_endif = find_diagnostic_at_line(diagnostics, 8)
+  MiniTest.expect.equality(missing_endif ~= nil, true, "Expected syntax error on line 9 (0-indexed: 8)")
 
   child.stop()
 end
