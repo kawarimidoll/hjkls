@@ -178,3 +178,22 @@ let g:single_simple = 'hello'
 
 " single_quote: valid (contains single quote)
 let g:double_with_quote = "it's a test"
+
+" === Key notation (should show hints) ===
+
+" key_notation: should hint (lowercase)
+nnoremap <cr> :echo 'hello'<CR>
+nnoremap <esc> <Esc>
+
+" key_notation: should hint (all caps arrow)
+nnoremap <UP> k
+nnoremap <DOWN> j
+
+" key_notation: should hint (lowercase modifier)
+nnoremap <c-a> <C-a>
+
+" key_notation: valid (already correct)
+nnoremap <CR> :quit<CR>
+nnoremap <Esc> <Esc>
+nnoremap <Up> k
+nnoremap <C-a> <C-a>

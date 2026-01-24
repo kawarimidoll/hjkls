@@ -208,3 +208,29 @@ let s = "hello\nworld"
 " OK: contains single quote
 let s = "it's a test"
 ```
+
+### `key_notation`
+
+**Origin:** hjkls original
+
+Normalizes key notation to match Vim's standard help notation (`:h key-notation`). This improves readability and consistency.
+
+```vim
+" Hint: use standard notation
+nnoremap <cr> :echo "hello"<CR>
+nnoremap <esc> <ESC>
+nnoremap <UP> k
+nnoremap <c-a> <C-a>
+
+" OK: already standard
+nnoremap <CR> :quit<CR>
+nnoremap <Esc> <Esc>
+nnoremap <Up> k
+nnoremap <C-a> <C-a>
+```
+
+**Standard notations:**
+- Special keys: `<CR>`, `<Tab>`, `<Esc>`, `<Space>`, `<BS>`, `<Del>`, etc.
+- Arrow keys: `<Up>`, `<Down>`, `<Left>`, `<Right>`
+- Function keys: `<F1>` through `<F12>`
+- Modifiers: `<C-...>`, `<S-...>`, `<M-...>`, `<A-...>` (uppercase modifier letter)

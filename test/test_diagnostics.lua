@@ -426,4 +426,48 @@ T["diagnostics"]["hints style single_quote"] = function()
   child.stop()
 end
 
+T["diagnostics"]["hints style key_notation"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 185: <cr> should be <CR> (0-indexed: 184)
+  local cr_hint = find_diagnostic_at_line(diagnostics, 184)
+  MiniTest.expect.equality(cr_hint ~= nil, true, "Expected hint for '<cr>' key notation")
+  if cr_hint then
+    MiniTest.expect.equality(cr_hint.severity, vim.diagnostic.severity.HINT)
+    MiniTest.expect.equality(cr_hint.message:match("<CR>") ~= nil, true, "Message should mention <CR>")
+  end
+
+  -- Line 189: <UP> should be <Up> (0-indexed: 188)
+  local up_hint = find_diagnostic_at_line(diagnostics, 188)
+  MiniTest.expect.equality(up_hint ~= nil, true, "Expected hint for '<UP>' key notation")
+  if up_hint then
+    MiniTest.expect.equality(up_hint.message:match("<Up>") ~= nil, true, "Message should mention <Up>")
+  end
+
+  -- Line 193: <c-a> should be <C-a> (0-indexed: 192)
+  local ctrl_hint = find_diagnostic_at_line(diagnostics, 192)
+  MiniTest.expect.equality(ctrl_hint ~= nil, true, "Expected hint for '<c-a>' key notation")
+  if ctrl_hint then
+    MiniTest.expect.equality(ctrl_hint.message:match("<C%-a>") ~= nil, true, "Message should mention <C-a>")
+  end
+
+  -- Lines 196-199: correct notations should NOT have hints
+  -- Line 196: <CR> (0-indexed: 195)
+  local valid_cr = find_diagnostic_at_line(diagnostics, 195)
+  local has_cr_false_positive = valid_cr ~= nil and valid_cr.message:match("key%-notation") ~= nil
+  MiniTest.expect.equality(has_cr_false_positive, false, "Expected no hint for correct '<CR>' notation")
+
+  -- Line 198: <Up> (0-indexed: 197)
+  local valid_up = find_diagnostic_at_line(diagnostics, 197)
+  local has_up_false_positive = valid_up ~= nil and valid_up.message:match("key%-notation") ~= nil
+  MiniTest.expect.equality(has_up_false_positive, false, "Expected no hint for correct '<Up>' notation")
+
+  child.stop()
+end
+
 return T
