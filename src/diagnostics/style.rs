@@ -26,6 +26,9 @@ pub fn collect_style_hints(tree: &Tree, source: &str) -> Vec<Diagnostic> {
     // key_notation: normalize key notation to standard form
     collect_key_notation_hints_recursive(&root, source, &mut diagnostics);
 
+    // plug_noremap: use noremap for <Plug> mappings
+    collect_plug_noremap_hints_recursive(&root, source, &mut diagnostics);
+
     diagnostics
 }
 
@@ -323,15 +326,12 @@ pub fn normalize_key_notation(key: &str) -> Option<String> {
 
         // Function keys (F + number)
         k if k.starts_with('f') && k[1..].parse::<u32>().is_ok() => {
-            let result = format!(
-                "<{}{}>",
-                if normalized_mods.is_empty() {
-                    String::new()
-                } else {
-                    format!("{}-", normalized_mods.join("-"))
-                },
-                format!("F{}", &key_name[1..])
-            );
+            let mods_prefix = if normalized_mods.is_empty() {
+                String::new()
+            } else {
+                format!("{}-", normalized_mods.join("-"))
+            };
+            let result = format!("<{}F{}>", mods_prefix, &key_name[1..]);
             return if result == key { None } else { Some(result) };
         }
 
@@ -352,15 +352,12 @@ pub fn normalize_key_notation(key: &str) -> Option<String> {
                 "insert" => "kInsert",
                 "del" | "delete" => "kDel",
                 d if d.len() == 1 && d.chars().next().unwrap().is_ascii_digit() => {
-                    let result = format!(
-                        "<{}{}>",
-                        if normalized_mods.is_empty() {
-                            String::new()
-                        } else {
-                            format!("{}-", normalized_mods.join("-"))
-                        },
-                        format!("k{}", d)
-                    );
+                    let mods_prefix = if normalized_mods.is_empty() {
+                        String::new()
+                    } else {
+                        format!("{}-", normalized_mods.join("-"))
+                    };
+                    let result = format!("<{}k{}>", mods_prefix, d);
                     return if result == key { None } else { Some(result) };
                 }
                 _ => {
@@ -485,6 +482,106 @@ fn collect_key_notation_hints_recursive(
     }
 }
 
+/// Get the noremap equivalent of a map command.
+/// Returns None if the command is not a map command (or already noremap).
+pub fn get_noremap_equivalent(cmd: &str) -> Option<&'static str> {
+    match cmd {
+        "map" => Some("noremap"),
+        "nmap" => Some("nnoremap"),
+        "vmap" => Some("vnoremap"),
+        "xmap" => Some("xnoremap"),
+        "smap" => Some("snoremap"),
+        "omap" => Some("onoremap"),
+        "imap" => Some("inoremap"),
+        "lmap" => Some("lnoremap"),
+        "cmap" => Some("cnoremap"),
+        "tmap" => Some("tnoremap"),
+        _ => None,
+    }
+}
+
+/// Check if a map_side node contains a <Plug> keycode
+fn contains_plug_keycode(node: &tree_sitter::Node, source: &str) -> bool {
+    if node.kind() == "keycode" {
+        if let Ok(text) = node.utf8_text(source.as_bytes()) {
+            if text.eq_ignore_ascii_case("<plug>") {
+                return true;
+            }
+        }
+    }
+
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if contains_plug_keycode(&child, source) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Collect hints for map commands with <Plug> that should use noremap
+fn collect_plug_noremap_hints_recursive(
+    node: &tree_sitter::Node,
+    source: &str,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    if node.kind() == "map_statement" {
+        let mut cursor = node.walk();
+        let children: Vec<_> = node.children(&mut cursor).collect();
+
+        // Find the map command (first child)
+        if let Some(cmd_node) = children.first() {
+            if let Ok(cmd_text) = cmd_node.utf8_text(source.as_bytes()) {
+                // Check if it's a non-noremap map command (get_noremap_equivalent returns Some)
+                if let Some(noremap_cmd) = get_noremap_equivalent(cmd_text) {
+                    // Find map_side nodes (there should be 2: lhs and rhs)
+                    let map_sides: Vec<_> =
+                        children.iter().filter(|c| c.kind() == "map_side").collect();
+
+                    // Check if rhs (second map_side) contains <Plug>
+                    if map_sides.len() >= 2 {
+                        let rhs = map_sides[1];
+                        if contains_plug_keycode(rhs, source) {
+                            let start = cmd_node.start_position();
+                            let end = cmd_node.end_position();
+
+                            diagnostics.push(Diagnostic {
+                                range: Range {
+                                    start: Position {
+                                        line: start.row as u32,
+                                        character: start.column as u32,
+                                    },
+                                    end: Position {
+                                        line: end.row as u32,
+                                        character: end.column as u32,
+                                    },
+                                },
+                                severity: Some(DiagnosticSeverity::HINT),
+                                source: Some("hjkls".to_string()),
+                                message: format!(
+                                    "Style: Use `{}` instead of `{}` for <Plug> mappings. \
+                                     <Plug> is always remapped even with noremap (see :h noremap).",
+                                    noremap_cmd, cmd_text
+                                ),
+                                code: Some(NumberOrString::String(
+                                    "hjkls/plug_noremap".to_string(),
+                                )),
+                                ..Default::default()
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        collect_plug_noremap_hints_recursive(&child, source, diagnostics);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -538,5 +635,85 @@ mod tests {
         // Unknown keys should return None (no suggestion)
         assert_eq!(normalize_key_notation("<unknown>"), None);
         assert_eq!(normalize_key_notation("<x>"), None);
+    }
+
+    #[test]
+    fn test_get_noremap_equivalent() {
+        assert_eq!(get_noremap_equivalent("nmap"), Some("nnoremap"));
+        assert_eq!(get_noremap_equivalent("vmap"), Some("vnoremap"));
+        assert_eq!(get_noremap_equivalent("imap"), Some("inoremap"));
+        assert_eq!(get_noremap_equivalent("map"), Some("noremap"));
+        assert_eq!(get_noremap_equivalent("nnoremap"), None);
+        assert_eq!(get_noremap_equivalent("noremap"), None);
+    }
+
+    #[test]
+    fn test_plug_noremap_hint() {
+        use tree_sitter::Parser;
+
+        let mut parser = Parser::new();
+        parser.set_language(&tree_sitter_vim::language()).unwrap();
+
+        // Should warn: nmap with <Plug>
+        let code = "nmap a <Plug>(special-function)";
+        let tree = parser.parse(code, None).unwrap();
+        let diagnostics = collect_style_hints(&tree, code);
+        let plug_hints: Vec<_> = diagnostics
+            .iter()
+            .filter(|d| d.code == Some(NumberOrString::String("hjkls/plug_noremap".to_string())))
+            .collect();
+        assert_eq!(plug_hints.len(), 1);
+        assert!(plug_hints[0].message.contains("nnoremap"));
+
+        // Should NOT warn: nnoremap with <Plug>
+        let code = "nnoremap a <Plug>(special-function)";
+        let tree = parser.parse(code, None).unwrap();
+        let diagnostics = collect_style_hints(&tree, code);
+        let plug_hints: Vec<_> = diagnostics
+            .iter()
+            .filter(|d| d.code == Some(NumberOrString::String("hjkls/plug_noremap".to_string())))
+            .collect();
+        assert_eq!(plug_hints.len(), 0);
+
+        // Should NOT warn: nmap without <Plug>
+        let code = "nmap a :echo 'hello'<CR>";
+        let tree = parser.parse(code, None).unwrap();
+        let diagnostics = collect_style_hints(&tree, code);
+        let plug_hints: Vec<_> = diagnostics
+            .iter()
+            .filter(|d| d.code == Some(NumberOrString::String("hjkls/plug_noremap".to_string())))
+            .collect();
+        assert_eq!(plug_hints.len(), 0);
+
+        // Should warn: case-insensitive <PLUG>
+        let code = "nmap a <PLUG>(upper-case)";
+        let tree = parser.parse(code, None).unwrap();
+        let diagnostics = collect_style_hints(&tree, code);
+        let plug_hints: Vec<_> = diagnostics
+            .iter()
+            .filter(|d| d.code == Some(NumberOrString::String("hjkls/plug_noremap".to_string())))
+            .collect();
+        assert_eq!(plug_hints.len(), 1);
+
+        // Should warn: mixed case <pLuG>
+        let code = "vmap b <pLuG>(mixed-case)";
+        let tree = parser.parse(code, None).unwrap();
+        let diagnostics = collect_style_hints(&tree, code);
+        let plug_hints: Vec<_> = diagnostics
+            .iter()
+            .filter(|d| d.code == Some(NumberOrString::String("hjkls/plug_noremap".to_string())))
+            .collect();
+        assert_eq!(plug_hints.len(), 1);
+        assert!(plug_hints[0].message.contains("vnoremap"));
+
+        // Should NOT warn: <Plug> in LHS (plugin definition)
+        let code = r#"nmap <Plug>(my-plugin) :echo "test"<CR>"#;
+        let tree = parser.parse(code, None).unwrap();
+        let diagnostics = collect_style_hints(&tree, code);
+        let plug_hints: Vec<_> = diagnostics
+            .iter()
+            .filter(|d| d.code == Some(NumberOrString::String("hjkls/plug_noremap".to_string())))
+            .collect();
+        assert_eq!(plug_hints.len(), 0);
     }
 }

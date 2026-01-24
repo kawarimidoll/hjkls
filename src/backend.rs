@@ -2658,6 +2658,22 @@ impl LanguageServer for Backend {
                         " abort".to_string(),
                     ))
                 }
+                "hjkls/plug_noremap" => {
+                    // Replace map command with noremap equivalent
+                    // The diagnostic range covers just the map command (e.g., "nmap")
+                    if end_col <= line.len() {
+                        let cmd = &line[start_col..end_col];
+                        diagnostics::style::get_noremap_equivalent(cmd).map(|noremap_cmd| {
+                            (
+                                "Use noremap for <Plug> mapping",
+                                diag.range,
+                                noremap_cmd.to_string(),
+                            )
+                        })
+                    } else {
+                        None
+                    }
+                }
                 // Other rules don't have simple auto-fixes
                 _ => None,
             };
