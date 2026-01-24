@@ -79,6 +79,9 @@ function! s:on_lsp_attached() abort
   nnoremap <buffer> grn <Cmd>LspRename<CR>
   nnoremap <buffer> gra <Cmd>LspCodeAction<CR>
 
+  " Formatting
+  nnoremap <buffer> gq <Cmd>LspFormat<CR>
+
   " Folding: use :LspFold to create folds from LSP
   " (zc=close, zo=open, zR=open all, zM=close all)
   nnoremap <buffer> zF <Cmd>LspFold<CR>

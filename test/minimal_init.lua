@@ -53,6 +53,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     local opts = { buffer = args.buf }
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- shortcut (default: <C-]>)
     vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, opts) -- normal mode shortcut
+    vim.keymap.set("n", "gq", vim.lsp.buf.format, opts) -- format buffer
 
     -- Enable autocompletion (Neovim 0.11+)
     vim.opt.completeopt = { "menuone", "noselect", "fuzzy" }
