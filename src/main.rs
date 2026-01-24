@@ -4,6 +4,7 @@ mod completion;
 mod config;
 mod db;
 mod diagnostics;
+mod formatter;
 mod logger;
 mod symbols;
 

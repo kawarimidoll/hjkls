@@ -1476,6 +1476,7 @@ impl LanguageServer for Backend {
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
                 code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
+                document_formatting_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -2750,6 +2751,31 @@ impl LanguageServer for Backend {
             Ok(None)
         } else {
             Ok(Some(actions))
+        }
+    }
+
+    async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+        let uri = params.text_document.uri;
+
+        let (source, tree) = {
+            let docs = self.documents.lock().unwrap();
+            let Some(doc) = docs.get(&uri) else {
+                return Ok(None);
+            };
+            (doc.text.text.clone(), doc.tree.clone())
+        };
+
+        // Clone format config to minimize lock hold time
+        let format_config = {
+            let config = self.config.lock().unwrap();
+            config.format.clone()
+        };
+        let edits = crate::formatter::format(&source, &tree, &format_config);
+
+        if edits.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(edits))
         }
     }
 }
