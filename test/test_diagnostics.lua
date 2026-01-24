@@ -353,15 +353,41 @@ T["diagnostics"]["hints style function_bang"] = function()
     MiniTest.expect.equality(script_local_bang.message:match("s:") ~= nil, true, "Message should mention s:")
   end
 
-  -- Line 151: function s:ScriptLocalNoBang() should NOT have hint (0-indexed: 150)
+  -- Line 151: function s:ScriptLocalNoBang() should NOT have function_bang hint (0-indexed: 150)
+  -- Note: It may have abort hint, so check specifically for "unnecessary" in message
   local script_local_no_bang = find_diagnostic_at_line(diagnostics, 150)
-  local has_no_bang_false_positive = script_local_no_bang ~= nil and script_local_no_bang.message:match("function!")
-  MiniTest.expect.equality(has_no_bang_false_positive, false, "Expected no hint for 'function' without bang")
+  local has_no_bang_false_positive = script_local_no_bang ~= nil and script_local_no_bang.message:match("unnecessary") ~= nil
+  MiniTest.expect.equality(has_no_bang_false_positive, false, "Expected no function_bang hint for 'function' without bang")
 
-  -- Line 156: function! GlobalFuncWithBang() should NOT have hint (0-indexed: 155)
+  -- Line 156: function! GlobalFuncWithBang() should NOT have function_bang hint (0-indexed: 155)
+  -- Note: It may have abort hint, so check specifically for "unnecessary" in message
   local global_bang = find_diagnostic_at_line(diagnostics, 155)
-  local has_global_false_positive = global_bang ~= nil and global_bang.message:match("function!")
-  MiniTest.expect.equality(has_global_false_positive, false, "Expected no hint for global function with bang")
+  local has_global_false_positive = global_bang ~= nil and global_bang.message:match("unnecessary") ~= nil
+  MiniTest.expect.equality(has_global_false_positive, false, "Expected no function_bang hint for global function with bang")
+
+  child.stop()
+end
+
+T["diagnostics"]["hints style abort"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 161: function! NoAbortFunc() (0-indexed: 160)
+  local no_abort = find_diagnostic_at_line(diagnostics, 160)
+  MiniTest.expect.equality(no_abort ~= nil, true, "Expected hint for function without abort")
+  if no_abort then
+    MiniTest.expect.equality(no_abort.severity, vim.diagnostic.severity.HINT)
+    MiniTest.expect.equality(no_abort.message:match("abort") ~= nil, true, "Message should mention abort")
+  end
+
+  -- Line 166: function! HasAbortFunc() abort should NOT have hint (0-indexed: 165)
+  local has_abort = find_diagnostic_at_line(diagnostics, 165)
+  local has_abort_false_positive = has_abort ~= nil and has_abort.message:match("missing.*abort")
+  MiniTest.expect.equality(has_abort_false_positive, false, "Expected no hint for function with abort")
 
   child.stop()
 end

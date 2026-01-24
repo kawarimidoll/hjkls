@@ -156,3 +156,13 @@ endfunction
 function! GlobalFuncWithBang()
   return 3
 endfunction
+
+" abort: should hint (missing abort)
+function! NoAbortFunc()
+  return 1
+endfunction
+
+" abort: valid (has abort)
+function! HasAbortFunc() abort
+  return 2
+endfunction

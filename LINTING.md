@@ -170,3 +170,21 @@ function! GlobalFunc()
   return 2
 endfunction
 ```
+
+### `abort`
+
+**Origin:** vint (`ProhibitMissingAbort`)
+
+Suggests adding `abort` attribute to function definitions. Without `abort`, functions continue execution after an error occurs, which can lead to unexpected behavior.
+
+```vim
+" Hint: missing abort attribute
+function! MyFunc()
+  return 1
+endfunction
+
+" OK: has abort
+function! MyFunc() abort
+  return 1
+endfunction
+```

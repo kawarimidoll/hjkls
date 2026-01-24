@@ -762,6 +762,9 @@ impl Backend {
         // function_bang: s: functions don't need `!`
         Self::collect_function_bang_hints_recursive(&root, source, &mut diagnostics);
 
+        // abort: functions should have `abort` attribute
+        Self::collect_abort_hints_recursive(&root, source, &mut diagnostics);
+
         diagnostics
     }
 
@@ -879,6 +882,54 @@ impl Backend {
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
             Self::collect_function_bang_hints_recursive(&child, source, diagnostics);
+        }
+    }
+
+    /// Collect hints for functions without `abort` attribute
+    fn collect_abort_hints_recursive(
+        node: &tree_sitter::Node,
+        source: &str,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        if node.kind() == "function_definition" {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            // Check if function has `abort` attribute
+            let has_abort = children.iter().any(|c| c.kind() == "abort");
+
+            if !has_abort {
+                let start = node.start_position();
+                // Get just the first line for cleaner message
+                let text = node.utf8_text(source.as_bytes()).unwrap_or("function");
+                let first_line = text.lines().next().unwrap_or(text);
+
+                diagnostics.push(Diagnostic {
+                    range: Range {
+                        start: Position {
+                            line: start.row as u32,
+                            character: start.column as u32,
+                        },
+                        end: Position {
+                            line: start.row as u32,
+                            character: start.column as u32 + first_line.len() as u32,
+                        },
+                    },
+                    severity: Some(DiagnosticSeverity::HINT),
+                    source: Some("hjkls".to_string()),
+                    message: format!(
+                        "Style: '{}' is missing `abort` attribute. Functions without `abort` continue execution after errors.",
+                        first_line.trim()
+                    ),
+                    ..Default::default()
+                });
+            }
+        }
+
+        // Recurse into children
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            Self::collect_abort_hints_recursive(&child, source, diagnostics);
         }
     }
 
