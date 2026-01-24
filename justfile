@@ -50,7 +50,7 @@ dev-nvim: build
   nvim -u test/minimal_init.lua test/fixtures/sample.vim
 
 # Open sample file in Vim for manual testing (logs to logs/hjkls.log)
-# Note: Using -S instead of -u to preserve Nix's vimrc (which sets packpath for vim-lsp)
+# Note: Using -S instead of -u to preserve Nix's vimrc (which sets packpath for yegappan/lsp)
 dev-vim: build
   mkdir -p logs
   vim -S test/minimal_init.vim test/fixtures/sample.vim

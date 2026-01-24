@@ -116,9 +116,19 @@
           neovim-test = pkgs.neovim.override {
             configure.packages.test.start = [ pkgs.vimPlugins.mini-test ];
           };
-          # Vim with vim-lsp for manual testing
+          # Vim with yegappan/lsp for manual testing
+          yegappan-lsp = pkgs.vimUtils.buildVimPlugin {
+            pname = "lsp";
+            version = "2026-01-24";
+            src = pkgs.fetchFromGitHub {
+              owner = "yegappan";
+              repo = "lsp";
+              rev = "38de9e4c2bdea3332387faec85833b778d2eee2f";
+              hash = "sha256-Db2t0rGu88Ol1kAt3SEFnvk67zZgLoU6/GkMIH0Kqks=";
+            };
+          };
           vim-dev = pkgs.vim-full.customize {
-            vimrcConfig.packages.dev.start = [ pkgs.vimPlugins.vim-lsp ];
+            vimrcConfig.packages.dev.start = [ yegappan-lsp ];
           };
         in
         {
