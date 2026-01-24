@@ -14,3 +14,7 @@ tree-sitter-vim = "0.4"
 texter = "0.2"
 tokio = { version = "1", features = ["full"] }
 salsa = "0.25"
+
+[lints.clippy]
+# Prefer modern module style: foo.rs + foo/ instead of foo/mod.rs
+mod_module_files = "warn"
