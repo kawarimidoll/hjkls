@@ -3,7 +3,7 @@
 //! These rules identify patterns that may behave unexpectedly or cause issues.
 //! While not necessarily bugs, they often indicate potential problems.
 
-use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Position, Range};
 use tree_sitter::Tree;
 
 /// Collect all suspicious warnings from the syntax tree
@@ -62,6 +62,7 @@ fn collect_normal_bang_warnings_recursive(
                     "Suspicious: '{}' uses `normal` without `!`. User mappings may interfere. Use `normal!` instead.",
                     text.trim()
                 ),
+                code: Some(NumberOrString::String("hjkls/normal_bang".to_string())),
                 ..Default::default()
             });
         }
@@ -113,6 +114,7 @@ fn collect_match_case_warnings_recursive(
                         "Suspicious: '{}' uses `=~` without case modifier. Behavior depends on 'ignorecase' option. Use `=~#` (case-sensitive) or `=~?` (case-insensitive) instead.",
                         text.trim()
                     ),
+                    code: Some(NumberOrString::String("hjkls/match_case".to_string())),
                     ..Default::default()
                 });
             }
@@ -185,6 +187,7 @@ fn collect_autocmd_group_warnings_recursive(
                     "Suspicious: '{}' is defined outside of an augroup. This may cause duplicate autocmds on reload. Wrap in `augroup` with `autocmd!` to clear.",
                     text.lines().next().unwrap_or(text).trim()
                 ),
+                code: Some(NumberOrString::String("hjkls/autocmd_group".to_string())),
                 ..Default::default()
             });
         }
@@ -249,6 +252,7 @@ fn collect_set_compatible_warnings_recursive(
                                         "Suspicious: '{}' enables Vi-compatible mode, which disables many Vim features. Is this intended?",
                                         text.trim()
                                     ),
+                                    code: Some(NumberOrString::String("hjkls/set_compatible".to_string())),
                                     ..Default::default()
                                 });
                             }
@@ -323,6 +327,9 @@ fn collect_vim9script_position_warnings(
                         message:
                             "Suspicious: `vim9script` must be at the very first line of the file."
                                 .to_string(),
+                        code: Some(NumberOrString::String(
+                            "hjkls/vim9script_position".to_string(),
+                        )),
                         ..Default::default()
                     });
                 }

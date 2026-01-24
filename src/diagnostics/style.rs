@@ -3,7 +3,7 @@
 //! These rules suggest improvements for code style. They don't indicate bugs
 //! but help maintain consistency and readability.
 
-use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Position, Range};
 use tree_sitter::Tree;
 
 /// Collect all style hints from the syntax tree
@@ -65,6 +65,7 @@ fn collect_double_dot_hints_recursive(
                     "Style: '{}' uses `.` for string concatenation. Use `..` instead. In Vim9 script, `..` is required.",
                     text.trim()
                 ),
+                code: Some(NumberOrString::String("hjkls/double_dot".to_string())),
                 ..Default::default()
             });
         }
@@ -132,6 +133,7 @@ fn collect_function_bang_hints_recursive(
                             "Style: '{}' uses `function!` for script-local function. The `!` is unnecessary for `s:` functions.",
                             first_line.trim()
                         ),
+                        code: Some(NumberOrString::String("hjkls/function_bang".to_string())),
                         ..Default::default()
                     });
                 }
@@ -182,6 +184,7 @@ fn collect_abort_hints_recursive(
                     "Style: '{}' is missing `abort` attribute. Functions without `abort` continue execution after errors.",
                     first_line.trim()
                 ),
+                code: Some(NumberOrString::String("hjkls/abort".to_string())),
                 ..Default::default()
             });
         }
@@ -232,6 +235,7 @@ fn collect_single_quote_hints_recursive(
                             "Style: {} can use single quotes. Double quotes are only needed for escape sequences.",
                             text
                         ),
+                        code: Some(NumberOrString::String("hjkls/single_quote".to_string())),
                         ..Default::default()
                     });
                 }
@@ -467,6 +471,7 @@ fn collect_key_notation_hints_recursive(
                         "Style: {} should be written as {} (see :h key-notation)",
                         text, normalized
                     ),
+                    code: Some(NumberOrString::String("hjkls/key_notation".to_string())),
                     ..Default::default()
                 });
             }

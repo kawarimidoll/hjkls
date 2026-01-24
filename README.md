@@ -16,6 +16,7 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 - [x] Document highlight (highlight symbol under cursor)
 - [x] Folding range (function/if/for/while/try/augroup)
 - [x] Selection range (smart expand selection via syntax tree)
+- [x] Code actions (quick fixes for lint rules)
 
 ## Builtin Function Coverage
 

@@ -613,6 +613,35 @@ impl Backend {
         }
     }
 
+    /// Replace single dot concatenation with double dot in Vim script
+    /// Only replaces `.` that is surrounded by spaces (string concatenation)
+    fn replace_single_dot_with_double(text: &str) -> String {
+        // Pattern: " . " (single dot with spaces) should become " .. "
+        // We need to be careful not to replace ".." or method calls like ".call"
+        let mut result = String::new();
+        let chars: Vec<char> = text.chars().collect();
+        let mut i = 0;
+
+        while i < chars.len() {
+            if chars[i] == '.' {
+                // Check if this is a single dot (not part of ..)
+                let prev_is_dot = i > 0 && chars[i - 1] == '.';
+                let next_is_dot = i + 1 < chars.len() && chars[i + 1] == '.';
+
+                if !prev_is_dot && !next_is_dot {
+                    // This is a single dot - replace with ..
+                    result.push_str("..");
+                    i += 1;
+                    continue;
+                }
+            }
+            result.push(chars[i]);
+            i += 1;
+        }
+
+        result
+    }
+
     /// Build a SelectionRange chain from the innermost node to the root
     fn build_selection_range(
         tree: &tree_sitter::Tree,
@@ -1404,6 +1433,7 @@ impl LanguageServer for Backend {
                 document_highlight_provider: Some(OneOf::Left(true)),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
+                code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
                 ..Default::default()
             },
             ..Default::default()
@@ -2453,5 +2483,252 @@ impl LanguageServer for Backend {
         } else {
             Ok(Some(ranges))
         }
+    }
+
+    async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+        let uri = params.text_document.uri;
+
+        let docs = self.documents.lock().unwrap();
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+        let source = doc.text.to_string();
+        drop(docs);
+
+        let mut actions = Vec::new();
+
+        for diag in params.context.diagnostics {
+            // Get the diagnostic code
+            let code = match &diag.code {
+                Some(NumberOrString::String(s)) => s.as_str(),
+                _ => continue,
+            };
+
+            // Get the text at the diagnostic range
+            let start_line = diag.range.start.line as usize;
+            let end_line = diag.range.end.line as usize;
+            let lines: Vec<&str> = source.lines().collect();
+
+            if start_line >= lines.len() {
+                continue;
+            }
+
+            let line = lines.get(start_line).unwrap_or(&"");
+            let start_col = diag.range.start.character as usize;
+            let end_col = if start_line == end_line {
+                diag.range.end.character as usize
+            } else {
+                line.len()
+            };
+
+            // Create text edit based on the rule
+            // Returns: Option<(title, range, new_text)>
+            let edit: Option<(&str, Range, String)> = match code {
+                "hjkls/double_dot" => {
+                    if end_col <= line.len() {
+                        let text = &line[start_col..end_col];
+                        let new_text = Self::replace_single_dot_with_double(text);
+                        if new_text != text {
+                            Some(("Use `..` for string concatenation", diag.range, new_text))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+                "hjkls/single_quote" => {
+                    if end_col <= line.len() {
+                        let text = &line[start_col..end_col];
+                        if text.starts_with('"') && text.ends_with('"') && text.len() >= 2 {
+                            let inner = &text[1..text.len() - 1];
+                            Some(("Use single quotes", diag.range, format!("'{}'", inner)))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+                "hjkls/key_notation" => {
+                    if end_col <= line.len() {
+                        let text = &line[start_col..end_col];
+                        diagnostics::style::normalize_key_notation(text)
+                            .map(|normalized| ("Normalize key notation", diag.range, normalized))
+                    } else {
+                        None
+                    }
+                }
+                "hjkls/normal_bang" => line.get(start_col..).and_then(|text_after| {
+                    text_after.to_lowercase().find("normal").and_then(|pos| {
+                        let normal_start = start_col + pos;
+                        let normal_end = normal_start + 6;
+                        let original = line.get(normal_start..normal_end)?;
+                        let after = line.get(normal_end..).unwrap_or("");
+
+                        if !after.starts_with('!') {
+                            Some((
+                                "Use `normal!` to ignore user mappings",
+                                Range {
+                                    start: Position {
+                                        line: diag.range.start.line,
+                                        character: normal_start as u32,
+                                    },
+                                    end: Position {
+                                        line: diag.range.start.line,
+                                        character: normal_end as u32,
+                                    },
+                                },
+                                format!("{}!", original),
+                            ))
+                        } else {
+                            None
+                        }
+                    })
+                }),
+                "hjkls/function_bang" => line.get(start_col..).and_then(|text_after| {
+                    text_after.to_lowercase().find("function!").map(|pos| {
+                        let func_start = start_col + pos;
+                        let func_end = func_start + 9;
+                        let original = line.get(func_start..func_end).unwrap_or("function!");
+
+                        (
+                            "Remove unnecessary `!` from s: function",
+                            Range {
+                                start: Position {
+                                    line: diag.range.start.line,
+                                    character: func_start as u32,
+                                },
+                                end: Position {
+                                    line: diag.range.start.line,
+                                    character: func_end as u32,
+                                },
+                            },
+                            original.get(..8).unwrap_or("function").to_string(),
+                        )
+                    })
+                }),
+                "hjkls/match_case" => {
+                    if end_col <= line.len() {
+                        let text = &line[start_col..end_col];
+                        text.find("=~").and_then(|pos| {
+                            let after = text.get(pos + 2..).unwrap_or("");
+                            if !after.starts_with('#') && !after.starts_with('?') {
+                                let op_start = start_col + pos;
+                                let op_end = op_start + 2;
+                                Some((
+                                    "Use `=~#` for case-sensitive match",
+                                    Range {
+                                        start: Position {
+                                            line: diag.range.start.line,
+                                            character: op_start as u32,
+                                        },
+                                        end: Position {
+                                            line: diag.range.start.line,
+                                            character: op_end as u32,
+                                        },
+                                    },
+                                    "=~#".to_string(),
+                                ))
+                            } else {
+                                None
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                }
+                "hjkls/abort" => {
+                    // Add `abort` attribute to function definition
+                    // The diagnostic range covers the first line of the function
+                    // Insert ` abort` at the end of the line (before newline)
+                    let line_end = line.len();
+                    Some((
+                        "Add `abort` attribute",
+                        Range {
+                            start: Position {
+                                line: diag.range.start.line,
+                                character: line_end as u32,
+                            },
+                            end: Position {
+                                line: diag.range.start.line,
+                                character: line_end as u32,
+                            },
+                        },
+                        " abort".to_string(),
+                    ))
+                }
+                // Other rules don't have simple auto-fixes
+                _ => None,
+            };
+
+            // Create the code action if we have an edit
+            if let Some((title, range, new_text)) = edit {
+                let text_edit = TextEdit { range, new_text };
+
+                let mut changes = HashMap::new();
+                changes.insert(uri.clone(), vec![text_edit]);
+
+                let workspace_edit = WorkspaceEdit {
+                    changes: Some(changes),
+                    document_changes: None,
+                    change_annotations: None,
+                };
+
+                actions.push(CodeActionOrCommand::CodeAction(CodeAction {
+                    title: title.to_string(),
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    diagnostics: Some(vec![diag.clone()]),
+                    edit: Some(workspace_edit),
+                    command: None,
+                    is_preferred: Some(true),
+                    disabled: None,
+                    data: None,
+                }));
+            }
+        }
+
+        if actions.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(actions))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_replace_single_dot_with_double() {
+        // Basic replacement
+        assert_eq!(Backend::replace_single_dot_with_double("a . b"), "a .. b");
+        assert_eq!(Backend::replace_single_dot_with_double("x.y"), "x..y");
+
+        // Already double dot - no change
+        assert_eq!(Backend::replace_single_dot_with_double("a .. b"), "a .. b");
+        assert_eq!(Backend::replace_single_dot_with_double("x..y"), "x..y");
+
+        // Single dot only
+        assert_eq!(Backend::replace_single_dot_with_double("."), "..");
+
+        // Multiple single dots
+        assert_eq!(
+            Backend::replace_single_dot_with_double("a . b . c"),
+            "a .. b .. c"
+        );
+
+        // Mixed single and double dots
+        assert_eq!(
+            Backend::replace_single_dot_with_double("a . b .. c"),
+            "a .. b .. c"
+        );
+
+        // No dots
+        assert_eq!(Backend::replace_single_dot_with_double("abc"), "abc");
+
+        // Empty string
+        assert_eq!(Backend::replace_single_dot_with_double(""), "");
     }
 }
