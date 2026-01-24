@@ -4,7 +4,7 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 
 ## Features
 
-- [x] Diagnostics (syntax errors, scope violations via tree-sitter-vim)
+- [x] Diagnostics (syntax errors + [lint rules](LINTING.md))
 - [x] Completion (built-in functions + user-defined symbols with scope support)
 - [x] Go to definition (same file + cross-file autoload support)
 - [x] Hover information (function signatures, autoload file paths)
