@@ -234,3 +234,73 @@ nnoremap <C-a> <C-a>
 - Arrow keys: `<Up>`, `<Down>`, `<Left>`, `<Right>`
 - Function keys: `<F1>` through `<F12>`
 - Modifiers: `<C-...>`, `<S-...>`, `<M-...>`, `<A-...>` (uppercase modifier letter)
+
+### `plug_noremap`
+
+**Origin:** hjkls original
+
+Suggests using `noremap` variants (`nnoremap`, `vnoremap`, etc.) for `<Plug>` mappings. According to `:help noremap`, `<Plug>` is always remapped even when using `noremap`, so using `nmap` vs `nnoremap` makes no difference for `<Plug>` mappings. However, `noremap` variants are preferred for consistency and to avoid accidentally remapping other keys in the same mapping.
+
+```vim
+" Hint: use nnoremap for <Plug> mapping
+nmap a <Plug>(some-function)
+
+" OK
+nnoremap a <Plug>(some-function)
+```
+
+## Suppressing Diagnostics
+
+You can suppress diagnostics using inline comments.
+
+### `hjkls:ignore-next-line`
+
+Suppresses diagnostics on the next line only.
+
+```vim
+" hjkls:ignore-next-line suspicious#normal_bang
+normal j  " No warning on this line
+
+normal k  " Warning appears here (not suppressed)
+```
+
+### `hjkls:ignore`
+
+Suppresses diagnostics from this line to the end of the file.
+
+```vim
+" hjkls:ignore suspicious#normal_bang
+normal j  " No warning
+normal k  " No warning
+```
+
+### Rule Specification
+
+Rules are specified as `category#rule_name`:
+
+```vim
+" Suppress a specific rule
+" hjkls:ignore suspicious#normal_bang
+
+" Suppress multiple rules
+" hjkls:ignore suspicious#normal_bang, style#double_dot
+
+" Suppress all diagnostics (no rules specified)
+" hjkls:ignore
+```
+
+### Comment Styles
+
+Both legacy Vim script and Vim9 script comment styles are supported:
+
+```vim
+" Legacy Vim script
+" hjkls:ignore suspicious#normal_bang
+
+# Vim9 script
+# hjkls:ignore suspicious#normal_bang
+```
+
+### Limitations
+
+The comment detection uses a simple heuristic (whitespace-preceded `"` or `#`) and may produce false positives for these characters inside string literals. In practice, this is rarely an issue since `hjkls:ignore` is an unusual string to appear in code.

@@ -789,6 +789,10 @@ impl Backend {
         let style_hints = self.collect_style_hints(&tree, &text.text);
         diagnostics.extend(style_hints);
 
+        // Filter diagnostics based on inline ignore directives
+        let directives = diagnostics::parse_ignore_directives(&text.text);
+        let diagnostics = diagnostics::filter_diagnostics(diagnostics, &directives);
+
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
 
@@ -844,6 +848,10 @@ impl Backend {
         // Collect style hints
         let style_hints = self.collect_style_hints(&tree, &text.text);
         diagnostics.extend(style_hints);
+
+        // Filter diagnostics based on inline ignore directives
+        let directives = diagnostics::parse_ignore_directives(&text.text);
+        let diagnostics = diagnostics::filter_diagnostics(diagnostics, &directives);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });

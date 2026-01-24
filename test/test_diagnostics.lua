@@ -470,4 +470,106 @@ T["diagnostics"]["hints style key_notation"] = function()
   child.stop()
 end
 
+-- ============================================================================
+-- Inline ignore directive tests
+-- ============================================================================
+
+T["diagnostics"]["hjkls:ignore-next-line suppresses warning on next line"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/ignore_test.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 4 (0-indexed: 3): normal j - should have warning (not ignored)
+  local line3_warning = find_diagnostic_at_line(diagnostics, 3)
+  local has_warning_line3 = line3_warning ~= nil and line3_warning.message:match("normal") ~= nil
+  MiniTest.expect.equality(
+    has_warning_line3,
+    true,
+    "Expected normal_bang warning on line 4 (not ignored)"
+  )
+
+  -- Line 7 (0-indexed: 6): normal k - should NOT have warning (ignored by hjkls:ignore-next-line on line 6)
+  local line6_warning = find_diagnostic_at_line(diagnostics, 6)
+  local has_normal_warning_line6 = line6_warning ~= nil and line6_warning.message:match("normal") ~= nil
+  MiniTest.expect.equality(
+    has_normal_warning_line6,
+    false,
+    "Expected no warning on line 7 (ignored by hjkls:ignore-next-line)"
+  )
+
+  -- Line 10 (0-indexed: 9): normal l - should have warning (ignore-next-line only affects line 7)
+  local line9_warning = find_diagnostic_at_line(diagnostics, 9)
+  local has_warning_line9 = line9_warning ~= nil and line9_warning.message:match("normal") ~= nil
+  MiniTest.expect.equality(
+    has_warning_line9,
+    true,
+    "Expected normal_bang warning on line 10 (ignore-next-line doesn't affect this)"
+  )
+
+  child.stop()
+end
+
+T["diagnostics"]["hjkls:ignore suppresses warnings to end of file"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/ignore_test.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Lines 13-14 (0-indexed: 12-13): normal m, normal n - should NOT have warning
+  -- (ignored by hjkls:ignore suspicious#normal_bang on line 12)
+  local line12_warning = find_diagnostic_at_line(diagnostics, 12)
+  local has_normal_warning_line12 = line12_warning ~= nil and line12_warning.message:match("normal") ~= nil
+  MiniTest.expect.equality(
+    has_normal_warning_line12,
+    false,
+    "Expected no normal_bang warning on line 13 (ignored to end of file)"
+  )
+
+  local line13_warning = find_diagnostic_at_line(diagnostics, 13)
+  local has_normal_warning_line13 = line13_warning ~= nil and line13_warning.message:match("normal") ~= nil
+  MiniTest.expect.equality(
+    has_normal_warning_line13,
+    false,
+    "Expected no normal_bang warning on line 14 (ignored to end of file)"
+  )
+
+  child.stop()
+end
+
+T["diagnostics"]["hjkls:ignore only affects specified rule"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/ignore_test.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 17 (0-indexed: 16): echo "hello" . "world" - should have double_dot hint
+  -- (hjkls:ignore suspicious#normal_bang doesn't affect style#double_dot)
+  local line16_warning = find_diagnostic_at_line(diagnostics, 16)
+  local has_double_dot_line16 = line16_warning ~= nil and line16_warning.message:match("%.%.") ~= nil
+  MiniTest.expect.equality(
+    has_double_dot_line16,
+    true,
+    "Expected double_dot hint on line 17 (different rule not ignored)"
+  )
+
+  -- Line 20 (0-indexed: 19): echo "foo" . "bar" - should NOT have double_dot hint
+  -- (ignored by hjkls:ignore style#double_dot on line 19)
+  local line19_warning = find_diagnostic_at_line(diagnostics, 19)
+  local has_double_dot_line19 = line19_warning ~= nil and line19_warning.message:match("%.%.") ~= nil
+  MiniTest.expect.equality(
+    has_double_dot_line19,
+    false,
+    "Expected no double_dot hint on line 20 (ignored by hjkls:ignore)"
+  )
+
+  child.stop()
+end
+
 return T
