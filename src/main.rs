@@ -751,6 +751,65 @@ impl Backend {
         }
     }
 
+    /// Collect style hints (code style suggestions, DiagnosticSeverity::HINT)
+    fn collect_style_hints(&self, tree: &Tree, source: &str) -> Vec<Diagnostic> {
+        let mut diagnostics = Vec::new();
+        let root = tree.root_node();
+
+        // double_dot: prefer `..` over `.` for string concatenation
+        Self::collect_double_dot_hints_recursive(&root, source, &mut diagnostics);
+
+        diagnostics
+    }
+
+    /// Collect hints for `.` string concatenation (should use `..`)
+    fn collect_double_dot_hints_recursive(
+        node: &tree_sitter::Node,
+        source: &str,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        if node.kind() == "binary_operation" {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            // Check if this is a `.` concatenation (not `..`)
+            // In tree-sitter-vim, the operator is a child node with kind "." or ".."
+            let has_single_dot = children.iter().any(|c| c.kind() == ".");
+
+            if has_single_dot {
+                let start = node.start_position();
+                let end = node.end_position();
+                let text = node.utf8_text(source.as_bytes()).unwrap_or(".");
+
+                diagnostics.push(Diagnostic {
+                    range: Range {
+                        start: Position {
+                            line: start.row as u32,
+                            character: start.column as u32,
+                        },
+                        end: Position {
+                            line: end.row as u32,
+                            character: end.column as u32,
+                        },
+                    },
+                    severity: Some(DiagnosticSeverity::HINT),
+                    source: Some("hjkls".to_string()),
+                    message: format!(
+                        "Style: '{}' uses `.` for string concatenation. Use `..` instead. In Vim9 script, `..` is required.",
+                        text.trim()
+                    ),
+                    ..Default::default()
+                });
+            }
+        }
+
+        // Recurse into children
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            Self::collect_double_dot_hints_recursive(&child, source, diagnostics);
+        }
+    }
+
     /// Collect warnings for undefined function calls.
     ///
     /// Checks:
@@ -1100,6 +1159,10 @@ impl Backend {
         let suspicious_warnings = self.collect_suspicious_warnings(&tree, &text.text);
         diagnostics.extend(suspicious_warnings);
 
+        // Collect style hints
+        let style_hints = self.collect_style_hints(&tree, &text.text);
+        diagnostics.extend(style_hints);
+
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
 
@@ -1152,6 +1215,10 @@ impl Backend {
         // Collect suspicious lint warnings
         let suspicious_warnings = self.collect_suspicious_warnings(&tree, &text.text);
         diagnostics.extend(suspicious_warnings);
+
+        // Collect style hints
+        let style_hints = self.collect_style_hints(&tree, &text.text);
+        diagnostics.extend(style_hints);
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });

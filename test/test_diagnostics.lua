@@ -308,4 +308,33 @@ T["diagnostics"]["detects vim9script not at start"] = function()
   child.stop()
 end
 
+T["diagnostics"]["hints style double_dot"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 139: "hello" . "world" (0-indexed: 138)
+  local single_dot = find_diagnostic_at_line(diagnostics, 138)
+  MiniTest.expect.equality(single_dot ~= nil, true, "Expected hint for '.' string concatenation")
+  if single_dot then
+    MiniTest.expect.equality(single_dot.severity, vim.diagnostic.severity.HINT)
+    MiniTest.expect.equality(single_dot.message:match("%.%.") ~= nil, true, "Message should mention '..'")
+    MiniTest.expect.equality(single_dot.message:match("Vim9") ~= nil, true, "Message should mention Vim9")
+  end
+
+  -- Line 140: "a" . "b" . "c" - chained (0-indexed: 139)
+  local chained_dot = find_diagnostic_at_line(diagnostics, 139)
+  MiniTest.expect.equality(chained_dot ~= nil, true, "Expected hint for chained '.' string concatenation")
+
+  -- Line 143: "hello" .. "world" should NOT have hint (0-indexed: 142)
+  local double_dot = find_diagnostic_at_line(diagnostics, 142)
+  local has_double_dot_false_positive = double_dot ~= nil and double_dot.message:match("Style")
+  MiniTest.expect.equality(has_double_dot_false_positive, false, "Expected no hint for '..' concatenation")
+
+  child.stop()
+end
+
 return T

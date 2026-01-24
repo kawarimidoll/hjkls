@@ -134,3 +134,10 @@ autocmd MyTestGroup BufEnter * echo "inline group"
 " set_compatible: should warn
 set compatible
 set cp
+
+" double_dot: should hint (use .. instead of .)
+let g:concat_single = "hello" . "world"
+let g:concat_chain = "a" . "b" . "c"
+
+" double_dot: valid (already using ..)
+let g:concat_double = "hello" .. "world"
