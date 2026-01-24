@@ -253,12 +253,12 @@ T["diagnostics"]["detects suspicious autocmd outside augroup"] = function()
 
   -- Line 128: autocmd inside augroup should NOT have warning (0-indexed: 127)
   local autocmd_in_group = find_diagnostic_at_line(diagnostics, 127)
-  local has_augroup_false_positive = autocmd_in_group ~= nil and autocmd_in_group.message:match("augroup")
+  local has_augroup_false_positive = autocmd_in_group ~= nil and autocmd_in_group.message:match("augroup") ~= nil
   MiniTest.expect.equality(has_augroup_false_positive, false, "Expected no warning for autocmd inside augroup")
 
   -- Line 132: autocmd with inline group should NOT have warning (0-indexed: 131)
   local autocmd_inline_group = find_diagnostic_at_line(diagnostics, 131)
-  local has_inline_false_positive = autocmd_inline_group ~= nil and autocmd_inline_group.message:match("augroup")
+  local has_inline_false_positive = autocmd_inline_group ~= nil and autocmd_inline_group.message:match("augroup") ~= nil
   MiniTest.expect.equality(has_inline_false_positive, false, "Expected no warning for autocmd with inline group")
 
   child.stop()
@@ -331,7 +331,7 @@ T["diagnostics"]["hints style double_dot"] = function()
 
   -- Line 143: "hello" .. "world" should NOT have hint (0-indexed: 142)
   local double_dot = find_diagnostic_at_line(diagnostics, 142)
-  local has_double_dot_false_positive = double_dot ~= nil and double_dot.message:match("Style")
+  local has_double_dot_false_positive = double_dot ~= nil and double_dot.message:match("Style") ~= nil
   MiniTest.expect.equality(has_double_dot_false_positive, false, "Expected no hint for '..' concatenation")
 
   child.stop()
@@ -388,6 +388,40 @@ T["diagnostics"]["hints style abort"] = function()
   local has_abort = find_diagnostic_at_line(diagnostics, 165)
   local has_abort_false_positive = has_abort ~= nil and has_abort.message:match("missing.*abort")
   MiniTest.expect.equality(has_abort_false_positive, false, "Expected no hint for function with abort")
+
+  child.stop()
+end
+
+T["diagnostics"]["hints style single_quote"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 171: "hello" (0-indexed: 170)
+  local double_simple = find_diagnostic_at_line(diagnostics, 170)
+  MiniTest.expect.equality(double_simple ~= nil, true, "Expected hint for double-quoted string without escapes")
+  if double_simple then
+    MiniTest.expect.equality(double_simple.severity, vim.diagnostic.severity.HINT)
+    MiniTest.expect.equality(double_simple.message:match("single quotes") ~= nil, true, "Message should mention single quotes")
+  end
+
+  -- Line 174: "hello\nworld" should NOT have hint (0-indexed: 173)
+  local double_escape = find_diagnostic_at_line(diagnostics, 173)
+  local has_escape_false_positive = double_escape ~= nil and double_escape.message:match("single quotes")
+  MiniTest.expect.equality(has_escape_false_positive, false, "Expected no hint for string with escape sequence")
+
+  -- Line 177: 'hello' should NOT have hint (0-indexed: 176)
+  local single_simple = find_diagnostic_at_line(diagnostics, 176)
+  local has_single_false_positive = single_simple ~= nil and single_simple.message:match("single quotes")
+  MiniTest.expect.equality(has_single_false_positive, false, "Expected no hint for single-quoted string")
+
+  -- Line 180: "it's a test" should NOT have hint (0-indexed: 179)
+  local double_with_quote = find_diagnostic_at_line(diagnostics, 179)
+  local has_quote_false_positive = double_with_quote ~= nil and double_with_quote.message:match("single quotes")
+  MiniTest.expect.equality(has_quote_false_positive, false, "Expected no hint for string containing single quote")
 
   child.stop()
 end

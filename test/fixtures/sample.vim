@@ -63,10 +63,10 @@ call empty(1, 2, 3)
 
 " Valid: optional arguments
 call Hello()
-call Hello("alice")
-call search("pattern")
-call search("pattern", "n")
-call search("pattern", "n", 100)
+call Hello('alice')
+call search('pattern')
+call search('pattern', 'n')
+call search('pattern', 'n', 100)
 
 " === Scope violations (should show warnings) ===
 
@@ -140,7 +140,7 @@ let g:concat_single = "hello" . "world"
 let g:concat_chain = "a" . "b" . "c"
 
 " double_dot: valid (already using ..)
-let g:concat_double = "hello" .. "world"
+let g:concat_double = 'hello' .. 'world'
 
 " function_bang: should hint (s: functions don't need !)
 function! s:ScriptLocalWithBang()
@@ -166,3 +166,15 @@ endfunction
 function! HasAbortFunc() abort
   return 2
 endfunction
+
+" single_quote: should hint (no escapes needed)
+let g:double_simple = "hello"
+
+" single_quote: valid (has escape sequence)
+let g:double_escape = "hello\nworld"
+
+" single_quote: valid (already single quote)
+let g:single_simple = 'hello'
+
+" single_quote: valid (contains single quote)
+let g:double_with_quote = "it's a test"

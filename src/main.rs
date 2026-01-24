@@ -765,6 +765,9 @@ impl Backend {
         // abort: functions should have `abort` attribute
         Self::collect_abort_hints_recursive(&root, source, &mut diagnostics);
 
+        // single_quote: prefer single quotes when no escapes needed
+        Self::collect_single_quote_hints_recursive(&root, source, &mut diagnostics);
+
         diagnostics
     }
 
@@ -930,6 +933,58 @@ impl Backend {
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
             Self::collect_abort_hints_recursive(&child, source, diagnostics);
+        }
+    }
+
+    /// Collect hints for double-quoted strings that don't need escapes
+    fn collect_single_quote_hints_recursive(
+        node: &tree_sitter::Node,
+        source: &str,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        if node.kind() == "string_literal" {
+            if let Ok(text) = node.utf8_text(source.as_bytes()) {
+                // Only check double-quoted strings
+                if text.starts_with('"') && text.ends_with('"') {
+                    // Check if the string contains any escape sequences
+                    // Vim escape sequences: \n, \r, \t, \e, \b, \\, \", \<xxx>, \x.., \u...., \U........, etc.
+                    let content = &text[1..text.len() - 1];
+                    let has_escape = content.contains('\\');
+                    // Also check for single quotes inside (would need escaping in single-quoted string)
+                    let has_single_quote = content.contains('\'');
+
+                    if !has_escape && !has_single_quote {
+                        let start = node.start_position();
+                        let end = node.end_position();
+
+                        diagnostics.push(Diagnostic {
+                            range: Range {
+                                start: Position {
+                                    line: start.row as u32,
+                                    character: start.column as u32,
+                                },
+                                end: Position {
+                                    line: end.row as u32,
+                                    character: end.column as u32,
+                                },
+                            },
+                            severity: Some(DiagnosticSeverity::HINT),
+                            source: Some("hjkls".to_string()),
+                            message: format!(
+                                "Style: {} can use single quotes. Double quotes are only needed for escape sequences.",
+                                text
+                            ),
+                            ..Default::default()
+                        });
+                    }
+                }
+            }
+        }
+
+        // Recurse into children
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            Self::collect_single_quote_hints_recursive(&child, source, diagnostics);
         }
     }
 

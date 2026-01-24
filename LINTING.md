@@ -188,3 +188,23 @@ function! MyFunc() abort
   return 1
 endfunction
 ```
+
+### `single_quote`
+
+**Origin:** hjkls original
+
+Suggests using single quotes for strings that don't require escape sequences. Single-quoted strings are simpler and more readable when no special characters are needed.
+
+```vim
+" Hint: use single quotes
+let s = "hello"
+
+" OK: already single-quoted
+let s = 'hello'
+
+" OK: contains escape sequence
+let s = "hello\nworld"
+
+" OK: contains single quote
+let s = "it's a test"
+```
