@@ -8,7 +8,7 @@ hjkls provides lint diagnostics beyond syntax errors. Rules are organized into c
 |----------|---------|----------|-------------|
 | **correctness** | Enabled | Error | Likely bugs or incorrect code |
 | **suspicious** | Enabled | Warning | Code that may behave unexpectedly |
-| **style** | Enabled | Hint | Style suggestions for better code |
+| **style** | Disabled | Hint | Style suggestions for better code |
 
 ## Correctness Rules (Error)
 
@@ -304,3 +304,95 @@ Both legacy Vim script and Vim9 script comment styles are supported:
 ### Limitations
 
 The comment detection uses a simple heuristic (whitespace-preceded `"` or `#`) and may produce false positives for these characters inside string literals. In practice, this is rarely an issue since `hjkls:ignore` is an unusual string to appear in code.
+
+## Configuration File
+
+You can configure lint rules using a `.hjkls.toml` file in your project root.
+
+> **Note:** Changes to `.hjkls.toml` require restarting the LSP server to take effect.
+
+### Basic Configuration
+
+```toml
+[lint]
+# Enable/disable entire categories
+correctness = true   # default: true
+suspicious = true    # default: true
+style = false        # default: false
+```
+
+### Per-Rule Overrides
+
+You can override individual rules within a category:
+
+```toml
+[lint]
+suspicious = true
+
+# Disable specific rules in the suspicious category
+[lint.rules.suspicious]
+normal_bang = "off"
+
+# Enable specific rules in the style category (even when category is disabled)
+[lint.rules.style]
+double_dot = "warn"
+```
+
+### Priority
+
+The configuration priority is: **per-rule override > category setting > default**
+
+This means you can:
+1. Enable a category but disable specific rules
+2. Disable a category but enable specific rules
+
+### Example Configurations
+
+**Minimal (strictest):** Enable all rules including style hints
+
+```toml
+[lint]
+style = true
+```
+
+**Permissive:** Only show critical errors
+
+```toml
+[lint]
+suspicious = false
+```
+
+**Custom:** Fine-tuned for your project
+
+```toml
+[lint]
+style = true
+
+# I use normal intentionally for specific effects
+[lint.rules.suspicious]
+normal_bang = "off"
+
+# I prefer single dots for readability
+[lint.rules.style]
+double_dot = "off"
+```
+
+### Available Rules
+
+| Category | Rule Name | Description |
+|----------|-----------|-------------|
+| correctness | `autoload_missing` | Autoload file not found |
+| correctness | `arity_mismatch` | Wrong number of function arguments |
+| correctness | `scope_violation` | Invalid scope usage (l:, a:) |
+| correctness | `undefined_function` | Undefined function call |
+| suspicious | `normal_bang` | `normal` without `!` |
+| suspicious | `match_case` | `=~` without case modifier |
+| suspicious | `autocmd_group` | `autocmd` outside `augroup` |
+| suspicious | `set_compatible` | `set compatible` enabled |
+| suspicious | `vim9script_position` | `vim9script` not at file start |
+| style | `double_dot` | `.` instead of `..` for concatenation |
+| style | `function_bang` | Unnecessary `!` on s: functions |
+| style | `abort` | Missing `abort` attribute |
+| style | `single_quote` | Double quotes when single would work |
+| style | `key_notation` | Non-standard key notation |
+| style | `plug_noremap` | `map` instead of `noremap` for `<Plug>` |

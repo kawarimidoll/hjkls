@@ -14,6 +14,8 @@ tree-sitter-vim = "0.4"
 texter = "0.2"
 tokio = { version = "1", features = ["full"] }
 salsa = "0.25"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
 
 [lints.clippy]
 # Prefer modern module style: foo.rs + foo/ instead of foo/mod.rs

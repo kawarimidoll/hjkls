@@ -15,6 +15,7 @@ use crate::builtins::{
     EditorMode, HAS_FEATURES, MAP_OPTIONS,
 };
 use crate::completion::CompletionContext;
+use crate::config::Config;
 use crate::db::{self, HjklsDatabase, SourceFile};
 use crate::diagnostics;
 use crate::log_debug;
@@ -46,6 +47,8 @@ pub struct Backend {
     editor_mode: EditorMode,
     /// Vim runtime path for autoload resolution
     vimruntime: Option<PathBuf>,
+    /// Lint configuration loaded from .hjkls.toml
+    config: Arc<Mutex<Config>>,
 }
 
 impl Backend {
@@ -65,6 +68,7 @@ impl Backend {
             indexing_complete: Arc::new(AtomicBool::new(false)),
             editor_mode,
             vimruntime,
+            config: Arc::new(Mutex::new(Config::default())),
         }
     }
 
@@ -111,6 +115,13 @@ impl Backend {
                     roots.push(path.into_owned());
                 }
             }
+        }
+
+        // Load configuration from workspace
+        if let Some(loaded_config) = Config::find_in_workspace(&roots) {
+            log_debug!("Loaded config from workspace");
+            let mut config = self.config.lock().unwrap();
+            *config = loaded_config;
         }
     }
 
@@ -175,6 +186,9 @@ impl Backend {
                                 severity: Some(DiagnosticSeverity::WARNING),
                                 source: Some("hjkls".to_string()),
                                 message: format!("Autoload file not found: {}", expected_path),
+                                code: Some(NumberOrString::String(
+                                    "hjkls/autoload_missing".to_string(),
+                                )),
                                 ..Default::default()
                             });
                         }
@@ -287,6 +301,9 @@ impl Backend {
                                     severity: Some(DiagnosticSeverity::WARNING),
                                     source: Some("hjkls".to_string()),
                                     message,
+                                    code: Some(NumberOrString::String(
+                                        "hjkls/arity_mismatch".to_string(),
+                                    )),
                                     ..Default::default()
                                 });
                             }
@@ -355,6 +372,7 @@ impl Backend {
                                 "Scope violation: '{}' uses local scope (l:) outside of a function",
                                 var_name
                             ),
+                            code: Some(NumberOrString::String("hjkls/scope_violation".to_string())),
                             ..Default::default()
                         });
                     }
@@ -392,6 +410,7 @@ impl Backend {
                     "Scope violation: '{}' uses argument scope (a:) outside of a function",
                     var_name
                 ),
+                code: Some(NumberOrString::String("hjkls/scope_violation".to_string())),
                 ..Default::default()
             });
         }
@@ -505,6 +524,9 @@ impl Backend {
                                 severity: Some(DiagnosticSeverity::WARNING),
                                 source: Some("hjkls".to_string()),
                                 message: format!("Undefined function: {}", func_name),
+                                code: Some(NumberOrString::String(
+                                    "hjkls/undefined_function".to_string(),
+                                )),
                                 ..Default::default()
                             });
                         }
@@ -793,6 +815,12 @@ impl Backend {
         let directives = diagnostics::parse_ignore_directives(&text.text);
         let diagnostics = diagnostics::filter_diagnostics(diagnostics, &directives);
 
+        // Filter diagnostics based on config settings
+        let diagnostics = {
+            let config = self.config.lock().unwrap();
+            diagnostics::filter_by_config(diagnostics, &config)
+        };
+
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri, Document { text, tree });
 
@@ -852,6 +880,12 @@ impl Backend {
         // Filter diagnostics based on inline ignore directives
         let directives = diagnostics::parse_ignore_directives(&text.text);
         let diagnostics = diagnostics::filter_diagnostics(diagnostics, &directives);
+
+        // Filter diagnostics based on config settings
+        let diagnostics = {
+            let config = self.config.lock().unwrap();
+            diagnostics::filter_by_config(diagnostics, &config)
+        };
 
         let mut docs = self.documents.lock().unwrap();
         docs.insert(uri.clone(), Document { text, tree });
