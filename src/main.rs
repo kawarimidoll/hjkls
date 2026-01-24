@@ -759,6 +759,9 @@ impl Backend {
         // double_dot: prefer `..` over `.` for string concatenation
         Self::collect_double_dot_hints_recursive(&root, source, &mut diagnostics);
 
+        // function_bang: s: functions don't need `!`
+        Self::collect_function_bang_hints_recursive(&root, source, &mut diagnostics);
+
         diagnostics
     }
 
@@ -807,6 +810,75 @@ impl Backend {
         let mut cursor = node.walk();
         for child in node.children(&mut cursor) {
             Self::collect_double_dot_hints_recursive(&child, source, diagnostics);
+        }
+    }
+
+    /// Collect hints for `function!` with `s:` scope (bang is unnecessary)
+    fn collect_function_bang_hints_recursive(
+        node: &tree_sitter::Node,
+        source: &str,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        if node.kind() == "function_definition" {
+            let mut cursor = node.walk();
+            let children: Vec<_> = node.children(&mut cursor).collect();
+
+            // Check if function has bang (!)
+            let has_bang = children.iter().any(|c| c.kind() == "bang");
+
+            if has_bang {
+                // Find function_declaration to get the function name
+                if let Some(decl) = children.iter().find(|c| c.kind() == "function_declaration") {
+                    let mut decl_cursor = decl.walk();
+                    let decl_children: Vec<_> = decl.children(&mut decl_cursor).collect();
+
+                    // Check if function name has s: scope
+                    let is_script_local = decl_children.iter().any(|c| {
+                        if c.kind() == "scoped_identifier" {
+                            let mut scope_cursor = c.walk();
+                            c.children(&mut scope_cursor).any(|sc| {
+                                sc.kind() == "scope"
+                                    && sc.utf8_text(source.as_bytes()).ok() == Some("s:")
+                            })
+                        } else {
+                            false
+                        }
+                    });
+
+                    if is_script_local {
+                        let start = node.start_position();
+                        // Get just the first line for cleaner message
+                        let text = node.utf8_text(source.as_bytes()).unwrap_or("function!");
+                        let first_line = text.lines().next().unwrap_or(text);
+
+                        diagnostics.push(Diagnostic {
+                            range: Range {
+                                start: Position {
+                                    line: start.row as u32,
+                                    character: start.column as u32,
+                                },
+                                end: Position {
+                                    line: start.row as u32,
+                                    character: start.column as u32 + first_line.len() as u32,
+                                },
+                            },
+                            severity: Some(DiagnosticSeverity::HINT),
+                            source: Some("hjkls".to_string()),
+                            message: format!(
+                                "Style: '{}' uses `function!` for script-local function. The `!` is unnecessary for `s:` functions.",
+                                first_line.trim()
+                            ),
+                            ..Default::default()
+                        });
+                    }
+                }
+            }
+        }
+
+        // Recurse into children
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            Self::collect_function_bang_hints_recursive(&child, source, diagnostics);
         }
     }
 

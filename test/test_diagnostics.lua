@@ -337,4 +337,33 @@ T["diagnostics"]["hints style double_dot"] = function()
   child.stop()
 end
 
+T["diagnostics"]["hints style function_bang"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Line 146: function! s:ScriptLocalWithBang() (0-indexed: 145)
+  local script_local_bang = find_diagnostic_at_line(diagnostics, 145)
+  MiniTest.expect.equality(script_local_bang ~= nil, true, "Expected hint for 'function!' with s: scope")
+  if script_local_bang then
+    MiniTest.expect.equality(script_local_bang.severity, vim.diagnostic.severity.HINT)
+    MiniTest.expect.equality(script_local_bang.message:match("s:") ~= nil, true, "Message should mention s:")
+  end
+
+  -- Line 151: function s:ScriptLocalNoBang() should NOT have hint (0-indexed: 150)
+  local script_local_no_bang = find_diagnostic_at_line(diagnostics, 150)
+  local has_no_bang_false_positive = script_local_no_bang ~= nil and script_local_no_bang.message:match("function!")
+  MiniTest.expect.equality(has_no_bang_false_positive, false, "Expected no hint for 'function' without bang")
+
+  -- Line 156: function! GlobalFuncWithBang() should NOT have hint (0-indexed: 155)
+  local global_bang = find_diagnostic_at_line(diagnostics, 155)
+  local has_global_false_positive = global_bang ~= nil and global_bang.message:match("function!")
+  MiniTest.expect.equality(has_global_false_positive, false, "Expected no hint for global function with bang")
+
+  child.stop()
+end
+
 return T

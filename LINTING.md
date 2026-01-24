@@ -147,3 +147,26 @@ let s = "hello" . "world"
 " OK
 let s = "hello" .. "world"
 ```
+
+### `function_bang`
+
+**Origin:** hjkls original
+
+Suggests removing `!` from script-local function definitions. The `!` allows overwriting existing functions, but `s:` functions are only visible within the same script, making `!` unnecessary.
+
+```vim
+" Hint: ! is unnecessary for s: functions
+function! s:MyHelper()
+  return 1
+endfunction
+
+" OK
+function s:MyHelper()
+  return 1
+endfunction
+
+" OK: global functions may need ! to avoid E122
+function! GlobalFunc()
+  return 2
+endfunction
+```

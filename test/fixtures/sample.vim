@@ -141,3 +141,18 @@ let g:concat_chain = "a" . "b" . "c"
 
 " double_dot: valid (already using ..)
 let g:concat_double = "hello" .. "world"
+
+" function_bang: should hint (s: functions don't need !)
+function! s:ScriptLocalWithBang()
+  return 1
+endfunction
+
+" function_bang: valid (s: without bang)
+function s:ScriptLocalNoBang()
+  return 2
+endfunction
+
+" function_bang: valid (global function with bang is OK)
+function! GlobalFuncWithBang()
+  return 3
+endfunction
