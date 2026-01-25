@@ -21,6 +21,7 @@
 //! let edits = format(source, &tree, &config);
 //! ```
 
+mod colons;
 mod commas;
 mod indent;
 mod operators;
@@ -66,6 +67,11 @@ pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit>
     // Compute comma spacing edits (a,b → a, b)
     if config.space_after_comma {
         edits.extend(commas::compute_comma_edits(source, tree));
+    }
+
+    // Compute colon spacing edits for dictionaries ({'a':1} → {'a': 1})
+    if config.space_after_colon {
+        edits.extend(colons::compute_colon_edits(source, tree));
     }
 
     // Compute line-level edits (trailing whitespace, final newline)
@@ -402,5 +408,31 @@ mod tests {
 
         // Should have spaces around operators and after commas
         assert_eq!(result, "call Test(a + b, c * d)\n");
+    }
+
+    #[test]
+    fn test_format_dict_colon_spacing() {
+        // Add space after colons in dictionaries
+        let source = "let d = {'a':1,'b':2}\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces after colons and commas
+        assert_eq!(result, "let d = {'a': 1, 'b': 2}\n");
+    }
+
+    #[test]
+    fn test_format_dict_full_formatting() {
+        // Full dictionary formatting: colons, commas, and operators
+        let source = "let d = {'sum':a+b,'diff':c-d}\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should format everything correctly
+        assert_eq!(result, "let d = {'sum': a + b, 'diff': c - d}\n");
     }
 }

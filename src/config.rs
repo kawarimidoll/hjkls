@@ -25,6 +25,7 @@
 //! normalize_spaces = true         # default: true
 //! space_around_operators = true   # default: true
 //! space_after_comma = true        # default: true
+//! space_after_colon = true        # default: true
 //! ```
 
 use serde::Deserialize;
@@ -72,6 +73,8 @@ pub struct FormatConfig {
     pub space_around_operators: bool,
     /// Add space after commas, default: true
     pub space_after_comma: bool,
+    /// Add space after colons in dictionaries, default: true
+    pub space_after_colon: bool,
 }
 
 impl Default for FormatConfig {
@@ -85,6 +88,7 @@ impl Default for FormatConfig {
             normalize_spaces: true,
             space_around_operators: true,
             space_after_comma: true,
+            space_after_colon: true,
         }
     }
 }

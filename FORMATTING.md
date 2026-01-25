@@ -13,6 +13,7 @@ hjkls provides automatic code formatting for Vim script files via the LSP `textD
 | **Space normalization** | Reduces multiple consecutive spaces to single space |
 | **Operator spacing** | Adds spaces around binary operators, removes space after unary operators |
 | **Comma spacing** | Adds space after commas in function calls, lists, and dictionaries |
+| **Colon spacing** | Adds space after colons in dictionary entries |
 
 ## Usage
 
@@ -161,6 +162,18 @@ let d = {'a': 1, 'b': 2}
 let x = [1, 2, 3,]  " Trailing comma preserved
 ```
 
+### Colon Spacing
+
+Colons in dictionary entries are followed by a single space:
+
+```vim
+" Before
+let d = {'a':1,'b':2}
+
+" After
+let d = {'a': 1, 'b': 2}
+```
+
 ## Configuration
 
 Configure formatting in `.hjkls.toml`:
@@ -175,6 +188,7 @@ insert_final_newline = true     # Add newline at end of file (default: true)
 normalize_spaces = true         # Reduce multiple spaces to single (default: true)
 space_around_operators = true   # Add spaces around operators (default: true)
 space_after_comma = true        # Add space after commas (default: true)
+space_after_colon = true        # Add space after colons in dicts (default: true)
 ```
 
 ### Tab Indentation
@@ -203,6 +217,7 @@ insert_final_newline = false      # Don't add final newline
 normalize_spaces = false          # Keep multiple consecutive spaces
 space_around_operators = false    # Keep original operator spacing
 space_after_comma = false         # Keep original comma spacing
+space_after_colon = false         # Keep original colon spacing
 ```
 
 > **Note:** Changes to `.hjkls.toml` require restarting the LSP server to take effect.
