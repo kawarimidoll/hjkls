@@ -497,9 +497,30 @@ impl Backend {
             if node.kind() == "call_expression" {
                 if let Some(func_node) = node.child(0) {
                     let func_name = func_node.utf8_text(source.as_bytes()).unwrap_or("");
+                    let func_kind = func_node.kind();
 
-                    // Skip empty names and autoload functions (handled separately)
-                    if !func_name.is_empty() && !func_name.contains('#') {
+                    // Skip dynamic/runtime function calls that cannot be statically checked:
+                    // - field_expression: dictionary methods (dict.method(), self.method())
+                    // - index_expression: dictionary subscript (a:args['callback']())
+                    // - argument: a: scope variables (a:callback())
+                    // - scoped_identifier with l: prefix: local variables (l:Func())
+                    let is_dynamic_call = func_kind == "field_expression"
+                        || func_kind == "index_expression"
+                        || func_kind == "argument"
+                        || (func_kind == "scoped_identifier" && func_name.starts_with("l:"));
+
+                    // For identifiers, check if it's a variable (lambda/funcref stored in variable)
+                    let is_variable_call = func_kind == "identifier"
+                        && local_symbols.iter().any(|s| {
+                            s.kind == symbols::SymbolKind::Variable && s.name == func_name
+                        });
+
+                    // Skip empty names, autoload functions, and dynamic/variable calls
+                    if !func_name.is_empty()
+                        && !func_name.contains('#')
+                        && !is_dynamic_call
+                        && !is_variable_call
+                    {
                         let is_undefined = self.check_if_function_undefined(
                             func_name,
                             local_symbols,

@@ -179,6 +179,60 @@ T["diagnostics"]["detects undefined function calls"] = function()
   child.stop()
 end
 
+T["diagnostics"]["no false positives for dynamic function calls"] = function()
+  local child = H.create_child()
+  child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")
+  H.wait_for_lsp(child)
+  H.wait_for_diagnostics(child)
+
+  local diagnostics = H.get_diagnostics(child)
+
+  -- Dynamic function calls section (lines 182-215 in sample.vim)
+  -- These are 0-indexed for diagnostics, so 181-214
+
+  -- Line 186: Lambda1(5) - should NOT have undefined warning (0-indexed: 185)
+  local lambda_call = find_diagnostic_at_line(diagnostics, 185)
+  local has_lambda_false_positive = lambda_call ~= nil and lambda_call.message:match("Undefined")
+  MiniTest.expect.equality(has_lambda_false_positive, false, "Expected no undefined warning for lambda variable call")
+
+  -- Line 190: Funcref1('hello') - should NOT have undefined warning (0-indexed: 189)
+  local funcref_call = find_diagnostic_at_line(diagnostics, 189)
+  local has_funcref_false_positive = funcref_call ~= nil and funcref_call.message:match("Undefined")
+  MiniTest.expect.equality(has_funcref_false_positive, false, "Expected no undefined warning for funcref variable call")
+
+  -- Line 197: dict1.method() - should NOT have undefined warning (0-indexed: 196)
+  local dict_method = find_diagnostic_at_line(diagnostics, 196)
+  local has_dict_false_positive = dict_method ~= nil and dict_method.message:match("Undefined")
+  MiniTest.expect.equality(has_dict_false_positive, false, "Expected no undefined warning for dictionary method call")
+
+  -- Line 204: obj1.greet() - should NOT have undefined warning (0-indexed: 203)
+  local obj_method = find_diagnostic_at_line(diagnostics, 203)
+  local has_obj_false_positive = obj_method ~= nil and obj_method.message:match("Undefined")
+  MiniTest.expect.equality(has_obj_false_positive, false, "Expected no undefined warning for object method call")
+
+  -- Line 208: a:callback() inside function - should NOT have undefined warning (0-indexed: 207)
+  local callback_call = find_diagnostic_at_line(diagnostics, 207)
+  local has_callback_false_positive = callback_call ~= nil and callback_call.message:match("Undefined")
+  MiniTest.expect.equality(has_callback_false_positive, false, "Expected no undefined warning for a:callback call")
+
+  -- Line 214: self.method() - should NOT have undefined warning (0-indexed: 213)
+  local self_method = find_diagnostic_at_line(diagnostics, 213)
+  local has_self_false_positive = self_method ~= nil and self_method.message:match("Undefined")
+  MiniTest.expect.equality(has_self_false_positive, false, "Expected no undefined warning for self.method call")
+
+  -- Line 219: a:opts['callback']() - should NOT have undefined warning (0-indexed: 218)
+  local subscript_call = find_diagnostic_at_line(diagnostics, 218)
+  local has_subscript_false_positive = subscript_call ~= nil and subscript_call.message:match("Undefined")
+  MiniTest.expect.equality(has_subscript_false_positive, false, "Expected no undefined warning for dict subscript call")
+
+  -- Line 225: l:Callback() - should NOT have undefined warning (0-indexed: 224)
+  local local_funcref = find_diagnostic_at_line(diagnostics, 224)
+  local has_local_false_positive = local_funcref ~= nil and local_funcref.message:match("Undefined")
+  MiniTest.expect.equality(has_local_false_positive, false, "Expected no undefined warning for l:Funcref call")
+
+  child.stop()
+end
+
 T["diagnostics"]["detects suspicious normal without bang"] = function()
   local child = H.create_child()
   child.cmd("edit " .. _G.TEST_PATHS.fixtures_dir .. "/sample.vim")

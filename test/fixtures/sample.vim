@@ -179,6 +179,52 @@ let g:single_simple = 'hello'
 " single_quote: valid (contains single quote)
 let g:double_with_quote = "it's a test"
 
+" === Dynamic function calls (should NOT show undefined warnings) ===
+
+" Lambda assigned to variable
+let Lambda1 = { x -> x + 1 }
+echo Lambda1(5)
+
+" Funcref assigned to variable
+let Funcref1 = function('strlen')
+echo Funcref1('hello')
+
+" Dictionary function
+let dict1 = {}
+function! dict1.method() abort
+  return 'method called'
+endfunction
+echo dict1.method()
+
+" Dictionary method with self
+let obj1 = {}
+function! obj1.greet() abort dict
+  return 'hello'
+endfunction
+echo obj1.greet()
+
+" Calling via a: scope (callback pattern)
+function! s:RunCallback(callback) abort
+  return a:callback()
+endfunction
+call s:RunCallback({ -> 'result' })
+
+" self.method() call inside dict function
+function! dict1.chain() abort dict
+  return self.method()
+endfunction
+
+" Dictionary subscript call (a:args['callback']())
+function! s:RunWithOptions(opts) abort
+  return a:opts['callback']()
+endfunction
+
+" Local scope function reference (l:Func())
+function! s:TestLocalFuncref() abort
+  let l:Callback = { -> 'test' }
+  return l:Callback()
+endfunction
+
 " === Key notation (should show hints) ===
 
 " key_notation: should hint (lowercase)

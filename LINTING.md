@@ -29,6 +29,34 @@ call NonExistentFunc()
 - Global functions in the workspace
 - Autoload functions (via `$VIMRUNTIME`)
 
+**Not checked (dynamic calls):**
+
+Vim script is dynamically typed, so some function calls cannot be verified statically. The following patterns are intentionally skipped to avoid false positives:
+
+```vim
+" Dictionary methods - checked at runtime
+let dict = {}
+function! dict.method() abort
+endfunction
+echo dict.method()       " Skipped: field_expression
+echo self.method()       " Skipped: field_expression
+
+" Dictionary subscript calls
+echo a:opts['callback']()  " Skipped: index_expression
+
+" Argument scope variables (callbacks)
+function! Run(callback) abort
+  return a:callback()    " Skipped: argument node
+endfunction
+
+" Variables holding function references (lambda/Funcref)
+let F = { x -> x + 1 }
+echo F(5)                " Skipped: variable defined in scope
+
+let G = function('strlen')
+echo G('hello')          " Skipped: variable defined in scope
+```
+
 ### `scope_violation`
 
 Warns when using `l:` (local) or `a:` (argument) scope outside of a function.
