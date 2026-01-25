@@ -30,6 +30,7 @@ Options:
       --vim-only         Show only Vim-compatible functions in completion
       --neovim-only      Show only Neovim-compatible functions in completion
       --vimruntime=<PATH> Override $VIMRUNTIME path for autoload resolution
+      --config=<PATH>    Use specified config file (overrides workspace .hjkls.toml)
       --log=<PATH>       Enable debug logging to specified file
   -h, --help             Show this help message
 
@@ -92,10 +93,24 @@ async fn main() {
         .or_else(|| std::env::var("VIMRUNTIME").ok().map(PathBuf::from))
         .filter(|p| p.exists());
 
+    // Parse --config=PATH argument
+    let config_path: Option<PathBuf> = args
+        .iter()
+        .find_map(|arg| arg.strip_prefix("--config=").map(PathBuf::from));
+
+    // Validate config path exists if specified
+    if let Some(ref path) = config_path {
+        if !path.exists() {
+            eprintln!("error: config file not found: {}", path.display());
+            std::process::exit(1);
+        }
+    }
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
-    let (service, socket) =
-        LspService::new(|client| Backend::new(client, editor_mode, vimruntime.clone()));
+    let (service, socket) = LspService::new(|client| {
+        Backend::new(client, editor_mode, vimruntime.clone(), config_path.clone())
+    });
     Server::new(stdin, stdout, socket).serve(service).await;
 }

@@ -47,12 +47,19 @@ pub struct Backend {
     editor_mode: EditorMode,
     /// Vim runtime path for autoload resolution
     vimruntime: Option<PathBuf>,
+    /// CLI-specified config file path
+    config_path: Option<PathBuf>,
     /// Lint configuration loaded from .hjkls.toml
     config: Arc<Mutex<Config>>,
 }
 
 impl Backend {
-    pub fn new(client: Client, editor_mode: EditorMode, vimruntime: Option<PathBuf>) -> Self {
+    pub fn new(
+        client: Client,
+        editor_mode: EditorMode,
+        vimruntime: Option<PathBuf>,
+        config_path: Option<PathBuf>,
+    ) -> Self {
         let mut parser = Parser::new();
         parser
             .set_language(&tree_sitter_vim::language())
@@ -68,6 +75,7 @@ impl Backend {
             indexing_complete: Arc::new(AtomicBool::new(false)),
             editor_mode,
             vimruntime,
+            config_path,
             config: Arc::new(Mutex::new(Config::default())),
         }
     }
@@ -117,11 +125,27 @@ impl Backend {
             }
         }
 
-        // Load configuration from workspace
-        if let Some(loaded_config) = Config::find_in_workspace(&roots) {
-            log_debug!("Loaded config from workspace");
+        // Load configuration: CLI path takes priority, then search workspace
+        let loaded_config = if let Some(ref path) = self.config_path {
+            match Config::load(path) {
+                Ok(cfg) => {
+                    log_debug!("Loaded config from CLI path: {:?}", path);
+                    Some(cfg)
+                }
+                Err(e) => {
+                    log_debug!("Failed to load config from {:?}: {}", path, e);
+                    None
+                }
+            }
+        } else {
+            Config::find_in_workspace(&roots).inspect(|_| {
+                log_debug!("Loaded config from workspace");
+            })
+        };
+
+        if let Some(cfg) = loaded_config {
             let mut config = self.config.lock().unwrap();
-            *config = loaded_config;
+            *config = cfg;
         }
     }
 
