@@ -1,6 +1,6 @@
 //! Configuration file support for hjkls
 //!
-//! Reads `.hjkls.toml` from the workspace root to configure lint rules.
+//! Reads `.hjkls.toml` from the workspace root to configure lint and format rules.
 //!
 //! # Example configuration
 //!
@@ -15,6 +15,18 @@
 //!
 //! [lint.rules.style]
 //! double_dot = "warn"
+//!
+//! [format]
+//! indent_width = 2                # default: 2
+//! use_tabs = false                # default: false
+//! line_continuation_indent = 6    # default: indent_width * 3
+//! trim_trailing_whitespace = true # default: true
+//! insert_final_newline = true     # default: true
+//! normalize_spaces = true         # default: true
+//! space_around_operators = true   # default: true
+//! space_after_comma = true        # default: true
+//! space_after_colon = true        # default: true
+//! trim_inside_brackets = true     # default: true
 //! ```
 
 use serde::Deserialize;
@@ -38,6 +50,58 @@ pub enum RuleState {
 impl RuleState {
     pub fn is_enabled(self) -> bool {
         matches!(self, RuleState::Warn)
+    }
+}
+
+/// Format configuration section
+#[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
+pub struct FormatConfig {
+    /// Indent width (shiftwidth), default: 2
+    pub indent_width: usize,
+    /// Use tabs instead of spaces, default: false
+    pub use_tabs: bool,
+    /// Line continuation indent (default: indent_width * 3 = 6)
+    /// When None, uses indent_width * 3
+    pub line_continuation_indent: Option<usize>,
+    /// Trim trailing whitespace, default: true
+    pub trim_trailing_whitespace: bool,
+    /// Insert final newline, default: true
+    pub insert_final_newline: bool,
+    /// Normalize multiple consecutive spaces to single space, default: true
+    pub normalize_spaces: bool,
+    /// Add/normalize spaces around operators, default: true
+    pub space_around_operators: bool,
+    /// Add space after commas, default: true
+    pub space_after_comma: bool,
+    /// Add space after colons in dictionaries, default: true
+    pub space_after_colon: bool,
+    /// Remove spaces inside brackets (parens, square, curly), default: true
+    pub trim_inside_brackets: bool,
+}
+
+impl Default for FormatConfig {
+    fn default() -> Self {
+        Self {
+            indent_width: 2,
+            use_tabs: false,
+            line_continuation_indent: None,
+            trim_trailing_whitespace: true,
+            insert_final_newline: true,
+            normalize_spaces: true,
+            space_around_operators: true,
+            space_after_comma: true,
+            space_after_colon: true,
+            trim_inside_brackets: true,
+        }
+    }
+}
+
+impl FormatConfig {
+    /// Get effective line continuation indent (default: indent_width * 3)
+    pub fn effective_line_continuation_indent(&self) -> usize {
+        self.line_continuation_indent
+            .unwrap_or(self.indent_width * 3)
     }
 }
 
@@ -73,6 +137,8 @@ pub struct RulesConfig {
 pub struct Config {
     /// Lint configuration
     pub lint: LintConfig,
+    /// Format configuration
+    pub format: FormatConfig,
 }
 
 impl Config {

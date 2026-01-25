@@ -1,0 +1,482 @@
+//! Vim script formatter
+//!
+//! This module provides formatting functionality for Vim script files.
+//!
+//! # Features
+//!
+//! - Trailing whitespace removal
+//! - Final newline insertion
+//! - Block indentation (function/if/for/while/try/augroup)
+//! - Line continuation indentation (\ at end of line)
+//!
+//! # Example
+//!
+//! ```ignore
+//! use hjkls::formatter::{format, FormatConfig};
+//!
+//! let source = "function! Test()\nlet x = 1\nendfunction";
+//! let tree = parser.parse(source, None).unwrap();
+//! let config = FormatConfig::default();
+//!
+//! let edits = format(source, &tree, &config);
+//! ```
+
+mod brackets;
+mod colons;
+mod commas;
+mod indent;
+mod operators;
+mod rules;
+mod spaces;
+
+pub use crate::config::FormatConfig;
+
+use tower_lsp_server::ls_types::TextEdit;
+use tree_sitter::Tree;
+
+/// Format Vim script source code and return text edits
+///
+/// This function analyzes the source code and syntax tree to produce
+/// a list of text edits that will format the code according to the
+/// configuration settings.
+///
+/// # Arguments
+///
+/// * `source` - The source code to format
+/// * `tree` - The parsed syntax tree
+/// * `config` - Format configuration
+///
+/// # Returns
+///
+/// A vector of `TextEdit` that can be applied to format the source
+pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit> {
+    let mut edits = Vec::new();
+
+    // Compute indent edits first (these modify line starts)
+    edits.extend(indent::compute_indent_edits(source, tree, config));
+
+    // Compute space normalization edits (multiple spaces → single space)
+    if config.normalize_spaces {
+        edits.extend(spaces::compute_space_edits(source, tree));
+    }
+
+    // Compute operator spacing edits (a=1 → a = 1, - 1 → -1)
+    if config.space_around_operators {
+        edits.extend(operators::compute_operator_edits(source, tree));
+    }
+
+    // Compute comma spacing edits (a,b → a, b)
+    if config.space_after_comma {
+        edits.extend(commas::compute_comma_edits(source, tree));
+    }
+
+    // Compute colon spacing edits for dictionaries ({'a':1} → {'a': 1})
+    if config.space_after_colon {
+        edits.extend(colons::compute_colon_edits(source, tree));
+    }
+
+    // Compute bracket spacing edits (( x ) → (x))
+    if config.trim_inside_brackets {
+        edits.extend(brackets::compute_bracket_edits(source, tree));
+    }
+
+    // Compute line-level edits (trailing whitespace, final newline)
+    edits.extend(rules::compute_line_edits(source, config));
+
+    // Sort edits by position (in reverse order for correct application)
+    // Note: This ordering is important for conflict resolution between modules.
+    // When spaces and operators modules produce overlapping edits, the sort ensures
+    // consistent behavior by processing later positions first, and dedup_by keeps
+    // the first edit encountered (which, after sorting, is the one at the later position).
+    edits.sort_by(|a, b| {
+        let pos_a = (a.range.start.line, a.range.start.character);
+        let pos_b = (b.range.start.line, b.range.start.character);
+        pos_b.cmp(&pos_a)
+    });
+
+    // Remove duplicate edits for the same range
+    // When multiple modules produce edits for the same position, the operator module's
+    // edits take precedence because they are added after space normalization edits,
+    // and dedup_by keeps the last-added edit when ranges match.
+    edits.dedup_by(|a, b| a.range == b.range);
+
+    edits
+}
+
+/// Format Vim script source code and return the formatted string
+///
+/// This is a convenience function that applies all edits and returns
+/// the resulting string.
+///
+/// # Arguments
+///
+/// * `source` - The source code to format
+/// * `tree` - The parsed syntax tree
+/// * `config` - Format configuration
+///
+/// # Returns
+///
+/// The formatted source code as a string
+#[cfg(test)]
+pub fn format_to_string(source: &str, tree: &Tree, config: &FormatConfig) -> String {
+    let edits = format(source, tree, config);
+    apply_edits(source, &edits)
+}
+
+/// Apply text edits to source code
+///
+/// Edits are expected to be sorted in reverse order (last position first)
+#[cfg(test)]
+fn apply_edits(source: &str, edits: &[TextEdit]) -> String {
+    let mut result = source.to_string();
+
+    for edit in edits {
+        let start_offset = position_to_offset(&result, edit.range.start);
+        let end_offset = position_to_offset(&result, edit.range.end);
+
+        if let (Some(start), Some(end)) = (start_offset, end_offset) {
+            result.replace_range(start..end, &edit.new_text);
+        }
+    }
+
+    result
+}
+
+/// Convert LSP position to byte offset
+#[cfg(test)]
+fn position_to_offset(
+    source: &str,
+    position: tower_lsp_server::ls_types::Position,
+) -> Option<usize> {
+    let mut offset = 0;
+    let mut current_line = 0;
+
+    for line in source.lines() {
+        if current_line == position.line as usize {
+            let char_offset = position.character as usize;
+            if char_offset <= line.len() {
+                return Some(offset + char_offset);
+            } else {
+                return Some(offset + line.len());
+            }
+        }
+        offset += line.len() + 1; // +1 for newline
+        current_line += 1;
+    }
+
+    // Handle position at the end of file
+    if current_line == position.line as usize && position.character == 0 {
+        Some(offset)
+    } else {
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tree_sitter::Parser;
+
+    fn parse_vim(source: &str) -> Tree {
+        let mut parser = Parser::new();
+        parser
+            .set_language(&tree_sitter_vim::language())
+            .expect("Error loading vim grammar");
+        parser.parse(source, None).unwrap()
+    }
+
+    #[test]
+    fn test_format_basic() {
+        let source = "function! Test()\nlet x = 1\nendfunction";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have proper indentation and final newline
+        assert!(result.contains("  let x = 1"));
+        assert!(result.ends_with('\n'));
+    }
+
+    #[test]
+    fn test_format_trailing_whitespace() {
+        let source = "let x = 1   \nlet y = 2\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Trailing whitespace should be removed
+        assert!(!result.contains("1   "));
+        assert!(result.contains("let x = 1\n"), "Result: {:?}", result);
+    }
+
+    #[test]
+    fn test_format_idempotent() {
+        let source = "function! Test()\n  let x = 1\nendfunction\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result1 = format_to_string(source, &tree, &config);
+        let tree2 = parse_vim(&result1);
+        let result2 = format_to_string(&result1, &tree2, &config);
+
+        // Formatting twice should produce the same result
+        assert_eq!(result1, result2);
+    }
+
+    #[test]
+    fn test_format_preserves_comments() {
+        let source = "\" This is a comment\nlet x = 1\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Comment should be preserved
+        assert!(result.contains("\" This is a comment"));
+    }
+
+    #[test]
+    fn test_format_nested_blocks() {
+        let source = "function! Test()\nif a == 1\nlet x = 1\nendif\nendfunction\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have proper nested indentation
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(lines[0], "function! Test()");
+        assert_eq!(lines[1], "  if a == 1");
+        assert_eq!(lines[2], "    let x = 1");
+        assert_eq!(lines[3], "  endif");
+        assert_eq!(lines[4], "endfunction");
+    }
+
+    #[test]
+    fn test_position_to_offset() {
+        let source = "line1\nline2\nline3";
+
+        // Position at start of line 0
+        assert_eq!(
+            position_to_offset(
+                source,
+                tower_lsp_server::ls_types::Position {
+                    line: 0,
+                    character: 0
+                }
+            ),
+            Some(0)
+        );
+
+        // Position at start of line 1
+        assert_eq!(
+            position_to_offset(
+                source,
+                tower_lsp_server::ls_types::Position {
+                    line: 1,
+                    character: 0
+                }
+            ),
+            Some(6)
+        );
+
+        // Position in middle of line 1
+        assert_eq!(
+            position_to_offset(
+                source,
+                tower_lsp_server::ls_types::Position {
+                    line: 1,
+                    character: 3
+                }
+            ),
+            Some(9)
+        );
+    }
+
+    #[test]
+    fn test_format_normalize_spaces() {
+        // Normalize excessive whitespace: multiple spaces → single space
+        let source = "function!     Hello         ( name   = 'world' )   abort\n  echo       'Hello, '  ..          a:name\nendfunction\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should normalize multiple spaces to single space while preserving string content
+        // Note: spaces inside parentheses are also removed by trim_inside_brackets
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(lines[0], "function! Hello (name = 'world') abort");
+        assert_eq!(lines[1], "  echo 'Hello, ' .. a:name");
+        assert_eq!(lines[2], "endfunction");
+    }
+
+    #[test]
+    fn test_format_preserves_string_spaces() {
+        // Ensure spaces inside strings are preserved
+        let source = "let msg = 'hello     world'\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // String content must be preserved
+        assert!(result.contains("'hello     world'"));
+    }
+
+    #[test]
+    fn test_format_preserves_comment_spaces() {
+        // Ensure spaces inside comments are preserved
+        let source = "\" This   is   a   comment\nlet x = 1\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Comment content must be preserved
+        assert!(result.contains("\" This   is   a   comment"));
+    }
+
+    #[test]
+    fn test_format_operator_spacing() {
+        // Add spaces around binary operators
+        let source = "let a=1+b\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces around = and +
+        assert_eq!(result, "let a = 1 + b\n");
+    }
+
+    #[test]
+    fn test_format_unary_operator() {
+        // Remove space after unary operator
+        let source = "let c = - 1\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should remove space after unary minus
+        assert_eq!(result, "let c = -1\n");
+    }
+
+    #[test]
+    fn test_format_string_concat_operator() {
+        // Add spaces around string concatenation operator
+        let source = "let s='a'.'b'\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces around .
+        assert_eq!(result, "let s = 'a' . 'b'\n");
+    }
+
+    #[test]
+    fn test_format_comma_spacing() {
+        // Add space after commas
+        let source = "call Test(a,b,c)\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces after commas
+        assert_eq!(result, "call Test(a, b, c)\n");
+    }
+
+    #[test]
+    fn test_format_list_comma_spacing() {
+        // Add space after commas in lists
+        let source = "let x = [1,2,3]\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces after commas
+        assert_eq!(result, "let x = [1, 2, 3]\n");
+    }
+
+    #[test]
+    fn test_format_combined_operators_and_commas() {
+        // Combined: operators and commas
+        let source = "call Test(a+b,c*d)\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces around operators and after commas
+        assert_eq!(result, "call Test(a + b, c * d)\n");
+    }
+
+    #[test]
+    fn test_format_dict_colon_spacing() {
+        // Add space after colons in dictionaries
+        let source = "let d = {'a':1,'b':2}\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces after colons and commas
+        assert_eq!(result, "let d = {'a': 1, 'b': 2}\n");
+    }
+
+    #[test]
+    fn test_format_dict_full_formatting() {
+        // Full dictionary formatting: colons, commas, and operators
+        let source = "let d = {'sum':a+b,'diff':c-d}\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should format everything correctly
+        assert_eq!(result, "let d = {'sum': a + b, 'diff': c - d}\n");
+    }
+
+    #[test]
+    fn test_format_trim_bracket_spaces() {
+        // Remove spaces inside brackets
+        let source = "call Test( a, b )\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should remove spaces inside parentheses
+        assert_eq!(result, "call Test(a, b)\n");
+    }
+
+    #[test]
+    fn test_format_trim_list_bracket_spaces() {
+        // Remove spaces inside list brackets
+        let source = "let x = [ 1, 2, 3 ]\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        assert_eq!(result, "let x = [1, 2, 3]\n");
+    }
+
+    #[test]
+    fn test_format_full_formatting() {
+        // Full formatting: all features combined
+        let source = "let d = { 'sum':a+b,'diff':c-d }\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Spaces inside braces removed, colons/commas/operators normalized
+        assert_eq!(result, "let d = {'sum': a + b, 'diff': c - d}\n");
+    }
+}
