@@ -1,0 +1,5 @@
+# hjkls configuration for the project
+# This enables style hints which are needed for E2E tests
+
+[lint]
+style = true
