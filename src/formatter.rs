@@ -23,6 +23,7 @@
 
 mod indent;
 mod rules;
+mod spaces;
 
 pub use crate::config::FormatConfig;
 
@@ -49,6 +50,11 @@ pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit>
 
     // Compute indent edits first (these modify line starts)
     edits.extend(indent::compute_indent_edits(source, tree, config));
+
+    // Compute space normalization edits (multiple spaces → single space)
+    if config.normalize_spaces {
+        edits.extend(spaces::compute_space_edits(source, tree));
+    }
 
     // Compute line-level edits (trailing whitespace, final newline)
     edits.extend(rules::compute_line_edits(source, config));
@@ -171,7 +177,7 @@ mod tests {
 
         // Trailing whitespace should be removed
         assert!(!result.contains("1   "));
-        assert!(result.contains("let x = 1\n"));
+        assert!(result.contains("let x = 1\n"), "Result: {:?}", result);
     }
 
     #[test]
@@ -256,5 +262,48 @@ mod tests {
             ),
             Some(9)
         );
+    }
+
+    #[test]
+    fn test_format_normalize_spaces() {
+        // Normalize excessive whitespace: multiple spaces → single space
+        let source = "function!     Hello         ( name   = 'world' )   abort\n  echo       'Hello, '  ..          a:name\nendfunction\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should normalize multiple spaces to single space while preserving string content
+        // Note: single spaces around parentheses are kept (removing them would be a different rule)
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(lines[0], "function! Hello ( name = 'world' ) abort");
+        assert_eq!(lines[1], "  echo 'Hello, ' .. a:name");
+        assert_eq!(lines[2], "endfunction");
+    }
+
+    #[test]
+    fn test_format_preserves_string_spaces() {
+        // Ensure spaces inside strings are preserved
+        let source = "let msg = 'hello     world'\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // String content must be preserved
+        assert!(result.contains("'hello     world'"));
+    }
+
+    #[test]
+    fn test_format_preserves_comment_spaces() {
+        // Ensure spaces inside comments are preserved
+        let source = "\" This   is   a   comment\nlet x = 1\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Comment content must be preserved
+        assert!(result.contains("\" This   is   a   comment"));
     }
 }

@@ -10,6 +10,7 @@ hjkls provides automatic code formatting for Vim script files via the LSP `textD
 | **Final newline insertion** | Ensures files end with a newline |
 | **Block indentation** | Automatically indents blocks (function/if/for/while/try/augroup) |
 | **Line continuation indentation** | Indents continuation lines starting with `\` |
+| **Space normalization** | Reduces multiple consecutive spaces to single space |
 
 ## Usage
 
@@ -93,6 +94,25 @@ let long_list = [
       \ ]
 ```
 
+### Space Normalization
+
+Multiple consecutive spaces are reduced to a single space:
+
+```vim
+" Before
+echo       'Hello'  ..          name
+
+" After
+echo 'Hello' .. name
+```
+
+**Note:** Spaces inside string literals and comments are preserved:
+
+```vim
+let msg = 'hello     world'   " Preserved inside string
+" This   comment   is   also   preserved
+```
+
 ## Configuration
 
 Configure formatting in `.hjkls.toml`:
@@ -104,6 +124,7 @@ use_tabs = false                # Use tabs instead of spaces (default: false)
 line_continuation_indent = 6    # Extra indent for \ lines (default: indent_width × 3)
 trim_trailing_whitespace = true # Remove trailing whitespace (default: true)
 insert_final_newline = true     # Add newline at end of file (default: true)
+normalize_spaces = true         # Reduce multiple spaces to single (default: true)
 ```
 
 ### Tab Indentation
@@ -129,6 +150,7 @@ You can disable individual formatting features:
 [format]
 trim_trailing_whitespace = false  # Keep trailing whitespace
 insert_final_newline = false      # Don't add final newline
+normalize_spaces = false          # Keep multiple consecutive spaces
 ```
 
 > **Note:** Changes to `.hjkls.toml` require restarting the LSP server to take effect.

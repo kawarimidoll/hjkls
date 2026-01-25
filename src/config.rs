@@ -22,6 +22,7 @@
 //! line_continuation_indent = 6    # default: indent_width * 3
 //! trim_trailing_whitespace = true # default: true
 //! insert_final_newline = true     # default: true
+//! normalize_spaces = true         # default: true
 //! ```
 
 use serde::Deserialize;
@@ -63,6 +64,8 @@ pub struct FormatConfig {
     pub trim_trailing_whitespace: bool,
     /// Insert final newline, default: true
     pub insert_final_newline: bool,
+    /// Normalize multiple consecutive spaces to single space, default: true
+    pub normalize_spaces: bool,
 }
 
 impl Default for FormatConfig {
@@ -73,6 +76,7 @@ impl Default for FormatConfig {
             line_continuation_indent: None,
             trim_trailing_whitespace: true,
             insert_final_newline: true,
+            normalize_spaces: true,
         }
     }
 }
