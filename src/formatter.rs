@@ -21,6 +21,7 @@
 //! let edits = format(source, &tree, &config);
 //! ```
 
+mod brackets;
 mod colons;
 mod commas;
 mod indent;
@@ -72,6 +73,11 @@ pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit>
     // Compute colon spacing edits for dictionaries ({'a':1} → {'a': 1})
     if config.space_after_colon {
         edits.extend(colons::compute_colon_edits(source, tree));
+    }
+
+    // Compute bracket spacing edits (( x ) → (x))
+    if config.trim_inside_brackets {
+        edits.extend(brackets::compute_bracket_edits(source, tree));
     }
 
     // Compute line-level edits (trailing whitespace, final newline)
@@ -299,9 +305,9 @@ mod tests {
         let result = format_to_string(source, &tree, &config);
 
         // Should normalize multiple spaces to single space while preserving string content
-        // Note: single spaces around parentheses are kept (removing them would be a different rule)
+        // Note: spaces inside parentheses are also removed by trim_inside_brackets
         let lines: Vec<&str> = result.lines().collect();
-        assert_eq!(lines[0], "function! Hello ( name = 'world' ) abort");
+        assert_eq!(lines[0], "function! Hello (name = 'world') abort");
         assert_eq!(lines[1], "  echo 'Hello, ' .. a:name");
         assert_eq!(lines[2], "endfunction");
     }
@@ -433,6 +439,44 @@ mod tests {
         let result = format_to_string(source, &tree, &config);
 
         // Should format everything correctly
+        assert_eq!(result, "let d = {'sum': a + b, 'diff': c - d}\n");
+    }
+
+    #[test]
+    fn test_format_trim_bracket_spaces() {
+        // Remove spaces inside brackets
+        let source = "call Test( a, b )\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should remove spaces inside parentheses
+        assert_eq!(result, "call Test(a, b)\n");
+    }
+
+    #[test]
+    fn test_format_trim_list_bracket_spaces() {
+        // Remove spaces inside list brackets
+        let source = "let x = [ 1, 2, 3 ]\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        assert_eq!(result, "let x = [1, 2, 3]\n");
+    }
+
+    #[test]
+    fn test_format_full_formatting() {
+        // Full formatting: all features combined
+        let source = "let d = { 'sum':a+b,'diff':c-d }\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Spaces inside braces removed, colons/commas/operators normalized
         assert_eq!(result, "let d = {'sum': a + b, 'diff': c - d}\n");
     }
 }

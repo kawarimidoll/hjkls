@@ -14,6 +14,7 @@ hjkls provides automatic code formatting for Vim script files via the LSP `textD
 | **Operator spacing** | Adds spaces around binary operators, removes space after unary operators |
 | **Comma spacing** | Adds space after commas in function calls, lists, and dictionaries |
 | **Colon spacing** | Adds space after colons in dictionary entries |
+| **Bracket trimming** | Removes spaces inside brackets `( x )` → `(x)` |
 
 ## Usage
 
@@ -174,6 +175,24 @@ let d = {'a':1,'b':2}
 let d = {'a': 1, 'b': 2}
 ```
 
+### Bracket Trimming
+
+Spaces immediately after opening brackets and before closing brackets are removed:
+
+```vim
+" Before
+call Test( a, b )
+let x = [ 1, 2, 3 ]
+let d = { 'a': 1 }
+
+" After
+call Test(a, b)
+let x = [1, 2, 3]
+let d = {'a': 1}
+```
+
+**Applies to:** parentheses `()`, square brackets `[]`, curly braces `{}`
+
 ## Configuration
 
 Configure formatting in `.hjkls.toml`:
@@ -189,6 +208,7 @@ normalize_spaces = true         # Reduce multiple spaces to single (default: tru
 space_around_operators = true   # Add spaces around operators (default: true)
 space_after_comma = true        # Add space after commas (default: true)
 space_after_colon = true        # Add space after colons in dicts (default: true)
+trim_inside_brackets = true     # Remove spaces inside brackets (default: true)
 ```
 
 ### Tab Indentation
@@ -218,6 +238,7 @@ normalize_spaces = false          # Keep multiple consecutive spaces
 space_around_operators = false    # Keep original operator spacing
 space_after_comma = false         # Keep original comma spacing
 space_after_colon = false         # Keep original colon spacing
+trim_inside_brackets = false      # Keep spaces inside brackets
 ```
 
 > **Note:** Changes to `.hjkls.toml` require restarting the LSP server to take effect.

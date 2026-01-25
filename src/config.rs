@@ -26,6 +26,7 @@
 //! space_around_operators = true   # default: true
 //! space_after_comma = true        # default: true
 //! space_after_colon = true        # default: true
+//! trim_inside_brackets = true     # default: true
 //! ```
 
 use serde::Deserialize;
@@ -75,6 +76,8 @@ pub struct FormatConfig {
     pub space_after_comma: bool,
     /// Add space after colons in dictionaries, default: true
     pub space_after_colon: bool,
+    /// Remove spaces inside brackets (parens, square, curly), default: true
+    pub trim_inside_brackets: bool,
 }
 
 impl Default for FormatConfig {
@@ -89,6 +92,7 @@ impl Default for FormatConfig {
             space_around_operators: true,
             space_after_comma: true,
             space_after_colon: true,
+            trim_inside_brackets: true,
         }
     }
 }
