@@ -23,6 +23,7 @@
 //! trim_trailing_whitespace = true # default: true
 //! insert_final_newline = true     # default: true
 //! normalize_spaces = true         # default: true
+//! space_around_operators = true   # default: true
 //! ```
 
 use serde::Deserialize;
@@ -66,6 +67,8 @@ pub struct FormatConfig {
     pub insert_final_newline: bool,
     /// Normalize multiple consecutive spaces to single space, default: true
     pub normalize_spaces: bool,
+    /// Add/normalize spaces around operators, default: true
+    pub space_around_operators: bool,
 }
 
 impl Default for FormatConfig {
@@ -77,6 +80,7 @@ impl Default for FormatConfig {
             trim_trailing_whitespace: true,
             insert_final_newline: true,
             normalize_spaces: true,
+            space_around_operators: true,
         }
     }
 }

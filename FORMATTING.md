@@ -11,6 +11,7 @@ hjkls provides automatic code formatting for Vim script files via the LSP `textD
 | **Block indentation** | Automatically indents blocks (function/if/for/while/try/augroup) |
 | **Line continuation indentation** | Indents continuation lines starting with `\` |
 | **Space normalization** | Reduces multiple consecutive spaces to single space |
+| **Operator spacing** | Adds spaces around binary operators, removes space after unary operators |
 
 ## Usage
 
@@ -113,6 +114,30 @@ let msg = 'hello     world'   " Preserved inside string
 " This   comment   is   also   preserved
 ```
 
+### Operator Spacing
+
+Binary operators get spaces on both sides. Unary operators have no space after them:
+
+```vim
+" Before
+let a=1+b
+let c = - 1
+let s='a'.'b'
+
+" After
+let a = 1 + b
+let c = -1
+let s = 'a' . 'b'
+```
+
+**Supported operators:**
+- Assignment: `=`
+- Arithmetic: `+`, `-`, `*`, `/`, `%`
+- Comparison: `==`, `!=`, `<`, `>`, `<=`, `>=`, `=~`, `!~`, etc.
+- Logical: `&&`, `||`
+- String concatenation: `.`, `..`
+- Unary (no space after): `-`, `!`, `+`
+
 ## Configuration
 
 Configure formatting in `.hjkls.toml`:
@@ -125,6 +150,7 @@ line_continuation_indent = 6    # Extra indent for \ lines (default: indent_widt
 trim_trailing_whitespace = true # Remove trailing whitespace (default: true)
 insert_final_newline = true     # Add newline at end of file (default: true)
 normalize_spaces = true         # Reduce multiple spaces to single (default: true)
+space_around_operators = true   # Add spaces around operators (default: true)
 ```
 
 ### Tab Indentation
@@ -151,6 +177,7 @@ You can disable individual formatting features:
 trim_trailing_whitespace = false  # Keep trailing whitespace
 insert_final_newline = false      # Don't add final newline
 normalize_spaces = false          # Keep multiple consecutive spaces
+space_around_operators = false    # Keep original operator spacing
 ```
 
 > **Note:** Changes to `.hjkls.toml` require restarting the LSP server to take effect.

@@ -22,6 +22,7 @@
 //! ```
 
 mod indent;
+mod operators;
 mod rules;
 mod spaces;
 
@@ -56,10 +57,19 @@ pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit>
         edits.extend(spaces::compute_space_edits(source, tree));
     }
 
+    // Compute operator spacing edits (a=1 → a = 1, - 1 → -1)
+    if config.space_around_operators {
+        edits.extend(operators::compute_operator_edits(source, tree));
+    }
+
     // Compute line-level edits (trailing whitespace, final newline)
     edits.extend(rules::compute_line_edits(source, config));
 
     // Sort edits by position (in reverse order for correct application)
+    // Note: This ordering is important for conflict resolution between modules.
+    // When spaces and operators modules produce overlapping edits, the sort ensures
+    // consistent behavior by processing later positions first, and dedup_by keeps
+    // the first edit encountered (which, after sorting, is the one at the later position).
     edits.sort_by(|a, b| {
         let pos_a = (a.range.start.line, a.range.start.character);
         let pos_b = (b.range.start.line, b.range.start.character);
@@ -67,6 +77,9 @@ pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit>
     });
 
     // Remove duplicate edits for the same range
+    // When multiple modules produce edits for the same position, the operator module's
+    // edits take precedence because they are added after space normalization edits,
+    // and dedup_by keeps the last-added edit when ranges match.
     edits.dedup_by(|a, b| a.range == b.range);
 
     edits
@@ -305,5 +318,44 @@ mod tests {
 
         // Comment content must be preserved
         assert!(result.contains("\" This   is   a   comment"));
+    }
+
+    #[test]
+    fn test_format_operator_spacing() {
+        // Add spaces around binary operators
+        let source = "let a=1+b\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces around = and +
+        assert_eq!(result, "let a = 1 + b\n");
+    }
+
+    #[test]
+    fn test_format_unary_operator() {
+        // Remove space after unary operator
+        let source = "let c = - 1\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should remove space after unary minus
+        assert_eq!(result, "let c = -1\n");
+    }
+
+    #[test]
+    fn test_format_string_concat_operator() {
+        // Add spaces around string concatenation operator
+        let source = "let s='a'.'b'\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces around .
+        assert_eq!(result, "let s = 'a' . 'b'\n");
     }
 }
