@@ -98,7 +98,49 @@ vim.lsp.config("hjkls", {
 vim.lsp.enable("hjkls")
 ```
 
-#### Optional: Enable autocompletion
+### Vim 9.0+ (yegappan/lsp)
+
+[yegappan/lsp](https://github.com/yegappan/lsp) is a Vim9 script-based LSP client.
+
+```vim
+let lspServers = [#{
+      \   name: 'hjkls',
+      \   filetype: ['vim'],
+      \   path: '/path/to/hjkls',
+      \   args: [],
+      \ }]
+
+let lspOptions = #{
+      \   autoComplete: v:true,
+      \   autoHighlight: v:true,
+      \   showDiagWithVirtualText: v:true,
+      \   showSignature: v:true,
+      \ }
+
+autocmd VimEnter * ++once call LspOptionsSet(lspOptions) | call LspAddServer(lspServers)
+```
+
+### Vim 8.0+ (vim-lsp)
+
+[vim-lsp](https://github.com/prabirshrestha/vim-lsp) is a popular async LSP client.
+
+```vim
+augroup hjkls_lsp
+  autocmd!
+  autocmd User lsp_setup call lsp#register_server({
+        \ 'name': 'hjkls',
+        \ 'cmd': ['/path/to/hjkls'],
+        \ 'allowlist': ['vim'],
+        \ })
+augroup END
+
+let g:lsp_diagnostics_enabled = 1
+let g:lsp_diagnostics_virtual_text_enabled = 1
+```
+
+## Neovim Optional Settings
+
+### Autocompletion
 
 Neovim 0.11:
 
@@ -128,7 +170,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 })
 ```
 
-#### Optional: Enable document highlight
+### Document Highlight
 
 ```lua
 -- Highlight references to the symbol under cursor
@@ -146,7 +188,7 @@ vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
 })
 ```
 
-#### Optional: Enable LSP-based folding
+### LSP-based Folding
 
 ```lua
 -- Enable LSP folding (zc=close, zo=open, zR=open all, zM=close all)
