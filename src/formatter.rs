@@ -21,6 +21,7 @@
 //! let edits = format(source, &tree, &config);
 //! ```
 
+mod commas;
 mod indent;
 mod operators;
 mod rules;
@@ -60,6 +61,11 @@ pub fn format(source: &str, tree: &Tree, config: &FormatConfig) -> Vec<TextEdit>
     // Compute operator spacing edits (a=1 → a = 1, - 1 → -1)
     if config.space_around_operators {
         edits.extend(operators::compute_operator_edits(source, tree));
+    }
+
+    // Compute comma spacing edits (a,b → a, b)
+    if config.space_after_comma {
+        edits.extend(commas::compute_comma_edits(source, tree));
     }
 
     // Compute line-level edits (trailing whitespace, final newline)
@@ -357,5 +363,44 @@ mod tests {
 
         // Should have spaces around .
         assert_eq!(result, "let s = 'a' . 'b'\n");
+    }
+
+    #[test]
+    fn test_format_comma_spacing() {
+        // Add space after commas
+        let source = "call Test(a,b,c)\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces after commas
+        assert_eq!(result, "call Test(a, b, c)\n");
+    }
+
+    #[test]
+    fn test_format_list_comma_spacing() {
+        // Add space after commas in lists
+        let source = "let x = [1,2,3]\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces after commas
+        assert_eq!(result, "let x = [1, 2, 3]\n");
+    }
+
+    #[test]
+    fn test_format_combined_operators_and_commas() {
+        // Combined: operators and commas
+        let source = "call Test(a+b,c*d)\n";
+        let tree = parse_vim(source);
+        let config = FormatConfig::default();
+
+        let result = format_to_string(source, &tree, &config);
+
+        // Should have spaces around operators and after commas
+        assert_eq!(result, "call Test(a + b, c * d)\n");
     }
 }

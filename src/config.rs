@@ -24,6 +24,7 @@
 //! insert_final_newline = true     # default: true
 //! normalize_spaces = true         # default: true
 //! space_around_operators = true   # default: true
+//! space_after_comma = true        # default: true
 //! ```
 
 use serde::Deserialize;
@@ -69,6 +70,8 @@ pub struct FormatConfig {
     pub normalize_spaces: bool,
     /// Add/normalize spaces around operators, default: true
     pub space_around_operators: bool,
+    /// Add space after commas, default: true
+    pub space_after_comma: bool,
 }
 
 impl Default for FormatConfig {
@@ -81,6 +84,7 @@ impl Default for FormatConfig {
             insert_final_newline: true,
             normalize_spaces: true,
             space_around_operators: true,
+            space_after_comma: true,
         }
     }
 }

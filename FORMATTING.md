@@ -12,6 +12,7 @@ hjkls provides automatic code formatting for Vim script files via the LSP `textD
 | **Line continuation indentation** | Indents continuation lines starting with `\` |
 | **Space normalization** | Reduces multiple consecutive spaces to single space |
 | **Operator spacing** | Adds spaces around binary operators, removes space after unary operators |
+| **Comma spacing** | Adds space after commas in function calls, lists, and dictionaries |
 
 ## Usage
 
@@ -138,6 +139,28 @@ let s = 'a' . 'b'
 - String concatenation: `.`, `..`
 - Unary (no space after): `-`, `!`, `+`
 
+### Comma Spacing
+
+Commas are followed by a single space in function calls, lists, and dictionaries:
+
+```vim
+" Before
+call Test(a,b,c)
+let x = [1,2,3]
+let d = {'a':1,'b':2}
+
+" After
+call Test(a, b, c)
+let x = [1, 2, 3]
+let d = {'a': 1, 'b': 2}
+```
+
+**Note:** Trailing commas before closing brackets are left unchanged:
+
+```vim
+let x = [1, 2, 3,]  " Trailing comma preserved
+```
+
 ## Configuration
 
 Configure formatting in `.hjkls.toml`:
@@ -151,6 +174,7 @@ trim_trailing_whitespace = true # Remove trailing whitespace (default: true)
 insert_final_newline = true     # Add newline at end of file (default: true)
 normalize_spaces = true         # Reduce multiple spaces to single (default: true)
 space_around_operators = true   # Add spaces around operators (default: true)
+space_after_comma = true        # Add space after commas (default: true)
 ```
 
 ### Tab Indentation
@@ -178,6 +202,7 @@ trim_trailing_whitespace = false  # Keep trailing whitespace
 insert_final_newline = false      # Don't add final newline
 normalize_spaces = false          # Keep multiple consecutive spaces
 space_around_operators = false    # Keep original operator spacing
+space_after_comma = false         # Keep original comma spacing
 ```
 
 > **Note:** Changes to `.hjkls.toml` require restarting the LSP server to take effect.
