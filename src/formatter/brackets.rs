@@ -62,61 +62,57 @@ fn collect_container_bracket_edits(
         let kind = child.kind();
 
         // Handle opening brackets - remove space after
-        if OPEN_BRACKETS.contains(&kind) {
-            if i + 1 < children.len() {
-                let next = &children[i + 1];
-                let bracket_end = child.end_position();
-                let next_start = next.start_position();
+        if OPEN_BRACKETS.contains(&kind) && i + 1 < children.len() {
+            let next = &children[i + 1];
+            let bracket_end = child.end_position();
+            let next_start = next.start_position();
 
-                // Only process if on same line
-                if bracket_end.row == next_start.row {
-                    let gap = next_start.column.saturating_sub(bracket_end.column);
-                    if gap > 0 {
-                        // Remove space after opening bracket
-                        edits.push(TextEdit {
-                            range: Range {
-                                start: Position {
-                                    line: bracket_end.row as u32,
-                                    character: bracket_end.column as u32,
-                                },
-                                end: Position {
-                                    line: next_start.row as u32,
-                                    character: next_start.column as u32,
-                                },
+            // Only process if on same line
+            if bracket_end.row == next_start.row {
+                let gap = next_start.column.saturating_sub(bracket_end.column);
+                if gap > 0 {
+                    // Remove space after opening bracket
+                    edits.push(TextEdit {
+                        range: Range {
+                            start: Position {
+                                line: bracket_end.row as u32,
+                                character: bracket_end.column as u32,
                             },
-                            new_text: String::new(),
-                        });
-                    }
+                            end: Position {
+                                line: next_start.row as u32,
+                                character: next_start.column as u32,
+                            },
+                        },
+                        new_text: String::new(),
+                    });
                 }
             }
         }
 
         // Handle closing brackets - remove space before
-        if CLOSE_BRACKETS.contains(&kind) {
-            if i > 0 {
-                let prev = &children[i - 1];
-                let prev_end = prev.end_position();
-                let bracket_start = child.start_position();
+        if CLOSE_BRACKETS.contains(&kind) && i > 0 {
+            let prev = &children[i - 1];
+            let prev_end = prev.end_position();
+            let bracket_start = child.start_position();
 
-                // Only process if on same line
-                if prev_end.row == bracket_start.row {
-                    let gap = bracket_start.column.saturating_sub(prev_end.column);
-                    if gap > 0 {
-                        // Remove space before closing bracket
-                        edits.push(TextEdit {
-                            range: Range {
-                                start: Position {
-                                    line: prev_end.row as u32,
-                                    character: prev_end.column as u32,
-                                },
-                                end: Position {
-                                    line: bracket_start.row as u32,
-                                    character: bracket_start.column as u32,
-                                },
+            // Only process if on same line
+            if prev_end.row == bracket_start.row {
+                let gap = bracket_start.column.saturating_sub(prev_end.column);
+                if gap > 0 {
+                    // Remove space before closing bracket
+                    edits.push(TextEdit {
+                        range: Range {
+                            start: Position {
+                                line: prev_end.row as u32,
+                                character: prev_end.column as u32,
                             },
-                            new_text: String::new(),
-                        });
-                    }
+                            end: Position {
+                                line: bracket_start.row as u32,
+                                character: bracket_start.column as u32,
+                            },
+                        },
+                        new_text: String::new(),
+                    });
                 }
             }
         }
