@@ -195,6 +195,64 @@ pub fn find_identifier_at_position(
     find_identifier_in_node(&root, source, row, col)
 }
 
+/// Find an Ex command name at a given position in the syntax tree
+/// Returns the command name if the cursor is on an unknown_command_name node
+/// or a known command node (like echo, call, etc.)
+pub fn find_command_at_position(
+    tree: &Tree,
+    source: &str,
+    row: usize,
+    col: usize,
+) -> Option<String> {
+    let root = tree.root_node();
+    find_command_in_node(&root, source, row, col)
+}
+
+fn find_command_in_node(node: &Node, source: &str, row: usize, col: usize) -> Option<String> {
+    // Check if position is within this node
+    let start = node.start_position();
+    let end = node.end_position();
+
+    if row < start.row || row > end.row {
+        return None;
+    }
+    if row == start.row && col < start.column {
+        return None;
+    }
+    if row == end.row && col > end.column {
+        return None;
+    }
+
+    // Check children first (more specific match)
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if let Some(cmd) = find_command_in_node(&child, source, row, col) {
+            return Some(cmd);
+        }
+    }
+
+    // Check if this node is a command name
+    match node.kind() {
+        // Most Ex commands are parsed as "unknown_command_name" by tree-sitter-vim
+        // (e.g., quit, write, buffer, split, etc.)
+        "unknown_command_name" => node
+            .utf8_text(source.as_bytes())
+            .ok()
+            .map(|s| s.to_string()),
+        // Some commands have dedicated node types in tree-sitter-vim grammar.
+        // These are typically control flow statements and common built-in commands.
+        "echo" | "call" | "if" | "else" | "elseif" | "endif" | "for" | "endfor" | "while"
+        | "endwhile" | "try" | "catch" | "finally" | "endtry" | "throw" | "return" | "function"
+        | "endfunction" | "let" | "const" | "unlet" | "set" | "setlocal" | "execute" | "normal"
+        | "source" | "runtime" | "autocmd" | "augroup" | "highlight" | "syntax" | "map"
+        | "nmap" | "vmap" | "imap" | "noremap" | "nnoremap" | "vnoremap" | "inoremap" => node
+            .utf8_text(source.as_bytes())
+            .ok()
+            .map(|s| s.to_string()),
+        _ => None,
+    }
+}
+
 fn find_identifier_in_node(node: &Node, source: &str, row: usize, col: usize) -> Option<Reference> {
     // Check if position is within this node
     let start = node.start_position();

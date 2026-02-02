@@ -1930,6 +1930,46 @@ impl LanguageServer for Backend {
             return Ok(None);
         };
 
+        // First, check if it's an Ex command
+        if let Some(cmd_name) = symbols::find_command_at_position(
+            &doc.tree,
+            &doc.text.text,
+            position.line as usize,
+            position.character as usize,
+        ) {
+            // Find matching command using abbreviation matching
+            if let Some(cmd) = BUILTIN_COMMANDS
+                .iter()
+                .filter(|c| c.availability.is_compatible(self.editor_mode))
+                .find(|c| c.matches(&cmd_name))
+            {
+                let abbrev_display = if cmd.min_abbrev as usize == cmd.name.len() {
+                    // No abbreviation possible
+                    format!(":{}", cmd.name)
+                } else {
+                    // Show abbreviation format: :q[uit]
+                    format!(
+                        ":{}[{}]",
+                        cmd.min_name(),
+                        &cmd.name[cmd.min_abbrev as usize..]
+                    )
+                };
+                let contents = format!(
+                    "```vim\n{}\n```\n\n{}{}",
+                    abbrev_display,
+                    cmd.availability.label_suffix(),
+                    cmd.description
+                );
+                return Ok(Some(Hover {
+                    contents: HoverContents::Markup(MarkupContent {
+                        kind: MarkupKind::Markdown,
+                        value: contents,
+                    }),
+                    range: None,
+                }));
+            }
+        }
+
         // Find the identifier at the cursor position
         let reference = find_identifier_at_position(
             &doc.tree,
