@@ -4,17 +4,17 @@ hjkls provides automatic code formatting for Vim script files via the LSP `textD
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Trailing whitespace removal** | Removes trailing spaces/tabs from each line |
-| **Final newline insertion** | Ensures files end with a newline |
-| **Block indentation** | Automatically indents blocks (function/if/for/while/try/augroup) |
-| **Line continuation indentation** | Indents continuation lines starting with `\` |
-| **Space normalization** | Reduces multiple consecutive spaces to single space |
-| **Operator spacing** | Adds spaces around binary operators, removes space after unary operators |
-| **Comma spacing** | Adds space after commas in function calls, lists, and dictionaries |
-| **Colon spacing** | Adds space after colons in dictionary entries |
-| **Bracket trimming** | Removes spaces inside brackets `( x )` → `(x)` |
+| Feature                           | Description                                                              |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| **Trailing whitespace removal**   | Removes trailing spaces/tabs from each line                              |
+| **Final newline insertion**       | Ensures files end with a newline                                         |
+| **Block indentation**             | Automatically indents blocks (function/if/for/while/try/augroup)         |
+| **Line continuation indentation** | Indents continuation lines starting with `\`                             |
+| **Space normalization**           | Reduces multiple consecutive spaces to single space                      |
+| **Operator spacing**              | Adds spaces around binary operators, removes space after unary operators |
+| **Comma spacing**                 | Adds space after commas in function calls, lists, and dictionaries       |
+| **Colon spacing**                 | Adds space after colons in dictionary entries                            |
+| **Bracket trimming**              | Removes spaces inside brackets `( x )` → `(x)`                           |
 
 ## Usage
 
@@ -134,6 +134,7 @@ let s = 'a' . 'b'
 ```
 
 **Supported operators:**
+
 - Assignment: `=`
 - Arithmetic: `+`, `-`, `*`, `/`, `%`
 - Comparison: `==`, `!=`, `<`, `>`, `<=`, `>=`, `=~`, `!~`, etc.
@@ -222,6 +223,7 @@ use_tabs = true
 ```
 
 Results in:
+
 - 4-space indent → 1 tab
 - 8-space indent → 2 tabs
 - 6-space indent → 1 tab + 2 spaces

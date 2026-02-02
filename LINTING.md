@@ -4,11 +4,11 @@ hjkls provides lint diagnostics beyond syntax errors. Rules are organized into c
 
 ## Categories
 
-| Category | Default | Severity | Description |
-|----------|---------|----------|-------------|
-| **correctness** | Enabled | Error | Likely bugs or incorrect code |
-| **suspicious** | Enabled | Warning | Code that may behave unexpectedly |
-| **style** | Disabled | Hint | Style suggestions for better code |
+| Category        | Default  | Severity | Description                       |
+| --------------- | -------- | -------- | --------------------------------- |
+| **correctness** | Enabled  | Error    | Likely bugs or incorrect code     |
+| **suspicious**  | Enabled  | Warning  | Code that may behave unexpectedly |
+| **style**       | Disabled | Hint     | Style suggestions for better code |
 
 ## Correctness Rules (Error)
 
@@ -24,6 +24,7 @@ call NonExistentFunc()
 ```
 
 **Checks against:**
+
 - Built-in functions (786 functions)
 - User-defined functions in the same file
 - Global functions in the workspace
@@ -258,6 +259,7 @@ nnoremap <C-a> <C-a>
 ```
 
 **Standard notations:**
+
 - Special keys: `<CR>`, `<Tab>`, `<Esc>`, `<Space>`, `<BS>`, `<Del>`, etc.
 - Arrow keys: `<Up>`, `<Down>`, `<Left>`, `<Right>`
 - Function keys: `<F1>` through `<F12>`
@@ -371,6 +373,7 @@ double_dot = "warn"
 The configuration priority is: **per-rule override > category setting > default**
 
 This means you can:
+
 1. Enable a category but disable specific rules
 2. Disable a category but enable specific rules
 
@@ -407,20 +410,20 @@ double_dot = "off"
 
 ### Available Rules
 
-| Category | Rule Name | Description |
-|----------|-----------|-------------|
-| correctness | `autoload_missing` | Autoload file not found |
-| correctness | `arity_mismatch` | Wrong number of function arguments |
-| correctness | `scope_violation` | Invalid scope usage (l:, a:) |
-| correctness | `undefined_function` | Undefined function call |
-| suspicious | `normal_bang` | `normal` without `!` |
-| suspicious | `match_case` | `=~` without case modifier |
-| suspicious | `autocmd_group` | `autocmd` outside `augroup` |
-| suspicious | `set_compatible` | `set compatible` enabled |
-| suspicious | `vim9script_position` | `vim9script` not at file start |
-| style | `double_dot` | `.` instead of `..` for concatenation |
-| style | `function_bang` | Unnecessary `!` on s: functions |
-| style | `abort` | Missing `abort` attribute |
-| style | `single_quote` | Double quotes when single would work |
-| style | `key_notation` | Non-standard key notation |
-| style | `plug_noremap` | `map` instead of `noremap` for `<Plug>` |
+| Category    | Rule Name             | Description                             |
+| ----------- | --------------------- | --------------------------------------- |
+| correctness | `autoload_missing`    | Autoload file not found                 |
+| correctness | `arity_mismatch`      | Wrong number of function arguments      |
+| correctness | `scope_violation`     | Invalid scope usage (l:, a:)            |
+| correctness | `undefined_function`  | Undefined function call                 |
+| suspicious  | `normal_bang`         | `normal` without `!`                    |
+| suspicious  | `match_case`          | `=~` without case modifier              |
+| suspicious  | `autocmd_group`       | `autocmd` outside `augroup`             |
+| suspicious  | `set_compatible`      | `set compatible` enabled                |
+| suspicious  | `vim9script_position` | `vim9script` not at file start          |
+| style       | `double_dot`          | `.` instead of `..` for concatenation   |
+| style       | `function_bang`       | Unnecessary `!` on s: functions         |
+| style       | `abort`               | Missing `abort` attribute               |
+| style       | `single_quote`        | Double quotes when single would work    |
+| style       | `key_notation`        | Non-standard key notation               |
+| style       | `plug_noremap`        | `map` instead of `noremap` for `<Plug>` |

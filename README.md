@@ -23,21 +23,21 @@ Language Server Protocol (LSP) implementation for Vim script, written in Rust.
 
 **Total: 786 functions**
 
-| Category | Count | Description |
-|----------|-------|-------------|
-| Common | ~420 | Vim/Neovim shared functions (`strlen`, `expand`, `bufnr`, etc.) |
-| Vim-only | ~130 | `popup_*`, `ch_*`, `job_*`, `term_*`, `test_*`, etc. |
-| Neovim-only | ~170 | `nvim_*` API functions |
+| Category    | Count | Description                                                     |
+| ----------- | ----- | --------------------------------------------------------------- |
+| Common      | ~420  | Vim/Neovim shared functions (`strlen`, `expand`, `bufnr`, etc.) |
+| Vim-only    | ~130  | `popup_*`, `ch_*`, `job_*`, `term_*`, `test_*`, etc.            |
+| Neovim-only | ~170  | `nvim_*` API functions                                          |
 
 ## Builtin Variable Coverage
 
 **Total: 149 variables**
 
-| Scope | Count | Examples |
-|-------|-------|----------|
-| `v:` | 126 | `v:version`, `v:errmsg`, `v:true`, `v:false` |
-| `b:` | 2 | `b:changedtick`, `b:current_syntax` |
-| `g:` | 21 | `g:colors_name`, `g:mapleader`, `g:clipboard` |
+| Scope | Count | Examples                                      |
+| ----- | ----- | --------------------------------------------- |
+| `v:`  | 126   | `v:version`, `v:errmsg`, `v:true`, `v:false`  |
+| `b:`  | 2     | `b:changedtick`, `b:current_syntax`           |
+| `g:`  | 21    | `g:colors_name`, `g:mapleader`, `g:clipboard` |
 
 Only variables with help documentation tags are supported. Runtime-defined variables (e.g., `g:markdown_*` syntax options) are excluded due to dynamic naming and noise.
 
