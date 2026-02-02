@@ -4783,6 +4783,22 @@ pub struct BuiltinCommand {
     pub name: &'static str,
     pub description: &'static str,
     pub availability: Availability,
+    /// Minimum abbreviation length (e.g., 1 for "q[uit]" means "q" is valid)
+    pub min_abbrev: u8,
+}
+
+impl BuiltinCommand {
+    /// Returns the shortest valid abbreviation of this command
+    pub fn min_name(&self) -> &str {
+        &self.name[..self.min_abbrev as usize]
+    }
+
+    /// Check if the input matches this command (considering abbreviation)
+    pub fn matches(&self, input: &str) -> bool {
+        input.len() >= self.min_abbrev as usize
+            && input.len() <= self.name.len()
+            && self.name.starts_with(input)
+    }
 }
 
 /// List of commonly used Vim Ex commands
@@ -4792,3071 +4808,3685 @@ pub static BUILTIN_COMMANDS: &[BuiltinCommand] = &[
         name: "if",
         description: "Execute commands when condition is true",
         availability: Availability::Common,
+        min_abbrev: 2, // :if
     },
     BuiltinCommand {
         name: "else",
         description: "Execute commands when 'if' condition is false",
         availability: Availability::Common,
+        min_abbrev: 2, // :el[se]
     },
     BuiltinCommand {
         name: "elseif",
         description: "Execute commands when condition is true",
         availability: Availability::Common,
+        min_abbrev: 5, // :elsei[f]
     },
     BuiltinCommand {
         name: "endif",
         description: "End 'if' block",
         availability: Availability::Common,
+        min_abbrev: 2, // :en[dif]
     },
     BuiltinCommand {
         name: "for",
         description: "Loop over a list",
         availability: Availability::Common,
+        min_abbrev: 3, // :for
     },
     BuiltinCommand {
         name: "endfor",
         description: "End 'for' loop",
         availability: Availability::Common,
+        min_abbrev: 5, // :endfo[r]
     },
     BuiltinCommand {
         name: "while",
         description: "Loop while condition is true",
         availability: Availability::Common,
+        min_abbrev: 2, // :wh[ile]
     },
     BuiltinCommand {
         name: "endwhile",
         description: "End 'while' loop",
         availability: Availability::Common,
+        min_abbrev: 4, // :endw[hile]
     },
     BuiltinCommand {
         name: "try",
         description: "Start try block for exception handling",
         availability: Availability::Common,
+        min_abbrev: 3, // :try
     },
     BuiltinCommand {
         name: "catch",
         description: "Catch exceptions",
         availability: Availability::Common,
+        min_abbrev: 3, // :cat[ch]
     },
     BuiltinCommand {
         name: "finally",
         description: "Execute commands regardless of exception",
         availability: Availability::Common,
+        min_abbrev: 4, // :fina[lly]
     },
     BuiltinCommand {
         name: "endtry",
         description: "End 'try' block",
         availability: Availability::Common,
+        min_abbrev: 4, // :endt[ry]
     },
     BuiltinCommand {
         name: "throw",
         description: "Throw an exception",
         availability: Availability::Common,
+        min_abbrev: 2, // :th[row]
     },
     BuiltinCommand {
         name: "break",
         description: "Break out of loop",
         availability: Availability::Common,
+        min_abbrev: 4, // :brea[k]
     },
     BuiltinCommand {
         name: "continue",
         description: "Continue loop from start",
         availability: Availability::Common,
+        min_abbrev: 3, // :con[tinue]
     },
     BuiltinCommand {
         name: "function",
         description: "Define a function",
         availability: Availability::Common,
+        min_abbrev: 2, // :fu[nction]
     },
     BuiltinCommand {
         name: "endfunction",
         description: "End function definition",
         availability: Availability::Common,
+        min_abbrev: 4, // :endf[unction]
     },
     BuiltinCommand {
         name: "return",
         description: "Return from function",
         availability: Availability::Common,
+        min_abbrev: 4, // :retu[rn]
     },
     BuiltinCommand {
         name: "call",
         description: "Call a function",
         availability: Availability::Common,
+        min_abbrev: 3, // :cal[l]
     },
     BuiltinCommand {
         name: "let",
         description: "Assign value to variable",
         availability: Availability::Common,
+        min_abbrev: 3, // :let
     },
     BuiltinCommand {
         name: "const",
         description: "Define a constant",
         availability: Availability::Common,
+        min_abbrev: 4, // :cons[t]
     },
     BuiltinCommand {
         name: "unlet",
         description: "Delete variable",
         availability: Availability::Common,
+        min_abbrev: 3, // :unl[et]
     },
     BuiltinCommand {
         name: "lockvar",
         description: "Lock variable",
         availability: Availability::Common,
+        min_abbrev: 5, // :lockv[ar]
     },
     BuiltinCommand {
         name: "unlockvar",
         description: "Unlock variable",
         availability: Availability::Common,
+        min_abbrev: 4, // :unlo[ckvar]
     },
     BuiltinCommand {
         name: "echo",
         description: "Echo expression",
         availability: Availability::Common,
+        min_abbrev: 2, // :ec[ho]
     },
     BuiltinCommand {
         name: "echom",
         description: "Echo message and save in history",
         availability: Availability::Common,
+        min_abbrev: 5, // :echom[sg] (alias)
     },
     BuiltinCommand {
         name: "echomsg",
         description: "Echo message and save in history",
         availability: Availability::Common,
+        min_abbrev: 5, // :echom[sg]
     },
     BuiltinCommand {
         name: "echoerr",
         description: "Echo error message",
         availability: Availability::Common,
+        min_abbrev: 5, // :echoe[rr]
     },
     BuiltinCommand {
         name: "echon",
         description: "Echo without newline",
         availability: Availability::Common,
+        min_abbrev: 5, // :echon
     },
     BuiltinCommand {
         name: "echohl",
         description: "Set highlight group for echo",
         availability: Availability::Common,
+        min_abbrev: 5, // :echoh[l]
     },
     BuiltinCommand {
         name: "echowindow",
         description: "Echo in popup window",
         availability: Availability::Common,
+        min_abbrev: 5, // :echow[indow]
     },
     BuiltinCommand {
         name: "map",
         description: "Define key mapping (all modes)",
         availability: Availability::Common,
+        min_abbrev: 3, // :map
     },
     BuiltinCommand {
         name: "nmap",
         description: "Define normal mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :nm[ap]
     },
     BuiltinCommand {
         name: "vmap",
         description: "Define visual mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :vm[ap]
     },
     BuiltinCommand {
         name: "xmap",
         description: "Define visual (not select) mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :xm[ap]
     },
     BuiltinCommand {
         name: "smap",
         description: "Define select mode mapping",
         availability: Availability::Common,
+        min_abbrev: 4, // :smap
     },
     BuiltinCommand {
         name: "imap",
         description: "Define insert mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :im[ap]
     },
     BuiltinCommand {
         name: "cmap",
         description: "Define command-line mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :cm[ap]
     },
     BuiltinCommand {
         name: "omap",
         description: "Define operator-pending mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :om[ap]
     },
     BuiltinCommand {
         name: "lmap",
         description: "Define language mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :lm[ap]
     },
     BuiltinCommand {
         name: "tmap",
         description: "Define terminal mode mapping",
         availability: Availability::Common,
+        min_abbrev: 3, // :tma[p]
     },
     BuiltinCommand {
         name: "noremap",
         description: "Define non-recursive mapping (all modes)",
         availability: Availability::Common,
+        min_abbrev: 2, // :no[remap]
     },
     BuiltinCommand {
         name: "nnoremap",
         description: "Define non-recursive normal mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :nn[oremap]
     },
     BuiltinCommand {
         name: "vnoremap",
         description: "Define non-recursive visual mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :vn[oremap]
     },
     BuiltinCommand {
         name: "xnoremap",
         description: "Define non-recursive visual (not select) mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :xn[oremap]
     },
     BuiltinCommand {
         name: "snoremap",
         description: "Define non-recursive select mode mapping",
         availability: Availability::Common,
+        min_abbrev: 4, // :snor[emap]
     },
     BuiltinCommand {
         name: "inoremap",
         description: "Define non-recursive insert mode mapping",
         availability: Availability::Common,
+        min_abbrev: 3, // :ino[remap]
     },
     BuiltinCommand {
         name: "cnoremap",
         description: "Define non-recursive command-line mode mapping",
         availability: Availability::Common,
+        min_abbrev: 3, // :cno[remap]
     },
     BuiltinCommand {
         name: "onoremap",
         description: "Define non-recursive operator-pending mode mapping",
         availability: Availability::Common,
+        min_abbrev: 3, // :ono[remap]
     },
     BuiltinCommand {
         name: "lnoremap",
         description: "Define non-recursive language mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :ln[oremap]
     },
     BuiltinCommand {
         name: "tnoremap",
         description: "Define non-recursive terminal mode mapping",
         availability: Availability::Common,
+        min_abbrev: 3, // :tno[remap]
     },
     BuiltinCommand {
         name: "unmap",
         description: "Remove mapping (all modes)",
         availability: Availability::Common,
+        min_abbrev: 3, // :unm[ap]
     },
     BuiltinCommand {
         name: "nunmap",
         description: "Remove normal mode mapping",
         availability: Availability::Common,
+        min_abbrev: 3, // :nun[map]
     },
     BuiltinCommand {
         name: "vunmap",
         description: "Remove visual mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :vu[nmap]
     },
     BuiltinCommand {
         name: "xunmap",
         description: "Remove visual (not select) mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :xu[nmap]
     },
     BuiltinCommand {
         name: "sunmap",
         description: "Remove select mode mapping",
         availability: Availability::Common,
+        min_abbrev: 4, // :sunm[ap]
     },
     BuiltinCommand {
         name: "iunmap",
         description: "Remove insert mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :iu[nmap]
     },
     BuiltinCommand {
         name: "cunmap",
         description: "Remove command-line mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :cu[nmap]
     },
     BuiltinCommand {
         name: "ounmap",
         description: "Remove operator-pending mode mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :ou[nmap]
     },
     BuiltinCommand {
         name: "lunmap",
         description: "Remove language mapping",
         availability: Availability::Common,
+        min_abbrev: 2, // :lu[nmap]
     },
     BuiltinCommand {
         name: "tunmap",
         description: "Remove terminal mode mapping",
         availability: Availability::Common,
+        min_abbrev: 5, // :tunma[p]
     },
     BuiltinCommand {
         name: "mapclear",
         description: "Clear all mappings (all modes)",
         availability: Availability::Common,
+        min_abbrev: 4, // :mapc[lear]
     },
     BuiltinCommand {
         name: "autocmd",
         description: "Define autocommand",
         availability: Availability::Common,
+        min_abbrev: 2, // :au[tocmd]
     },
     BuiltinCommand {
         name: "augroup",
         description: "Define autocommand group",
         availability: Availability::Common,
+        min_abbrev: 3, // :aug[roup]
     },
     BuiltinCommand {
         name: "doautocmd",
         description: "Execute autocommands",
         availability: Availability::Common,
+        min_abbrev: 2, // :do[autocmd]
     },
     BuiltinCommand {
         name: "doautoall",
         description: "Execute autocommands for all buffers",
         availability: Availability::Common,
+        min_abbrev: 7, // :doautoa[ll]
     },
     BuiltinCommand {
         name: "set",
         description: "Set option value",
         availability: Availability::Common,
+        min_abbrev: 2, // :se[t]
     },
     BuiltinCommand {
         name: "setlocal",
         description: "Set local option value",
         availability: Availability::Common,
+        min_abbrev: 4, // :setl[ocal]
     },
     BuiltinCommand {
         name: "setglobal",
         description: "Set global option value",
         availability: Availability::Common,
+        min_abbrev: 4, // :setg[lobal]
     },
     BuiltinCommand {
         name: "highlight",
         description: "Define highlighting",
         availability: Availability::Common,
+        min_abbrev: 2, // :hi[ghlight]
     },
     BuiltinCommand {
         name: "syntax",
         description: "Define syntax highlighting",
         availability: Availability::Common,
+        min_abbrev: 2, // :sy[ntax]
     },
     BuiltinCommand {
         name: "colorscheme",
         description: "Load colorscheme",
         availability: Availability::Common,
+        min_abbrev: 4, // :colo[rscheme]
     },
     BuiltinCommand {
         name: "command",
         description: "Define user command",
         availability: Availability::Common,
+        min_abbrev: 3, // :com[mand]
     },
     BuiltinCommand {
         name: "delcommand",
         description: "Delete user command",
         availability: Availability::Common,
+        min_abbrev: 4, // :delc[ommand]
     },
     BuiltinCommand {
         name: "comclear",
         description: "Clear all user commands",
         availability: Availability::Common,
+        min_abbrev: 4, // :comc[lear]
     },
     BuiltinCommand {
         name: "execute",
         description: "Execute string as Ex command",
         availability: Availability::Common,
+        min_abbrev: 3, // :exe[cute]
     },
     BuiltinCommand {
         name: "normal",
         description: "Execute normal mode commands",
         availability: Availability::Common,
+        min_abbrev: 4, // :norm[al]
     },
     BuiltinCommand {
         name: "source",
         description: "Read and execute commands from file",
         availability: Availability::Common,
+        min_abbrev: 2, // :so[urce]
     },
     BuiltinCommand {
         name: "runtime",
         description: "Source files from 'runtimepath'",
         availability: Availability::Common,
+        min_abbrev: 2, // :ru[ntime]
     },
     BuiltinCommand {
         name: "finish",
         description: "Stop sourcing current script",
         availability: Availability::Common,
+        min_abbrev: 4, // :fini[sh]
     },
     BuiltinCommand {
         name: "edit",
         description: "Edit a file",
         availability: Availability::Common,
+        min_abbrev: 1, // :e[dit]
     },
     BuiltinCommand {
         name: "enew",
         description: "Edit a new unnamed buffer",
         availability: Availability::Common,
+        min_abbrev: 3, // :ene[w]
     },
     BuiltinCommand {
         name: "buffer",
         description: "Go to buffer",
         availability: Availability::Common,
+        min_abbrev: 1, // :b[uffer]
     },
     BuiltinCommand {
         name: "bdelete",
         description: "Delete buffer",
         availability: Availability::Common,
+        min_abbrev: 2, // :bd[elete]
     },
     BuiltinCommand {
         name: "bwipeout",
         description: "Wipe out buffer",
         availability: Availability::Common,
+        min_abbrev: 2, // :bw[ipeout]
     },
     BuiltinCommand {
         name: "split",
         description: "Split window horizontally",
         availability: Availability::Common,
+        min_abbrev: 2, // :sp[lit]
     },
     BuiltinCommand {
         name: "vsplit",
         description: "Split window vertically",
         availability: Availability::Common,
+        min_abbrev: 2, // :vs[plit]
     },
     BuiltinCommand {
         name: "new",
         description: "Create new window with empty buffer",
         availability: Availability::Common,
+        min_abbrev: 3, // :new
     },
     BuiltinCommand {
         name: "vnew",
         description: "Create new vertical window with empty buffer",
         availability: Availability::Common,
+        min_abbrev: 3, // :vne[w]
     },
     BuiltinCommand {
         name: "close",
         description: "Close window",
         availability: Availability::Common,
+        min_abbrev: 3, // :clo[se]
     },
     BuiltinCommand {
         name: "only",
         description: "Close all other windows",
         availability: Availability::Common,
+        min_abbrev: 2, // :on[ly]
     },
     BuiltinCommand {
         name: "tabnew",
         description: "Create new tab",
         availability: Availability::Common,
+        min_abbrev: 6, // :tabnew
     },
     BuiltinCommand {
         name: "tabclose",
         description: "Close tab",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabc[lose]
     },
     BuiltinCommand {
         name: "tabnext",
         description: "Go to next tab",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabn[ext]
     },
     BuiltinCommand {
         name: "tabprevious",
         description: "Go to previous tab",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabp[revious]
     },
     BuiltinCommand {
         name: "write",
         description: "Write buffer to file",
         availability: Availability::Common,
+        min_abbrev: 1, // :w[rite]
     },
     BuiltinCommand {
         name: "wall",
         description: "Write all buffers",
         availability: Availability::Common,
+        min_abbrev: 2, // :wa[ll]
     },
     BuiltinCommand {
         name: "quit",
         description: "Quit window",
         availability: Availability::Common,
+        min_abbrev: 1, // :q[uit]
     },
     BuiltinCommand {
         name: "qall",
         description: "Quit all windows",
         availability: Availability::Common,
+        min_abbrev: 2, // :qa[ll]
     },
     BuiltinCommand {
         name: "wq",
         description: "Write and quit",
         availability: Availability::Common,
+        min_abbrev: 2, // :wq
     },
     BuiltinCommand {
         name: "wqall",
         description: "Write all and quit",
         availability: Availability::Common,
+        min_abbrev: 3, // :wqa[ll]
     },
     BuiltinCommand {
         name: "saveas",
         description: "Save buffer to new file",
         availability: Availability::Common,
+        min_abbrev: 3, // :sav[eas]
     },
     BuiltinCommand {
         name: "substitute",
         description: "Search and replace",
         availability: Availability::Common,
+        min_abbrev: 1, // :s[ubstitute]
     },
     BuiltinCommand {
         name: "global",
         description: "Execute command on matching lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :g[lobal]
     },
     BuiltinCommand {
         name: "vglobal",
         description: "Execute command on non-matching lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :v[global]
     },
     BuiltinCommand {
         name: "silent",
         description: "Execute command silently",
         availability: Availability::Common,
+        min_abbrev: 3, // :sil[ent]
     },
     BuiltinCommand {
         name: "redraw",
         description: "Redraw screen",
         availability: Availability::Common,
+        min_abbrev: 4, // :redr[aw]
     },
     BuiltinCommand {
         name: "sleep",
         description: "Pause execution",
         availability: Availability::Common,
+        min_abbrev: 2, // :sl[eep]
     },
     BuiltinCommand {
         name: "filetype",
         description: "Set filetype options",
         availability: Availability::Common,
+        min_abbrev: 5, // :filet[ype]
     },
     BuiltinCommand {
         name: "lua",
         description: "Execute Lua code",
         availability: Availability::NeovimOnly,
+        min_abbrev: 3, // :lua (no abbreviation)
     },
     BuiltinCommand {
         name: "luado",
         description: "Execute Lua for each line",
         availability: Availability::NeovimOnly,
+        min_abbrev: 4, // :luad[o]
     },
     BuiltinCommand {
         name: "luafile",
         description: "Execute Lua file",
         availability: Availability::NeovimOnly,
+        min_abbrev: 4, // :luaf[ile]
     },
     BuiltinCommand {
         name: "vim9script",
         description: "Start Vim9 script",
         availability: Availability::VimOnly,
+        min_abbrev: 5, // :vim9s[cript]
     },
     BuiltinCommand {
         name: "!",
         description: "filter lines or execute an external command",
         availability: Availability::Common,
+        min_abbrev: 1, // :!
     },
     BuiltinCommand {
         name: "!!",
         description: "repeat last \":!\" command",
         availability: Availability::Common,
+        min_abbrev: 2, // :!!
     },
     BuiltinCommand {
         name: "#",
         description: "same as \":number\"",
         availability: Availability::Common,
+        min_abbrev: 1, // :#
     },
     BuiltinCommand {
         name: "&",
         description: "repeat last \":substitute\"",
         availability: Availability::Common,
+        min_abbrev: 1, // :&
     },
     BuiltinCommand {
         name: "2match",
         description: "define a second match to highlight",
         availability: Availability::Common,
+        min_abbrev: 4, // :2mat[ch]
     },
     BuiltinCommand {
         name: "3match",
         description: "define a third match to highlight",
         availability: Availability::Common,
+        min_abbrev: 4, // :3mat[ch]
     },
     BuiltinCommand {
         name: "<",
         description: "shift lines one 'shiftwidth' left",
         availability: Availability::Common,
+        min_abbrev: 1, // :<
     },
     BuiltinCommand {
         name: "=",
         description: "print the last line number",
         availability: Availability::Common,
+        min_abbrev: 1, // :=
     },
     BuiltinCommand {
         name: ">",
         description: "shift lines one 'shiftwidth' right",
         availability: Availability::Common,
+        min_abbrev: 1, // :>
     },
     BuiltinCommand {
         name: "@",
         description: "execute contents of a register",
         availability: Availability::Common,
+        min_abbrev: 1, // :@
     },
     BuiltinCommand {
         name: "@@",
         description: "repeat the previous \":@\"",
         availability: Availability::Common,
+        min_abbrev: 2, // :@@
     },
     BuiltinCommand {
         name: "~",
         description: "repeat last \":substitute\"",
         availability: Availability::Common,
+        min_abbrev: 1, // :~
     },
     BuiltinCommand {
         name: "Next",
         description: "go to previous file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 1, // :N[ext]
     },
     BuiltinCommand {
         name: "argadd",
         description: "add items to the argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :arga[dd]
     },
     BuiltinCommand {
         name: "argdedupe",
         description: "remove duplicates from the argument list",
         availability: Availability::Common,
+        min_abbrev: 6, // :argded[upe]
     },
     BuiltinCommand {
         name: "argdelete",
         description: "delete items from the argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :argd[elete]
     },
     BuiltinCommand {
         name: "argdo",
         description: "do a command on all items in the argument list",
         availability: Availability::Common,
+        min_abbrev: 5, // :argdo (no abbreviation)
     },
     BuiltinCommand {
         name: "argedit",
         description: "add item to the argument list and edit it",
         availability: Availability::Common,
+        min_abbrev: 4, // :arge[dit]
     },
     BuiltinCommand {
         name: "argglobal",
         description: "define the global argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :argg[lobal]
     },
     BuiltinCommand {
         name: "arglocal",
         description: "define a local argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :argl[ocal]
     },
     BuiltinCommand {
         name: "args",
         description: "print the argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :ar[gs]
     },
     BuiltinCommand {
         name: "argument",
         description: "go to specific file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :argu[ment]
     },
     BuiltinCommand {
         name: "first",
         description: "go to the first file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 3, // :fir[st]
     },
     BuiltinCommand {
         name: "last",
         description: "go to the last file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :la[st]
     },
     BuiltinCommand {
         name: "next",
         description: "go to next file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 1, // :n[ext]
     },
     BuiltinCommand {
         name: "previous",
         description: "go to previous file in argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :prev[ious]
     },
     BuiltinCommand {
         name: "rewind",
         description: "go to the first file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 3, // :rew[ind]
     },
     BuiltinCommand {
         name: "bNext",
         description: "go to previous buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :bN[ext]
     },
     BuiltinCommand {
         name: "badd",
         description: "add buffer to the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :bad[d]
     },
     BuiltinCommand {
         name: "ball",
         description: "open a window for each buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :ba[ll]
     },
     BuiltinCommand {
         name: "balt",
         description: "like \":badd\" but also set the alternate file",
         availability: Availability::Common,
+        min_abbrev: 4, // :balt (no abbreviation)
     },
     BuiltinCommand {
         name: "bfirst",
         description: "go to first buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :bf[irst]
     },
     BuiltinCommand {
         name: "blast",
         description: "go to last buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :bl[ast]
     },
     BuiltinCommand {
         name: "bmodified",
         description: "go to next buffer in the buffer list that has been modified",
         availability: Availability::Common,
+        min_abbrev: 2, // :bm[odified]
     },
     BuiltinCommand {
         name: "bnext",
         description: "go to next buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :bn[ext]
     },
     BuiltinCommand {
         name: "bprevious",
         description: "go to previous buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :bp[revious]
     },
     BuiltinCommand {
         name: "brewind",
         description: "go to first buffer in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :br[ewind]
     },
     BuiltinCommand {
         name: "bufdo",
         description: "execute command in each listed buffer",
         availability: Availability::Common,
+        min_abbrev: 4, // :bufd[o]
     },
     BuiltinCommand {
         name: "buffers",
         description: "list all files in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 7, // :buffers (no abbreviation)
     },
     BuiltinCommand {
         name: "bunload",
         description: "unload a specific buffer",
         availability: Availability::Common,
+        min_abbrev: 3, // :bun[load]
     },
     BuiltinCommand {
         name: "files",
         description: "list all files in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 5, // :files (no abbreviation)
     },
     BuiltinCommand {
         name: "ls",
         description: "list all buffers",
         availability: Availability::Common,
+        min_abbrev: 2, // :ls (no abbreviation)
     },
     BuiltinCommand {
         name: "aboveleft",
         description: "make split window appear left or above",
         availability: Availability::Common,
+        min_abbrev: 3, // :abo[veleft]
     },
     BuiltinCommand {
         name: "belowright",
         description: "make split window appear right or below",
         availability: Availability::Common,
+        min_abbrev: 3, // :bel[owright]
     },
     BuiltinCommand {
         name: "botright",
         description: "make split window appear at bottom or far right",
         availability: Availability::Common,
+        min_abbrev: 2, // :bo[tright]
     },
     BuiltinCommand {
         name: "browse",
         description: "use file selection dialog",
         availability: Availability::Common,
+        min_abbrev: 3, // :bro[wse]
     },
     BuiltinCommand {
         name: "confirm",
         description: "prompt user when confirmation required",
         availability: Availability::Common,
+        min_abbrev: 4, // :conf[irm]
     },
     BuiltinCommand {
         name: "hide",
         description: "hide current buffer for a command",
         availability: Availability::Common,
+        min_abbrev: 3, // :hid[e]
     },
     BuiltinCommand {
         name: "horizontal",
         description: "following window command work horizontally",
         availability: Availability::Common,
+        min_abbrev: 3, // :hor[izontal]
     },
     BuiltinCommand {
         name: "leftabove",
         description: "make split window appear left or above",
         availability: Availability::Common,
+        min_abbrev: 5, // :lefta[bove]
     },
     BuiltinCommand {
         name: "rightbelow",
         description: "make split window appear right or below",
         availability: Availability::Common,
+        min_abbrev: 6, // :rightb[elow]
     },
     BuiltinCommand {
         name: "tab",
         description: "create new tab when opening new window",
         availability: Availability::Common,
+        min_abbrev: 3, // :tab
     },
     BuiltinCommand {
         name: "topleft",
         description: "make split window appear at top or far left",
         availability: Availability::Common,
+        min_abbrev: 2, // :to[pleft]
     },
     BuiltinCommand {
         name: "vertical",
         description: "make following command split vertically",
         availability: Availability::Common,
+        min_abbrev: 4, // :vert[ical]
     },
     BuiltinCommand {
         name: "cNext",
         description: "go to previous error",
         availability: Availability::Common,
+        min_abbrev: 2, // :cN[ext]
     },
     BuiltinCommand {
         name: "cNfile",
         description: "go to last error in previous file",
         availability: Availability::Common,
+        min_abbrev: 3, // :cNf[ile]
     },
     BuiltinCommand {
         name: "cabove",
         description: "go to error above current line",
         availability: Availability::Common,
+        min_abbrev: 4, // :cabo[ve]
     },
     BuiltinCommand {
         name: "caddbuffer",
         description: "add errors from buffer",
         availability: Availability::Common,
+        min_abbrev: 3, // :cad[dbuffer]
     },
     BuiltinCommand {
         name: "caddexpr",
         description: "add errors from expr",
         availability: Availability::Common,
+        min_abbrev: 5, // :cadde[xpr]
     },
     BuiltinCommand {
         name: "caddfile",
         description: "add error message to current quickfix list",
         availability: Availability::Common,
+        min_abbrev: 5, // :caddf[ile]
     },
     BuiltinCommand {
         name: "cafter",
         description: "go to error after current cursor",
         availability: Availability::Common,
+        min_abbrev: 3, // :caf[ter]
     },
     BuiltinCommand {
         name: "cbefore",
         description: "go to error before current cursor",
         availability: Availability::Common,
+        min_abbrev: 3, // :cbe[fore]
     },
     BuiltinCommand {
         name: "cbelow",
         description: "go to error below current line",
         availability: Availability::Common,
+        min_abbrev: 4, // :cbel[ow]
     },
     BuiltinCommand {
         name: "cbottom",
         description: "scroll to the bottom of the quickfix window",
         availability: Availability::Common,
+        min_abbrev: 3, // :cbo[ttom]
     },
     BuiltinCommand {
         name: "cbuffer",
         description: "parse error messages and jump to first error",
         availability: Availability::Common,
+        min_abbrev: 2, // :cb[uffer]
     },
     BuiltinCommand {
         name: "cc",
         description: "go to specific error",
         availability: Availability::Common,
+        min_abbrev: 2, // :cc
     },
     BuiltinCommand {
         name: "cclose",
         description: "close quickfix window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ccl[ose]
     },
     BuiltinCommand {
         name: "cdo",
         description: "execute command in each valid error list entry",
         availability: Availability::Common,
+        min_abbrev: 3, // :cdo
     },
     BuiltinCommand {
         name: "cexpr",
         description: "read errors from expr and jump to first",
         availability: Availability::Common,
+        min_abbrev: 3, // :cex[pr]
     },
     BuiltinCommand {
         name: "cfdo",
         description: "execute command in each file in error list",
         availability: Availability::Common,
+        min_abbrev: 3, // :cfd[o]
     },
     BuiltinCommand {
         name: "cfile",
         description: "read file with error messages and jump to first",
         availability: Availability::Common,
+        min_abbrev: 2, // :cf[ile]
     },
     BuiltinCommand {
         name: "cfirst",
         description: "go to the specified error, default first one",
         availability: Availability::Common,
+        min_abbrev: 4, // :cfir[st]
     },
     BuiltinCommand {
         name: "cgetbuffer",
         description: "get errors from buffer",
         availability: Availability::Common,
+        min_abbrev: 5, // :cgetb[uffer]
     },
     BuiltinCommand {
         name: "cgetexpr",
         description: "get errors from expr",
         availability: Availability::Common,
+        min_abbrev: 5, // :cgete[xpr]
     },
     BuiltinCommand {
         name: "cgetfile",
         description: "read file with error messages",
         availability: Availability::Common,
+        min_abbrev: 2, // :cg[etfile]
     },
     BuiltinCommand {
         name: "chistory",
         description: "list the error lists",
         availability: Availability::Common,
+        min_abbrev: 3, // :chi[story]
     },
     BuiltinCommand {
         name: "clast",
         description: "go to the specified error, default last one",
         availability: Availability::Common,
+        min_abbrev: 3, // :cla[st]
     },
     BuiltinCommand {
         name: "clist",
         description: "list all errors",
         availability: Availability::Common,
+        min_abbrev: 2, // :cl[ist]
     },
     BuiltinCommand {
         name: "cnewer",
         description: "go to newer error list",
         availability: Availability::Common,
+        min_abbrev: 4, // :cnew[er]
     },
     BuiltinCommand {
         name: "cnext",
         description: "go to next error",
         availability: Availability::Common,
+        min_abbrev: 2, // :cn[ext]
     },
     BuiltinCommand {
         name: "cnfile",
         description: "go to first error in next file",
         availability: Availability::Common,
+        min_abbrev: 3, // :cnf[ile]
     },
     BuiltinCommand {
         name: "colder",
         description: "go to older error list",
         availability: Availability::Common,
+        min_abbrev: 3, // :col[der]
     },
     BuiltinCommand {
         name: "copen",
         description: "open quickfix window",
         availability: Availability::Common,
+        min_abbrev: 4, // :cope[n]
     },
     BuiltinCommand {
         name: "cpfile",
         description: "go to last error in previous file",
         availability: Availability::Common,
+        min_abbrev: 3, // :cpf[ile]
     },
     BuiltinCommand {
         name: "cprevious",
         description: "go to previous error",
         availability: Availability::Common,
+        min_abbrev: 2, // :cp[revious]
     },
     BuiltinCommand {
         name: "cquit",
         description: "quit Vim with an error code",
         availability: Availability::Common,
+        min_abbrev: 2, // :cq[uit]
     },
     BuiltinCommand {
         name: "crewind",
         description: "go to the specified error, default first one",
         availability: Availability::Common,
+        min_abbrev: 2, // :cr[ewind]
     },
     BuiltinCommand {
         name: "cwindow",
         description: "open or close quickfix window",
         availability: Availability::Common,
+        min_abbrev: 2, // :cw[indow]
     },
     BuiltinCommand {
         name: "lNext",
         description: "go to previous entry in location list",
         availability: Availability::Common,
+        min_abbrev: 2, // :lN[ext]
     },
     BuiltinCommand {
         name: "lNfile",
         description: "go to last entry in previous file",
         availability: Availability::Common,
+        min_abbrev: 3, // :lNf[ile]
     },
     BuiltinCommand {
         name: "labove",
         description: "go to location above current line",
         availability: Availability::Common,
+        min_abbrev: 3, // :lab[ove]
     },
     BuiltinCommand {
         name: "laddbuffer",
         description: "add locations from buffer",
         availability: Availability::Common,
+        min_abbrev: 5, // :laddb[uffer]
     },
     BuiltinCommand {
         name: "laddexpr",
         description: "add locations from expr",
         availability: Availability::Common,
+        min_abbrev: 3, // :lad[dexpr]
     },
     BuiltinCommand {
         name: "laddfile",
         description: "add locations to current location list",
         availability: Availability::Common,
+        min_abbrev: 5, // :laddf[ile]
     },
     BuiltinCommand {
         name: "lafter",
         description: "go to location after current cursor",
         availability: Availability::Common,
+        min_abbrev: 3, // :laf[ter]
     },
     BuiltinCommand {
         name: "lbefore",
         description: "go to location before current cursor",
         availability: Availability::Common,
+        min_abbrev: 3, // :lbe[fore]
     },
     BuiltinCommand {
         name: "lbelow",
         description: "go to location below current line",
         availability: Availability::Common,
+        min_abbrev: 4, // :lbel[ow]
     },
     BuiltinCommand {
         name: "lbottom",
         description: "scroll to the bottom of the location window",
         availability: Availability::Common,
+        min_abbrev: 3, // :lbo[ttom]
     },
     BuiltinCommand {
         name: "lbuffer",
         description: "parse locations and jump to first location",
         availability: Availability::Common,
+        min_abbrev: 2, // :lb[uffer]
     },
     BuiltinCommand {
         name: "lclose",
         description: "close location window",
         availability: Availability::Common,
+        min_abbrev: 3, // :lcl[ose]
     },
     BuiltinCommand {
         name: "ldo",
         description: "execute command in valid location list entries",
         availability: Availability::Common,
+        min_abbrev: 2, // :ld[o]
     },
     BuiltinCommand {
         name: "lexpr",
         description: "read locations from expr and jump to first",
         availability: Availability::Common,
+        min_abbrev: 3, // :lex[pr]
     },
     BuiltinCommand {
         name: "lfdo",
         description: "execute command in each file in location list",
         availability: Availability::Common,
+        min_abbrev: 3, // :lfd[o]
     },
     BuiltinCommand {
         name: "lfile",
         description: "read file with locations and jump to first",
         availability: Availability::Common,
+        min_abbrev: 2, // :lf[ile]
     },
     BuiltinCommand {
         name: "lfirst",
         description: "go to the specified location, default first one",
         availability: Availability::Common,
+        min_abbrev: 4, // :lfir[st]
     },
     BuiltinCommand {
         name: "lgetbuffer",
         description: "get locations from buffer",
         availability: Availability::Common,
+        min_abbrev: 5, // :lgetb[uffer]
     },
     BuiltinCommand {
         name: "lgetexpr",
         description: "get locations from expr",
         availability: Availability::Common,
+        min_abbrev: 5, // :lgete[xpr]
     },
     BuiltinCommand {
         name: "lgetfile",
         description: "read file with locations",
         availability: Availability::Common,
+        min_abbrev: 2, // :lg[etfile]
     },
     BuiltinCommand {
         name: "lgrep",
         description: "run 'grepprg' and jump to first match",
         availability: Availability::Common,
+        min_abbrev: 3, // :lgr[ep]
     },
     BuiltinCommand {
         name: "lgrepadd",
         description: "like :grep, but append to current list",
         availability: Availability::Common,
+        min_abbrev: 6, // :lgrepa[dd]
     },
     BuiltinCommand {
         name: "lhelpgrep",
         description: "like \":helpgrep\" but uses location list",
         availability: Availability::Common,
+        min_abbrev: 2, // :lh[elpgrep]
     },
     BuiltinCommand {
         name: "lhistory",
         description: "list the location lists",
         availability: Availability::Common,
+        min_abbrev: 3, // :lhi[story]
     },
     BuiltinCommand {
         name: "ll",
         description: "go to specific location",
         availability: Availability::Common,
+        min_abbrev: 2, // :ll
     },
     BuiltinCommand {
         name: "llast",
         description: "go to the specified location, default last one",
         availability: Availability::Common,
+        min_abbrev: 3, // :lla[st]
     },
     BuiltinCommand {
         name: "llist",
         description: "list all locations",
         availability: Availability::Common,
+        min_abbrev: 3, // :lli[st]
     },
     BuiltinCommand {
         name: "lmake",
         description: "execute external command 'makeprg' and parse",
         availability: Availability::Common,
+        min_abbrev: 4, // :lmak[e]
     },
     BuiltinCommand {
         name: "lnewer",
         description: "go to newer location list",
         availability: Availability::Common,
+        min_abbrev: 4, // :lnew[er]
     },
     BuiltinCommand {
         name: "lnext",
         description: "go to next location",
         availability: Availability::Common,
+        min_abbrev: 3, // :lne[xt]
     },
     BuiltinCommand {
         name: "lnfile",
         description: "go to first location in next file",
         availability: Availability::Common,
+        min_abbrev: 3, // :lnf[ile]
     },
     BuiltinCommand {
         name: "lolder",
         description: "go to older location list",
         availability: Availability::Common,
+        min_abbrev: 3, // :lol[der]
     },
     BuiltinCommand {
         name: "lopen",
         description: "open location window",
         availability: Availability::Common,
+        min_abbrev: 3, // :lop[en]
     },
     BuiltinCommand {
         name: "lpfile",
         description: "go to last location in previous file",
         availability: Availability::Common,
+        min_abbrev: 3, // :lpf[ile]
     },
     BuiltinCommand {
         name: "lprevious",
         description: "go to previous location",
         availability: Availability::Common,
+        min_abbrev: 2, // :lp[revious]
     },
     BuiltinCommand {
         name: "lrewind",
         description: "go to the specified location, default first one",
         availability: Availability::Common,
+        min_abbrev: 2, // :lr[ewind]
     },
     BuiltinCommand {
         name: "ltag",
         description: "jump to tag and add matching tags to the location list",
         availability: Availability::Common,
+        min_abbrev: 2, // :lt[ag]
     },
     BuiltinCommand {
         name: "lvimgrep",
         description: "search for pattern in files",
         availability: Availability::Common,
+        min_abbrev: 2, // :lv[imgrep]
     },
     BuiltinCommand {
         name: "lvimgrepadd",
         description: "like :vimgrep, but append to current list",
         availability: Availability::Common,
+        min_abbrev: 8, // :lvimgrepa[dd]
     },
     BuiltinCommand {
         name: "lwindow",
         description: "open or close location window",
         availability: Availability::Common,
+        min_abbrev: 2, // :lw[indow]
     },
     BuiltinCommand {
         name: "cd",
         description: "change directory",
         availability: Availability::Common,
+        min_abbrev: 2, // :cd
     },
     BuiltinCommand {
         name: "chdir",
         description: "change directory",
         availability: Availability::Common,
+        min_abbrev: 3, // :chd[ir]
     },
     BuiltinCommand {
         name: "lcd",
         description: "change directory locally",
         availability: Availability::Common,
+        min_abbrev: 2, // :lc[d]
     },
     BuiltinCommand {
         name: "lchdir",
         description: "change directory locally",
         availability: Availability::Common,
+        min_abbrev: 3, // :lch[dir]
     },
     BuiltinCommand {
         name: "pwd",
         description: "print current directory",
         availability: Availability::Common,
+        min_abbrev: 2, // :pw[d]
     },
     BuiltinCommand {
         name: "tcd",
         description: "change directory for tab page",
         availability: Availability::Common,
+        min_abbrev: 2, // :tc[d]
     },
     BuiltinCommand {
         name: "tchdir",
         description: "change directory for tab page",
         availability: Availability::Common,
+        min_abbrev: 3, // :tch[dir]
     },
     BuiltinCommand {
         name: "Print",
         description: "print lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :P[rint]
     },
     BuiltinCommand {
         name: "append",
         description: "append text",
         availability: Availability::Common,
+        min_abbrev: 1, // :a[ppend]
     },
     BuiltinCommand {
         name: "center",
         description: "format lines at the center",
         availability: Availability::Common,
+        min_abbrev: 2, // :ce[nter]
     },
     BuiltinCommand {
         name: "change",
         description: "replace a line or series of lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :c[hange]
     },
     BuiltinCommand {
         name: "copy",
         description: "copy lines",
         availability: Availability::Common,
+        min_abbrev: 2, // :co[py]
     },
     BuiltinCommand {
         name: "delete",
         description: "delete lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :d[elete]
     },
     BuiltinCommand {
         name: "insert",
         description: "insert text",
         availability: Availability::Common,
+        min_abbrev: 1, // :i[nsert]
     },
     BuiltinCommand {
         name: "join",
         description: "join lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :j[oin]
     },
     BuiltinCommand {
         name: "left",
         description: "left align lines",
         availability: Availability::Common,
+        min_abbrev: 2, // :le[ft]
     },
     BuiltinCommand {
         name: "list",
         description: "print lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :l[ist]
     },
     BuiltinCommand {
         name: "move",
         description: "move lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :m[ove]
     },
     BuiltinCommand {
         name: "number",
         description: "print lines with line number",
         availability: Availability::Common,
+        min_abbrev: 2, // :nu[mber]
     },
     BuiltinCommand {
         name: "print",
         description: "print lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :p[rint]
     },
     BuiltinCommand {
         name: "put",
         description: "insert contents of register in the text",
         availability: Availability::Common,
+        min_abbrev: 2, // :pu[t]
     },
     BuiltinCommand {
         name: "read",
         description: "read file into the text",
         availability: Availability::Common,
+        min_abbrev: 1, // :r[ead]
     },
     BuiltinCommand {
         name: "retab",
         description: "change tab size",
         availability: Availability::Common,
+        min_abbrev: 3, // :ret[ab]
     },
     BuiltinCommand {
         name: "right",
         description: "right align text",
         availability: Availability::Common,
+        min_abbrev: 2, // :ri[ght]
     },
     BuiltinCommand {
         name: "sort",
         description: "sort lines",
         availability: Availability::Common,
+        min_abbrev: 3, // :sor[t]
     },
     BuiltinCommand {
         name: "t",
         description: "same as \":copy\"",
         availability: Availability::Common,
+        min_abbrev: 1, // :t
     },
     BuiltinCommand {
         name: "uniq",
         description: "uniq lines",
         availability: Availability::Common,
+        min_abbrev: 3, // :uni[q]
     },
     BuiltinCommand {
         name: "yank",
         description: "yank lines into a register",
         availability: Availability::Common,
+        min_abbrev: 1, // :y[ank]
     },
     BuiltinCommand {
         name: "z",
         description: "print some lines",
         availability: Availability::Common,
+        min_abbrev: 1, // :z
     },
     BuiltinCommand {
         name: "earlier",
         description: "go to older change, undo",
         availability: Availability::Common,
+        min_abbrev: 2, // :ea[rlier]
     },
     BuiltinCommand {
         name: "later",
         description: "go to newer change, redo",
         availability: Availability::Common,
+        min_abbrev: 3, // :lat[er]
     },
     BuiltinCommand {
         name: "redo",
         description: "redo one undone change",
         availability: Availability::Common,
+        min_abbrev: 3, // :red[o]
     },
     BuiltinCommand {
         name: "rundo",
         description: "read undo information from a file",
         availability: Availability::Common,
+        min_abbrev: 4, // :rund[o]
     },
     BuiltinCommand {
         name: "undo",
         description: "undo last change(s)",
         availability: Availability::Common,
+        min_abbrev: 1, // :u[ndo]
     },
     BuiltinCommand {
         name: "undojoin",
         description: "join next change with previous undo block",
         availability: Availability::Common,
+        min_abbrev: 5, // :undoj[oin]
     },
     BuiltinCommand {
         name: "undolist",
         description: "list leafs of the undo tree",
         availability: Availability::Common,
+        min_abbrev: 5, // :undol[ist]
     },
     BuiltinCommand {
         name: "wundo",
         description: "write undo information to a file",
         availability: Availability::Common,
+        min_abbrev: 2, // :wu[ndo]
     },
     BuiltinCommand {
         name: "changes",
         description: "print the change list",
         availability: Availability::Common,
+        min_abbrev: 7, // :changes
     },
     BuiltinCommand {
         name: "clearjumps",
         description: "clear the jump list",
         availability: Availability::Common,
+        min_abbrev: 3, // :cle[arjumps]
     },
     BuiltinCommand {
         name: "delmarks",
         description: "delete marks",
         availability: Availability::Common,
+        min_abbrev: 4, // :delm[arks]
     },
     BuiltinCommand {
         name: "jumps",
         description: "print the jump list",
         availability: Availability::Common,
+        min_abbrev: 2, // :ju[mps]
     },
     BuiltinCommand {
         name: "k",
         description: "set a mark",
         availability: Availability::Common,
+        min_abbrev: 1, // :k
     },
     BuiltinCommand {
         name: "mark",
         description: "set a mark",
         availability: Availability::Common,
+        min_abbrev: 2, // :ma[rk]
     },
     BuiltinCommand {
         name: "marks",
         description: "list all marks",
         availability: Availability::Common,
+        min_abbrev: 5, // :marks
     },
     BuiltinCommand {
         name: "ascii",
         description: "print ascii value of character under the cursor",
         availability: Availability::Common,
+        min_abbrev: 2, // :as[cii]
     },
     BuiltinCommand {
         name: "display",
         description: "display registers",
         availability: Availability::Common,
+        min_abbrev: 2, // :di[splay]
     },
     BuiltinCommand {
         name: "registers",
         description: "display the contents of registers",
         availability: Availability::Common,
+        min_abbrev: 3, // :reg[isters]
     },
     BuiltinCommand {
         name: "cscope",
         description: "execute cscope command",
         availability: Availability::Common,
+        min_abbrev: 2, // :cs[cope]
     },
     BuiltinCommand {
         name: "cstag",
         description: "use cscope to jump to a tag",
         availability: Availability::Common,
+        min_abbrev: 3, // :cst[ag]
     },
     BuiltinCommand {
         name: "lcscope",
         description: "like \":cscope\" but uses location list",
         availability: Availability::Common,
+        min_abbrev: 3, // :lcs[cope]
     },
     BuiltinCommand {
         name: "pop",
         description: "jump to older entry in tag stack",
         availability: Availability::Common,
+        min_abbrev: 2, // :po[p]
     },
     BuiltinCommand {
         name: "ptNext",
         description: ":tNext in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptN[ext]
     },
     BuiltinCommand {
         name: "ptag",
         description: "show tag in preview window",
         availability: Availability::Common,
+        min_abbrev: 2, // :pt[ag]
     },
     BuiltinCommand {
         name: "ptfirst",
         description: ":trewind in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptf[irst]
     },
     BuiltinCommand {
         name: "ptjump",
         description: ":tjump and show tag in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptj[ump]
     },
     BuiltinCommand {
         name: "ptlast",
         description: ":tlast in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptl[ast]
     },
     BuiltinCommand {
         name: "ptnext",
         description: ":tnext in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptn[ext]
     },
     BuiltinCommand {
         name: "ptprevious",
         description: ":tprevious in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptp[revious]
     },
     BuiltinCommand {
         name: "ptrewind",
         description: ":trewind in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ptr[ewind]
     },
     BuiltinCommand {
         name: "ptselect",
         description: ":tselect and show tag in preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :pts[elect]
     },
     BuiltinCommand {
         name: "scscope",
         description: "split window and execute cscope command",
         availability: Availability::Common,
+        min_abbrev: 3, // :scs[cope]
     },
     BuiltinCommand {
         name: "stag",
         description: "split window and jump to a tag",
         availability: Availability::Common,
+        min_abbrev: 3, // :sta[g]
     },
     BuiltinCommand {
         name: "stjump",
         description: "do \":tjump\" and split window",
         availability: Availability::Common,
+        min_abbrev: 3, // :stj[ump]
     },
     BuiltinCommand {
         name: "stselect",
         description: "do \":tselect\" and split window",
         availability: Availability::Common,
+        min_abbrev: 3, // :sts[elect]
     },
     BuiltinCommand {
         name: "tNext",
         description: "jump to previous matching tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :tN[ext]
     },
     BuiltinCommand {
         name: "tag",
         description: "jump to tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :ta[g]
     },
     BuiltinCommand {
         name: "tags",
         description: "show the contents of the tag stack",
         availability: Availability::Common,
+        min_abbrev: 4, // :tags
     },
     BuiltinCommand {
         name: "tfirst",
         description: "jump to first matching tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :tf[irst]
     },
     BuiltinCommand {
         name: "tjump",
         description: "like \":tselect\", but jump directly when there is only one match",
         availability: Availability::Common,
+        min_abbrev: 2, // :tj[ump]
     },
     BuiltinCommand {
         name: "tlast",
         description: "jump to last matching tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :tl[ast]
     },
     BuiltinCommand {
         name: "tnext",
         description: "jump to next matching tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :tn[ext]
     },
     BuiltinCommand {
         name: "tprevious",
         description: "jump to previous matching tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :tp[revious]
     },
     BuiltinCommand {
         name: "trewind",
         description: "jump to first matching tag",
         availability: Availability::Common,
+        min_abbrev: 2, // :tr[ewind]
     },
     BuiltinCommand {
         name: "tselect",
         description: "list matching tags and select one",
         availability: Availability::Common,
+        min_abbrev: 2, // :ts[elect]
     },
     BuiltinCommand {
         name: "tabNext",
         description: "go to previous tab page",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabN[ext]
     },
     BuiltinCommand {
         name: "tabdo",
         description: "execute command in each tab page",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabd[o]
     },
     BuiltinCommand {
         name: "tabedit",
         description: "edit a file in a new tab page",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabe[dit]
     },
     BuiltinCommand {
         name: "tabfind",
         description: "find file in 'path', edit it in a new tab page",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabf[ind]
     },
     BuiltinCommand {
         name: "tabfirst",
         description: "go to first tab page",
         availability: Availability::Common,
+        min_abbrev: 6, // :tabfir[st]
     },
     BuiltinCommand {
         name: "tablast",
         description: "go to last tab page",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabl[ast]
     },
     BuiltinCommand {
         name: "tabmove",
         description: "move tab page to other position",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabm[ove]
     },
     BuiltinCommand {
         name: "tabonly",
         description: "close all tab pages except the current one",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabo[nly]
     },
     BuiltinCommand {
         name: "tabrewind",
         description: "go to first tab page",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabr[ewind]
     },
     BuiltinCommand {
         name: "tabs",
         description: "list the tab pages and what they contain",
         availability: Availability::Common,
+        min_abbrev: 4, // :tabs
     },
     BuiltinCommand {
         name: "all",
         description: "open a window for each file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :al[l]
     },
     BuiltinCommand {
         name: "pbuffer",
         description: "edit buffer in the preview window",
         availability: Availability::Common,
+        min_abbrev: 2, // :pb[uffer]
     },
     BuiltinCommand {
         name: "pclose",
         description: "close preview window",
         availability: Availability::Common,
+        min_abbrev: 2, // :pc[lose]
     },
     BuiltinCommand {
         name: "pedit",
         description: "edit file in the preview window",
         availability: Availability::Common,
+        min_abbrev: 3, // :ped[it]
     },
     BuiltinCommand {
         name: "ppop",
         description: "\":pop\" in preview window",
         availability: Availability::Common,
+        min_abbrev: 2, // :pp[op]
     },
     BuiltinCommand {
         name: "psearch",
         description: "like \":ijump\" but shows match in preview window",
         availability: Availability::Common,
+        min_abbrev: 2, // :ps[earch]
     },
     BuiltinCommand {
         name: "resize",
         description: "change current window height",
         availability: Availability::Common,
+        min_abbrev: 3, // :res[ize]
     },
     BuiltinCommand {
         name: "sNext",
         description: "split window and go to previous file in argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :sN[ext]
     },
     BuiltinCommand {
         name: "sall",
         description: "open a window for each file in argument list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sal[l]
     },
     BuiltinCommand {
         name: "sargument",
         description: "split window and go to specific file in argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :sa[rgument]
     },
     BuiltinCommand {
         name: "sbNext",
         description: "split window and go to previous file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbN[ext]
     },
     BuiltinCommand {
         name: "sball",
         description: "open a window for each file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sba[ll]
     },
     BuiltinCommand {
         name: "sbfirst",
         description: "split window and go to first file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbf[irst]
     },
     BuiltinCommand {
         name: "sblast",
         description: "split window and go to last file in buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbl[ast]
     },
     BuiltinCommand {
         name: "sbmodified",
         description: "split window and go to modified file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbm[odified]
     },
     BuiltinCommand {
         name: "sbnext",
         description: "split window and go to next file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbn[ext]
     },
     BuiltinCommand {
         name: "sbprevious",
         description: "split window and go to previous file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbp[revious]
     },
     BuiltinCommand {
         name: "sbrewind",
         description: "split window and go to first file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sbr[ewind]
     },
     BuiltinCommand {
         name: "sbuffer",
         description: "split window and go to specific file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 2, // :sb[uffer]
     },
     BuiltinCommand {
         name: "sfind",
         description: "split current window and edit file in 'path'",
         availability: Availability::Common,
+        min_abbrev: 2, // :sf[ind]
     },
     BuiltinCommand {
         name: "sfirst",
         description: "split window and go to first file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 4, // :sfir[st]
     },
     BuiltinCommand {
         name: "slast",
         description: "split window and go to last file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sla[st]
     },
     BuiltinCommand {
         name: "snext",
         description: "split window and go to next file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :sn[ext]
     },
     BuiltinCommand {
         name: "sprevious",
         description: "split window and go to previous file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 3, // :spr[evious]
     },
     BuiltinCommand {
         name: "srewind",
         description: "split window and go to first file in the argument list",
         availability: Availability::Common,
+        min_abbrev: 3, // :sre[wind]
     },
     BuiltinCommand {
         name: "sunhide",
         description: "same as \":unhide\"",
         availability: Availability::Common,
+        min_abbrev: 3, // :sun[hide]
     },
     BuiltinCommand {
         name: "sview",
         description: "split window and edit file read-only",
         availability: Availability::Common,
+        min_abbrev: 2, // :sv[iew]
     },
     BuiltinCommand {
         name: "unhide",
         description: "open a window for each loaded file in the buffer list",
         availability: Availability::Common,
+        min_abbrev: 3, // :unh[ide]
     },
     BuiltinCommand {
         name: "wincmd",
         description: "execute a Window (CTRL-W) command",
         availability: Availability::Common,
+        min_abbrev: 4, // :winc[md]
     },
     BuiltinCommand {
         name: "windo",
         description: "execute command in each window",
         availability: Availability::Common,
+        min_abbrev: 4, // :wind[o]
     },
     BuiltinCommand {
         name: "winpos",
         description: "get or set window position",
         availability: Availability::Common,
+        min_abbrev: 4, // :winp[os]
     },
     BuiltinCommand {
         name: "winsize",
         description: "get or set window size (obsolete)",
         availability: Availability::Common,
+        min_abbrev: 2, // :wi[nsize]
     },
     BuiltinCommand {
         name: "X",
         description: "ask for encryption key",
         availability: Availability::Common,
+        min_abbrev: 1, // :X
     },
     BuiltinCommand {
         name: "drop",
         description: "jump to window editing file or edit file in current window",
         availability: Availability::Common,
+        min_abbrev: 2, // :dr[op]
     },
     BuiltinCommand {
         name: "ex",
         description: "same as \":edit\"",
         availability: Availability::Common,
+        min_abbrev: 2, // :ex
     },
     BuiltinCommand {
         name: "exit",
         description: "same as \":xit\"",
         availability: Availability::Common,
+        min_abbrev: 3, // :exi[t]
     },
     BuiltinCommand {
         name: "file",
         description: "show or set the current file name",
         availability: Availability::Common,
+        min_abbrev: 1, // :f[ile]
     },
     BuiltinCommand {
         name: "find",
         description: "find file in 'path' and edit it",
         availability: Availability::Common,
+        min_abbrev: 3, // :fin[d]
     },
     BuiltinCommand {
         name: "loadview",
         description: "load view for current window from a file",
         availability: Availability::Common,
+        min_abbrev: 2, // :lo[adview]
     },
     BuiltinCommand {
         name: "mkexrc",
         description: "write current mappings and settings to a file",
         availability: Availability::Common,
+        min_abbrev: 2, // :mk[exrc]
     },
     BuiltinCommand {
         name: "mksession",
         description: "write session info to a file",
         availability: Availability::Common,
+        min_abbrev: 3, // :mks[ession]
     },
     BuiltinCommand {
         name: "mkview",
         description: "write view of current window to a file",
         availability: Availability::Common,
+        min_abbrev: 5, // :mkvie[w]
     },
     BuiltinCommand {
         name: "mkvimrc",
         description: "write current mappings and settings to a file",
         availability: Availability::Common,
+        min_abbrev: 3, // :mkv[imrc]
     },
     BuiltinCommand {
         name: "oldfiles",
         description: "list files that have marks in the viminfo file",
         availability: Availability::Common,
+        min_abbrev: 2, // :ol[dfiles]
     },
     BuiltinCommand {
         name: "preserve",
         description: "write all text to swap file",
         availability: Availability::Common,
+        min_abbrev: 3, // :pre[serve]
     },
     BuiltinCommand {
         name: "quitall",
         description: "quit Vim",
         availability: Availability::Common,
+        min_abbrev: 5, // :quita[ll]
     },
     BuiltinCommand {
         name: "recover",
         description: "recover a file from a swap file",
         availability: Availability::Common,
+        min_abbrev: 3, // :rec[over]
     },
     BuiltinCommand {
         name: "rviminfo",
         description: "read from viminfo file",
         availability: Availability::Common,
+        min_abbrev: 2, // :rv[iminfo]
     },
     BuiltinCommand {
         name: "swapname",
         description: "show the name of the current swap file",
         availability: Availability::Common,
+        min_abbrev: 2, // :sw[apname]
     },
     BuiltinCommand {
         name: "update",
         description: "write buffer if modified",
         availability: Availability::Common,
+        min_abbrev: 2, // :up[date]
     },
     BuiltinCommand {
         name: "view",
         description: "edit a file read-only",
         availability: Availability::Common,
+        min_abbrev: 3, // :vie[w]
     },
     BuiltinCommand {
         name: "visual",
         description: "same as \":edit\", but turns off \"Ex\" mode",
         availability: Availability::Common,
+        min_abbrev: 2, // :vi[sual]
     },
     BuiltinCommand {
         name: "wNext",
         description: "write to a file and go to previous file in argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :wN[ext]
     },
     BuiltinCommand {
         name: "wnext",
         description: "write to a file and go to next file in argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :wn[ext]
     },
     BuiltinCommand {
         name: "wprevious",
         description: "write to a file and go to previous file in argument list",
         availability: Availability::Common,
+        min_abbrev: 2, // :wp[revious]
     },
     BuiltinCommand {
         name: "wviminfo",
         description: "write to viminfo file",
         availability: Availability::Common,
+        min_abbrev: 2, // :wv[iminfo]
     },
     BuiltinCommand {
         name: "xall",
         description: "same as \":wqall\"",
         availability: Availability::Common,
+        min_abbrev: 2, // :xa[ll]
     },
     BuiltinCommand {
         name: "xit",
         description: "write if buffer changed and close window",
         availability: Availability::Common,
+        min_abbrev: 1, // :x[it]
     },
     BuiltinCommand {
         name: "diffget",
         description: "remove differences in current buffer",
         availability: Availability::Common,
+        min_abbrev: 5, // :diffg[et]
     },
     BuiltinCommand {
         name: "diffoff",
         description: "switch off diff mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :diffo[ff]
     },
     BuiltinCommand {
         name: "diffpatch",
         description: "apply a patch and show differences",
         availability: Availability::Common,
+        min_abbrev: 5, // :diffp[atch]
     },
     BuiltinCommand {
         name: "diffput",
         description: "remove differences in other buffer",
         availability: Availability::Common,
+        min_abbrev: 6, // :diffpu[t]
     },
     BuiltinCommand {
         name: "diffsplit",
         description: "show differences with another file",
         availability: Availability::Common,
+        min_abbrev: 5, // :diffs[plit]
     },
     BuiltinCommand {
         name: "diffthis",
         description: "make current window a diff window",
         availability: Availability::Common,
+        min_abbrev: 5, // :difft[his]
     },
     BuiltinCommand {
         name: "diffupdate",
         description: "update 'diff' buffers",
         availability: Availability::Common,
+        min_abbrev: 3, // :dif[fupdate]
     },
     BuiltinCommand {
         name: "fold",
         description: "create a fold",
         availability: Availability::Common,
+        min_abbrev: 2, // :fo[ld]
     },
     BuiltinCommand {
         name: "foldclose",
         description: "close folds",
         availability: Availability::Common,
+        min_abbrev: 5, // :foldc[lose]
     },
     BuiltinCommand {
         name: "folddoclosed",
         description: "execute command on lines in a closed fold",
         availability: Availability::Common,
+        min_abbrev: 7, // :folddoc[losed]
     },
     BuiltinCommand {
         name: "folddoopen",
         description: "execute command on lines not in a closed fold",
         availability: Availability::Common,
+        min_abbrev: 5, // :foldd[oopen]
     },
     BuiltinCommand {
         name: "foldopen",
         description: "open folds",
         availability: Availability::Common,
+        min_abbrev: 5, // :foldo[pen]
     },
     BuiltinCommand {
         name: "abbreviate",
         description: "enter abbreviation",
         availability: Availability::Common,
+        min_abbrev: 2, // :ab[breviate]
     },
     BuiltinCommand {
         name: "abclear",
         description: "remove all abbreviations",
         availability: Availability::Common,
+        min_abbrev: 3, // :abc[lear]
     },
     BuiltinCommand {
         name: "cabbrev",
         description: "like \":abbreviate\" but for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 2, // :ca[bbrev]
     },
     BuiltinCommand {
         name: "cabclear",
         description: "clear all abbreviations for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 4, // :cabc[lear]
     },
     BuiltinCommand {
         name: "cnoreabbrev",
         description: "like \":noreabbrev\" but for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 6, // :cnorea[bbrev]
     },
     BuiltinCommand {
         name: "cunabbrev",
         description: "like \":unabbrev\" but for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 4, // :cuna[bbrev]
     },
     BuiltinCommand {
         name: "iabbrev",
         description: "like \":abbrev\" but for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 2, // :ia[bbrev]
     },
     BuiltinCommand {
         name: "iabclear",
         description: "like \":abclear\" but for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 4, // :iabc[lear]
     },
     BuiltinCommand {
         name: "inoreabbrev",
         description: "like \":noreabbrev\" but for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 6, // :inorea[bbrev]
     },
     BuiltinCommand {
         name: "iunabbrev",
         description: "like \":unabbrev\" but for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 4, // :iuna[bbrev]
     },
     BuiltinCommand {
         name: "noreabbrev",
         description: "enter an abbreviation that will not be remapped",
         availability: Availability::Common,
+        min_abbrev: 5, // :norea[bbrev]
     },
     BuiltinCommand {
         name: "unabbreviate",
         description: "remove abbreviation",
         availability: Availability::Common,
+        min_abbrev: 3, // :una[bbreviate]
     },
     BuiltinCommand {
         name: "amenu",
         description: "enter new menu item for all modes",
         availability: Availability::Common,
+        min_abbrev: 2, // :am[enu]
     },
     BuiltinCommand {
         name: "anoremenu",
         description: "enter a new menu for all modes that will not be remapped",
         availability: Availability::Common,
+        min_abbrev: 2, // :an[oremenu]
     },
     BuiltinCommand {
         name: "aunmenu",
         description: "remove menu for all modes",
         availability: Availability::Common,
+        min_abbrev: 3, // :aun[menu]
     },
     BuiltinCommand {
         name: "cmenu",
         description: "add menu for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :cme[nu]
     },
     BuiltinCommand {
         name: "cnoremenu",
         description: "like \":noremenu\" but for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :cnoreme[nu]
     },
     BuiltinCommand {
         name: "cunmenu",
         description: "remove menu for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :cunme[nu]
     },
     BuiltinCommand {
         name: "emenu",
         description: "execute a menu by name",
         availability: Availability::Common,
+        min_abbrev: 2, // :em[enu]
     },
     BuiltinCommand {
         name: "imenu",
         description: "add menu for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :ime[nu]
     },
     BuiltinCommand {
         name: "inoremenu",
         description: "like \":noremenu\" but for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :inoreme[nu]
     },
     BuiltinCommand {
         name: "iunmenu",
         description: "remove menu for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :iunme[nu]
     },
     BuiltinCommand {
         name: "menu",
         description: "enter a new menu item",
         availability: Availability::Common,
+        min_abbrev: 2, // :me[nu]
     },
     BuiltinCommand {
         name: "menutranslate",
         description: "add a menu translation item",
         availability: Availability::Common,
+        min_abbrev: 5, // :menut[ranslate]
     },
     BuiltinCommand {
         name: "nmenu",
         description: "add menu for Normal mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :nme[nu]
     },
     BuiltinCommand {
         name: "nnoremenu",
         description: "like \":noremenu\" but for Normal mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :nnoreme[nu]
     },
     BuiltinCommand {
         name: "noremenu",
         description: "enter a menu that will not be remapped",
         availability: Availability::Common,
+        min_abbrev: 6, // :noreme[nu]
     },
     BuiltinCommand {
         name: "nunmenu",
         description: "remove menu for Normal mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :nunme[nu]
     },
     BuiltinCommand {
         name: "omenu",
         description: "add menu for Operator-pending mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :ome[nu]
     },
     BuiltinCommand {
         name: "onoremenu",
         description: "like \":noremenu\" but for Operator-pending mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :onoreme[nu]
     },
     BuiltinCommand {
         name: "ounmenu",
         description: "remove menu for Operator-pending mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :ounme[nu]
     },
     BuiltinCommand {
         name: "popup",
         description: "popup a menu by name",
         availability: Availability::Common,
+        min_abbrev: 4, // :popu[p]
     },
     BuiltinCommand {
         name: "smenu",
         description: "add menu for Select mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :sme[nu]
     },
     BuiltinCommand {
         name: "snoremenu",
         description: "like \":noremenu\" but for Select mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :snoreme[nu]
     },
     BuiltinCommand {
         name: "sunmenu",
         description: "remove menu for Select mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :sunme[nu]
     },
     BuiltinCommand {
         name: "tearoff",
         description: "tear-off a menu",
         availability: Availability::Common,
+        min_abbrev: 2, // :te[aroff]
     },
     BuiltinCommand {
         name: "tlmenu",
         description: "add menu for Terminal-Job mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :tlm[enu]
     },
     BuiltinCommand {
         name: "tlnoremenu",
         description: "like \":noremenu\" but for Terminal-Job mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :tln[oremenu]
     },
     BuiltinCommand {
         name: "tlunmenu",
         description: "remove menu for Terminal-Job mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :tlu[nmenu]
     },
     BuiltinCommand {
         name: "tmenu",
         description: "define menu tooltip",
         availability: Availability::Common,
+        min_abbrev: 2, // :tm[enu]
     },
     BuiltinCommand {
         name: "tunmenu",
         description: "remove menu tooltip",
         availability: Availability::Common,
+        min_abbrev: 2, // :tu[nmenu]
     },
     BuiltinCommand {
         name: "unmenu",
         description: "remove menu",
         availability: Availability::Common,
+        min_abbrev: 4, // :unme[nu]
     },
     BuiltinCommand {
         name: "vmenu",
         description: "add menu for Visual+Select mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :vme[nu]
     },
     BuiltinCommand {
         name: "vnoremenu",
         description: "like \":noremenu\" but for Visual+Select mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :vnoreme[nu]
     },
     BuiltinCommand {
         name: "vunmenu",
         description: "remove menu for Visual+Select mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :vunme[nu]
     },
     BuiltinCommand {
         name: "xmenu",
         description: "add menu for Visual mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :xme[nu]
     },
     BuiltinCommand {
         name: "xnoremenu",
         description: "like \":noremenu\" but for Visual mode",
         availability: Availability::Common,
+        min_abbrev: 7, // :xnoreme[nu]
     },
     BuiltinCommand {
         name: "xunmenu",
         description: "remove menu for Visual mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :xunme[nu]
     },
     BuiltinCommand {
         name: "cmapclear",
         description: "clear all mappings for Command-line mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :cmapc[lear]
     },
     BuiltinCommand {
         name: "imapclear",
         description: "like \":mapclear\" but for Insert mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :imapc[lear]
     },
     BuiltinCommand {
         name: "lmapclear",
         description: "like \":mapclear!\" but includes Lang-Arg mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :lmapc[lear]
     },
     BuiltinCommand {
         name: "nmapclear",
         description: "clear all mappings for Normal mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :nmapc[lear]
     },
     BuiltinCommand {
         name: "omapclear",
         description: "remove all mappings for Operator-pending mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :omapc[lear]
     },
     BuiltinCommand {
         name: "smapclear",
         description: "remove all mappings for Select mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :smapc[lear]
     },
     BuiltinCommand {
         name: "tmapclear",
         description: "remove all mappings for Terminal-Job mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :tmapc[lear]
     },
     BuiltinCommand {
         name: "vmapclear",
         description: "remove all mappings for Visual+Select mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :vmapc[lear]
     },
     BuiltinCommand {
         name: "xmapclear",
         description: "remove all mappings for Visual mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :xmapc[lear]
     },
     BuiltinCommand {
         name: "exusage",
         description: "overview of Ex commands",
         availability: Availability::Common,
+        min_abbrev: 3, // :exu[sage]
     },
     BuiltinCommand {
         name: "help",
         description: "open a help window",
         availability: Availability::Common,
+        min_abbrev: 1, // :h[elp]
     },
     BuiltinCommand {
         name: "helpclose",
         description: "close one help window",
         availability: Availability::Common,
+        min_abbrev: 5, // :helpc[lose]
     },
     BuiltinCommand {
         name: "helpfind",
         description: "dialog to open a help window",
         availability: Availability::Common,
+        min_abbrev: 5, // :helpf[ind]
     },
     BuiltinCommand {
         name: "helpgrep",
         description: "like \":grep\" but searches help files",
         availability: Availability::Common,
+        min_abbrev: 5, // :helpg[rep]
     },
     BuiltinCommand {
         name: "helptags",
         description: "generate help tags for a directory",
         availability: Availability::Common,
+        min_abbrev: 5, // :helpt[ags]
     },
     BuiltinCommand {
         name: "intro",
         description: "print the introductory message",
         availability: Availability::Common,
+        min_abbrev: 3, // :int[ro]
     },
     BuiltinCommand {
         name: "messages",
         description: "view previously displayed messages",
         availability: Availability::Common,
+        min_abbrev: 3, // :mes[sages]
     },
     BuiltinCommand {
         name: "version",
         description: "print version number and other info",
         availability: Availability::Common,
+        min_abbrev: 2, // :ve[rsion]
     },
     BuiltinCommand {
         name: "viusage",
         description: "overview of Normal mode commands",
         availability: Availability::Common,
+        min_abbrev: 3, // :viu[sage]
     },
     BuiltinCommand {
         name: "grep",
         description: "run 'grepprg' and jump to first match",
         availability: Availability::Common,
+        min_abbrev: 2, // :gr[ep]
     },
     BuiltinCommand {
         name: "grepadd",
         description: "like :grep, but append to current list",
         availability: Availability::Common,
+        min_abbrev: 5, // :grepa[dd]
     },
     BuiltinCommand {
         name: "make",
         description: "execute external command 'makeprg' and parse",
         availability: Availability::Common,
+        min_abbrev: 3, // :mak[e]
     },
     BuiltinCommand {
         name: "nohlsearch",
         description: "suspend 'hlsearch' highlighting",
         availability: Availability::Common,
+        min_abbrev: 3, // :noh[lsearch]
     },
     BuiltinCommand {
         name: "smagic",
         description: ":substitute with 'magic'",
         availability: Availability::Common,
+        min_abbrev: 2, // :sm[agic]
     },
     BuiltinCommand {
         name: "snomagic",
         description: ":substitute with 'nomagic'",
         availability: Availability::Common,
+        min_abbrev: 3, // :sno[magic]
     },
     BuiltinCommand {
         name: "vimgrep",
         description: "search for pattern in files",
         availability: Availability::Common,
+        min_abbrev: 3, // :vim[grep]
     },
     BuiltinCommand {
         name: "vimgrepadd",
         description: "like :vimgrep, but append to current list",
         availability: Availability::Common,
+        min_abbrev: 7, // :vimgrepa[dd]
     },
     BuiltinCommand {
         name: "checkpath",
         description: "list included files",
         availability: Availability::Common,
+        min_abbrev: 3, // :che[ckpath]
     },
     BuiltinCommand {
         name: "djump",
         description: "jump to #define",
         availability: Availability::Common,
+        min_abbrev: 2, // :dj[ump]
     },
     BuiltinCommand {
         name: "dl",
         description: "short for :delete with the 'l' flag",
         availability: Availability::Common,
+        min_abbrev: 2, // :dl
     },
     BuiltinCommand {
         name: "dlist",
         description: "list #defines",
         availability: Availability::Common,
+        min_abbrev: 3, // :dli[st]
     },
     BuiltinCommand {
         name: "dp",
         description: "short for :delete with the 'p' flag",
         availability: Availability::Common,
+        min_abbrev: 2, // :dp
     },
     BuiltinCommand {
         name: "dsearch",
         description: "list one #define",
         availability: Availability::Common,
+        min_abbrev: 2, // :ds[earch]
     },
     BuiltinCommand {
         name: "dsplit",
         description: "split window and jump to #define",
         availability: Availability::Common,
+        min_abbrev: 3, // :dsp[lit]
     },
     BuiltinCommand {
         name: "ijump",
         description: "jump to definition of identifier",
         availability: Availability::Common,
+        min_abbrev: 2, // :ij[ump]
     },
     BuiltinCommand {
         name: "ilist",
         description: "list lines where identifier matches",
         availability: Availability::Common,
+        min_abbrev: 2, // :il[ist]
     },
     BuiltinCommand {
         name: "iput",
         description: "like :put, but adjust the indent",
         availability: Availability::Common,
+        min_abbrev: 2, // :ip[ut]
     },
     BuiltinCommand {
         name: "isearch",
         description: "list one line where identifier matches",
         availability: Availability::Common,
+        min_abbrev: 2, // :is[earch]
     },
     BuiltinCommand {
         name: "isplit",
         description: "split window and jump to definition of identifier",
         availability: Availability::Common,
+        min_abbrev: 3, // :isp[lit]
     },
     BuiltinCommand {
         name: "mkspell",
         description: "produce .spl spell file",
         availability: Availability::Common,
+        min_abbrev: 4, // :mksp[ell]
     },
     BuiltinCommand {
         name: "spelldump",
         description: "split window and fill with all correct words",
         availability: Availability::Common,
+        min_abbrev: 6, // :spelld[ump]
     },
     BuiltinCommand {
         name: "spellgood",
         description: "add good word for spelling",
         availability: Availability::Common,
+        min_abbrev: 3, // :spe[llgood]
     },
     BuiltinCommand {
         name: "spellinfo",
         description: "show info about loaded spell files",
         availability: Availability::Common,
+        min_abbrev: 6, // :spelli[nfo]
     },
     BuiltinCommand {
         name: "spellrare",
         description: "add rare word for spelling",
         availability: Availability::Common,
+        min_abbrev: 7, // :spellra[re]
     },
     BuiltinCommand {
         name: "spellrepall",
         description: "replace all bad words like last |z=|",
         availability: Availability::Common,
+        min_abbrev: 6, // :spellr[epall]
     },
     BuiltinCommand {
         name: "spellundo",
         description: "remove good or bad word",
         availability: Availability::Common,
+        min_abbrev: 6, // :spellu[ndo]
     },
     BuiltinCommand {
         name: "spellwrong",
         description: "add spelling mistake",
         availability: Availability::Common,
+        min_abbrev: 6, // :spellw[rong]
     },
     BuiltinCommand {
         name: "breakadd",
         description: "add a debugger breakpoint",
         availability: Availability::Common,
+        min_abbrev: 6, // :breaka[dd]
     },
     BuiltinCommand {
         name: "breakdel",
         description: "delete a debugger breakpoint",
         availability: Availability::Common,
+        min_abbrev: 6, // :breakd[el]
     },
     BuiltinCommand {
         name: "breaklist",
         description: "list debugger breakpoints",
         availability: Availability::Common,
+        min_abbrev: 6, // :breakl[ist]
     },
     BuiltinCommand {
         name: "debug",
         description: "run a command in debugging mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :deb[ug]
     },
     BuiltinCommand {
         name: "debuggreedy",
         description: "read debug mode commands from normal input",
         availability: Availability::Common,
+        min_abbrev: 6, // :debugg[reedy]
     },
     BuiltinCommand {
         name: "profile",
         description: "profiling functions and scripts",
         availability: Availability::Common,
+        min_abbrev: 4, // :prof[ile]
     },
     BuiltinCommand {
         name: "profdel",
         description: "stop profiling a function or script",
         availability: Availability::Common,
+        min_abbrev: 5, // :profd[el]
     },
     BuiltinCommand {
         name: "delfunction",
         description: "delete a user function",
         availability: Availability::Common,
+        min_abbrev: 4, // :delf[unction]
     },
     BuiltinCommand {
         name: "scriptencoding",
         description: "encoding used in sourced Vim script",
         availability: Availability::Common,
+        min_abbrev: 7, // :scripte[ncoding]
     },
     BuiltinCommand {
         name: "scriptnames",
         description: "list names of all sourced Vim scripts",
         availability: Availability::Common,
+        min_abbrev: 3, // :scr[iptnames]
     },
     BuiltinCommand {
         name: "scriptversion",
         description: "version of Vim script used",
         availability: Availability::Common,
+        min_abbrev: 7, // :scriptv[ersion]
     },
     BuiltinCommand {
         name: "behave",
         description: "set mouse and selection behavior",
         availability: Availability::Common,
+        min_abbrev: 2, // :be[have]
     },
     BuiltinCommand {
         name: "checktime",
         description: "check timestamp of loaded buffers",
         availability: Availability::Common,
+        min_abbrev: 6, // :checkt[ime]
     },
     BuiltinCommand {
         name: "clipreset",
         description: "reset 'clipmethod'",
         availability: Availability::Common,
+        min_abbrev: 4, // :clip[reset]
     },
     BuiltinCommand {
         name: "compiler",
         description: "do settings for a specific compiler",
         availability: Availability::Common,
+        min_abbrev: 4, // :comp[iler]
     },
     BuiltinCommand {
         name: "defer",
         description: "call function when current function is done",
         availability: Availability::Common,
+        min_abbrev: 4, // :defe[r]
     },
     BuiltinCommand {
         name: "digraphs",
         description: "show or enter digraphs",
         availability: Availability::Common,
+        min_abbrev: 3, // :dig[raphs]
     },
     BuiltinCommand {
         name: "eval",
         description: "evaluate an expression and discard the result",
         availability: Availability::Common,
+        min_abbrev: 2, // :ev[al]
     },
     BuiltinCommand {
         name: "filter",
         description: "filter output of following command",
         availability: Availability::Common,
+        min_abbrev: 4, // :filt[er]
     },
     BuiltinCommand {
         name: "fixdel",
         description: "set key code of <Del>",
         availability: Availability::Common,
+        min_abbrev: 3, // :fix[del]
     },
     BuiltinCommand {
         name: "goto",
         description: "go to byte in the buffer",
         availability: Availability::Common,
+        min_abbrev: 2, // :go[to]
     },
     BuiltinCommand {
         name: "hardcopy",
         description: "send text to the printer",
         availability: Availability::Common,
+        min_abbrev: 2, // :ha[rdcopy]
     },
     BuiltinCommand {
         name: "history",
         description: "print a history list",
         availability: Availability::Common,
+        min_abbrev: 3, // :his[tory]
     },
     BuiltinCommand {
         name: "keepalt",
         description: "following command keeps the alternate file",
         availability: Availability::Common,
+        min_abbrev: 5, // :keepa[lt]
     },
     BuiltinCommand {
         name: "keepjumps",
         description: "following command keeps jumplist and marks",
         availability: Availability::Common,
+        min_abbrev: 5, // :keepj[umps]
     },
     BuiltinCommand {
         name: "keepmarks",
         description: "following command keeps marks where they are",
         availability: Availability::Common,
+        min_abbrev: 3, // :kee[pmarks]
     },
     BuiltinCommand {
         name: "keeppatterns",
         description: "following command keeps search pattern history",
         availability: Availability::Common,
+        min_abbrev: 5, // :keepp[atterns]
     },
     BuiltinCommand {
         name: "language",
         description: "set the language (locale)",
         availability: Availability::Common,
+        min_abbrev: 3, // :lan[guage]
     },
     BuiltinCommand {
         name: "legacy",
         description: "make following command use legacy script syntax",
         availability: Availability::Common,
+        min_abbrev: 3, // :leg[acy]
     },
     BuiltinCommand {
         name: "loadkeymap",
         description: "load the following keymaps until EOF",
         availability: Availability::Common,
+        min_abbrev: 5, // :loadk[eymap]
     },
     BuiltinCommand {
         name: "lockmarks",
         description: "following command keeps marks where they are",
         availability: Availability::Common,
+        min_abbrev: 3, // :loc[kmarks]
     },
     BuiltinCommand {
         name: "lsp",
         description: "LSP client command",
         availability: Availability::Common,
+        min_abbrev: 3, // :lsp (no abbreviation in Vim docs)
     },
     BuiltinCommand {
         name: "match",
         description: "define a match to highlight",
         availability: Availability::Common,
+        min_abbrev: 3, // :mat[ch]
     },
     BuiltinCommand {
         name: "mode",
         description: "show or change the screen mode",
         availability: Availability::Common,
+        min_abbrev: 3, // :mod[e]
     },
     BuiltinCommand {
         name: "noautocmd",
         description: "following commands don't trigger autocommands",
         availability: Availability::Common,
+        min_abbrev: 3, // :noa[utocmd]
     },
     BuiltinCommand {
         name: "noswapfile",
         description: "following commands don't create a swap file",
         availability: Availability::Common,
+        min_abbrev: 3, // :nos[wapfile]
     },
     BuiltinCommand {
         name: "open",
         description: "start open mode (not implemented)",
         availability: Availability::Common,
+        min_abbrev: 1, // :o[pen]
     },
     BuiltinCommand {
         name: "options",
         description: "open the options-window",
         availability: Availability::Common,
+        min_abbrev: 3, // :opt[ions]
     },
     BuiltinCommand {
         name: "ownsyntax",
         description: "set new local syntax highlight for this window",
         availability: Availability::Common,
+        min_abbrev: 2, // :ow[nsyntax]
     },
     BuiltinCommand {
         name: "packadd",
         description: "add a plugin from 'packpath'",
         availability: Availability::Common,
+        min_abbrev: 2, // :pa[ckadd]
     },
     BuiltinCommand {
         name: "packloadall",
         description: "load all packages under 'packpath'",
         availability: Availability::Common,
+        min_abbrev: 5, // :packl[oadall]
     },
     BuiltinCommand {
         name: "range",
         description: "go to last line in {range}",
         availability: Availability::Common,
+        min_abbrev: 5, // :range (special command, no abbreviation)
     },
     BuiltinCommand {
         name: "redir",
         description: "redirect messages to a file or register",
         availability: Availability::Common,
+        min_abbrev: 4, // :redi[r]
     },
     BuiltinCommand {
         name: "redrawstatus",
         description: "force a redraw of the status line(s)",
         availability: Availability::Common,
+        min_abbrev: 7, // :redraws[tatus]
     },
     BuiltinCommand {
         name: "redrawtabline",
         description: "force a redraw of the tabline",
         availability: Availability::Common,
+        min_abbrev: 7, // :redrawt[abline]
     },
     BuiltinCommand {
         name: "redrawtabpanel",
         description: "force a redraw of the tabpanel",
         availability: Availability::Common,
+        min_abbrev: 10, // :redrawtabp[anel]
     },
     BuiltinCommand {
         name: "restart",
         description: "restart Vim",
         availability: Availability::Common,
+        min_abbrev: 7, // :restart (no abbreviation in Vim docs)
     },
     BuiltinCommand {
         name: "sandbox",
         description: "execute a command in the sandbox",
         availability: Availability::Common,
+        min_abbrev: 3, // :san[dbox]
     },
     BuiltinCommand {
         name: "setfiletype",
         description: "set 'filetype', unless it was set already",
         availability: Availability::Common,
+        min_abbrev: 4, // :setf[iletype]
     },
     BuiltinCommand {
         name: "shell",
         description: "escape to a shell",
         availability: Availability::Common,
+        min_abbrev: 2, // :sh[ell]
     },
     BuiltinCommand {
         name: "sign",
         description: "manipulate signs",
         availability: Availability::Common,
+        min_abbrev: 3, // :sig[n]
     },
     BuiltinCommand {
         name: "sleep!",
         description: "do nothing for a few seconds, without the cursor visible",
         availability: Availability::Common,
+        min_abbrev: 2, // :sl[eep]!
     },
     BuiltinCommand {
         name: "smile",
         description: "make the user happy",
         availability: Availability::Common,
+        min_abbrev: 3, // :smi[le]
     },
     BuiltinCommand {
         name: "star",
         description: "use the last Visual area, like :'<,'>",
         availability: Availability::Common,
+        min_abbrev: 4, // :* (special command)
     },
     BuiltinCommand {
         name: "startgreplace",
         description: "start Virtual Replace mode",
         availability: Availability::Common,
+        min_abbrev: 6, // :startg[replace]
     },
     BuiltinCommand {
         name: "startinsert",
         description: "start Insert mode",
         availability: Availability::Common,
+        min_abbrev: 4, // :star[tinsert]
     },
     BuiltinCommand {
         name: "startreplace",
         description: "start Replace mode",
         availability: Availability::Common,
+        min_abbrev: 6, // :startr[eplace]
     },
     BuiltinCommand {
         name: "stop",
         description: "suspend the editor or escape to a shell",
         availability: Availability::Common,
+        min_abbrev: 2, // :st[op]
     },
     BuiltinCommand {
         name: "stopinsert",
         description: "stop Insert mode",
         availability: Availability::Common,
+        min_abbrev: 5, // :stopi[nsert]
     },
     BuiltinCommand {
         name: "suspend",
         description: "same as \":stop\"",
         availability: Availability::Common,
+        min_abbrev: 3, // :sus[pend]
     },
     BuiltinCommand {
         name: "syncbind",
         description: "sync scroll binding",
         availability: Availability::Common,
+        min_abbrev: 4, // :sync[bind]
     },
     BuiltinCommand {
         name: "syntime",
         description: "measure syntax highlighting speed",
         availability: Availability::Common,
+        min_abbrev: 5, // :synti[me]
     },
     BuiltinCommand {
         name: "unsilent",
         description: "run a command not silently",
         availability: Availability::Common,
+        min_abbrev: 3, // :uns[ilent]
     },
     BuiltinCommand {
         name: "verbose",
         description: "execute command with 'verbose' set",
         availability: Availability::Common,
+        min_abbrev: 4, // :verb[ose]
     },
     BuiltinCommand {
         name: "echoconsole",
         description: "like :echomsg but write to stdout",
         availability: Availability::Common,
+        min_abbrev: 5, // :echoc[onsole]
     },
     BuiltinCommand {
         name: "fclose",
         description: "close file dialog",
         availability: Availability::Common,
+        min_abbrev: 6, // :fclose (no abbreviation in Vim docs)
     },
     BuiltinCommand {
         name: "gui",
         description: "start the GUI",
         availability: Availability::Common,
+        min_abbrev: 2, // :gu[i]
     },
     BuiltinCommand {
         name: "gvim",
         description: "start the GUI",
         availability: Availability::Common,
+        min_abbrev: 2, // :gv[im]
     },
     BuiltinCommand {
         name: "promptfind",
         description: "open GUI dialog for searching",
         availability: Availability::Common,
+        min_abbrev: 3, // :pro[mptfind]
     },
     BuiltinCommand {
         name: "promptrepl",
         description: "open GUI dialog for search/replace",
+        min_abbrev: 7, // :promptr[epl]
         availability: Availability::Common,
     },
     BuiltinCommand {
         name: "simalt",
         description: "Win32 GUI: simulate Windows ALT key",
         availability: Availability::Common,
+        min_abbrev: 3, // :sim[alt]
     },
     BuiltinCommand {
         name: "wlrestore",
         description: "restore the Wayland compositor connection",
         availability: Availability::Common,
+        min_abbrev: 2, // :wl[restore]
     },
     BuiltinCommand {
         name: "xrestore",
         description: "restores the X server connection",
         availability: Availability::Common,
+        min_abbrev: 2, // :xr[estore]
     },
     BuiltinCommand {
         name: "perl",
         description: "execute Perl command",
         availability: Availability::Common,
+        min_abbrev: 2, // :pe[rl]
     },
     BuiltinCommand {
         name: "perldo",
         description: "execute Perl command for each line",
         availability: Availability::Common,
+        min_abbrev: 5, // :perld[o]
     },
     BuiltinCommand {
         name: "perlfile",
         description: "execute Perl script file",
         availability: Availability::Common,
+        min_abbrev: 8, // :perlfile (no abbreviation in Vim docs)
     },
     BuiltinCommand {
         name: "py3",
         description: "execute Python 3 command",
         availability: Availability::Common,
+        min_abbrev: 3, // :py3
     },
     BuiltinCommand {
         name: "py3do",
         description: "execute Python 3 command for each line",
         availability: Availability::Common,
+        min_abbrev: 4, // :py3d[o]
     },
     BuiltinCommand {
         name: "py3file",
         description: "execute Python 3 script file",
         availability: Availability::Common,
+        min_abbrev: 4, // :py3f[ile]
     },
     BuiltinCommand {
         name: "pydo",
         description: "execute Python command for each line",
         availability: Availability::Common,
+        min_abbrev: 3, // :pyd[o]
     },
     BuiltinCommand {
         name: "pyfile",
         description: "execute Python script file",
         availability: Availability::Common,
+        min_abbrev: 3, // :pyf[ile]
     },
     BuiltinCommand {
         name: "python",
         description: "execute Python command",
         availability: Availability::Common,
+        min_abbrev: 2, // :py[thon]
     },
     BuiltinCommand {
         name: "python3",
         description: "same as :py3",
         availability: Availability::Common,
+        min_abbrev: 7, // :python3
     },
     BuiltinCommand {
         name: "pythonx",
         description: "same as :pyx",
         availability: Availability::Common,
+        min_abbrev: 7, // :pythonx
     },
     BuiltinCommand {
         name: "pyx",
         description: "execute python_x command",
         availability: Availability::Common,
+        min_abbrev: 3, // :pyx
     },
     BuiltinCommand {
         name: "pyxdo",
         description: "execute python_x command for each line",
         availability: Availability::Common,
+        min_abbrev: 4, // :pyxd[o]
     },
     BuiltinCommand {
         name: "pyxfile",
         description: "execute python_x script file",
         availability: Availability::Common,
+        min_abbrev: 4, // :pyxf[ile]
     },
     BuiltinCommand {
         name: "ruby",
         description: "execute Ruby command",
         availability: Availability::Common,
+        min_abbrev: 3, // :rub[y]
     },
     BuiltinCommand {
         name: "rubydo",
         description: "execute Ruby command for each line",
         availability: Availability::Common,
+        min_abbrev: 5, // :rubyd[o]
     },
     BuiltinCommand {
         name: "rubyfile",
         description: "execute Ruby script file",
         availability: Availability::Common,
+        min_abbrev: 5, // :rubyf[ile]
     },
     BuiltinCommand {
         name: "tcl",
         description: "execute Tcl command",
         availability: Availability::Common,
+        min_abbrev: 3, // :tcl
     },
     BuiltinCommand {
         name: "tcldo",
         description: "execute Tcl command for each line",
         availability: Availability::Common,
+        min_abbrev: 4, // :tcld[o]
     },
     BuiltinCommand {
         name: "tclfile",
         description: "execute Tcl script file",
         availability: Availability::Common,
+        min_abbrev: 4, // :tclf[ile]
     },
     BuiltinCommand {
         name: "mzfile",
         description: "execute MzScheme script file",
         availability: Availability::Common,
+        min_abbrev: 3, // :mzf[ile]
     },
     BuiltinCommand {
         name: "mzscheme",
         description: "execute MzScheme command",
         availability: Availability::Common,
+        min_abbrev: 2, // :mz[scheme]
     },
     BuiltinCommand {
         name: "nbclose",
         description: "close the current Netbeans session",
         availability: Availability::Common,
+        min_abbrev: 3, // :nbc[lose]
     },
     BuiltinCommand {
         name: "nbkey",
         description: "pass a key to Netbeans",
         availability: Availability::Common,
+        min_abbrev: 2, // :nb[key]
     },
     BuiltinCommand {
         name: "nbstart",
         description: "start a new Netbeans session",
         availability: Availability::Common,
+        min_abbrev: 3, // :nbs[tart]
     },
     BuiltinCommand {
         name: "checkhealth",
         description: "run health checks",
         availability: Availability::NeovimOnly,
+        min_abbrev: 11, // :checkhealth (Neovim only)
     },
     BuiltinCommand {
         name: "terminal",
         description: "open a terminal window",
         availability: Availability::NeovimOnly,
+        min_abbrev: 3, // :ter[minal]
     },
     BuiltinCommand {
         name: "rshada",
         description: "read from shada file",
         availability: Availability::NeovimOnly,
+        min_abbrev: 6, // :rshada (Neovim only)
     },
     BuiltinCommand {
         name: "wshada",
         description: "write to shada file",
         availability: Availability::NeovimOnly,
+        min_abbrev: 6, // :wshada (Neovim only)
     },
     BuiltinCommand {
         name: "detach",
         description: "detach the current UI",
         availability: Availability::NeovimOnly,
+        min_abbrev: 6, // :detach (Neovim only)
     },
     BuiltinCommand {
         name: "trust",
         description: "manage trusted files",
         availability: Availability::NeovimOnly,
+        min_abbrev: 5, // :trust (Neovim only)
     },
     BuiltinCommand {
         name: "abstract",
         description: "declare a Vim9 abstract class",
         availability: Availability::VimOnly,
+        min_abbrev: 8, // :abstract
     },
     BuiltinCommand {
         name: "class",
         description: "start of a class declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 5, // :class
     },
     BuiltinCommand {
         name: "def",
         description: "define a Vim9 user function",
         availability: Availability::VimOnly,
+        min_abbrev: 3, // :def
     },
     BuiltinCommand {
         name: "defcompile",
         description: "compile Vim9 user functions in current script",
         availability: Availability::VimOnly,
+        min_abbrev: 4, // :defc[ompile]
     },
     BuiltinCommand {
         name: "disassemble",
         description: "disassemble Vim9 user function",
         availability: Availability::VimOnly,
+        min_abbrev: 4, // :disa[ssemble]
     },
     BuiltinCommand {
         name: "endclass",
         description: "end of a class declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 8, // :endclass
     },
     BuiltinCommand {
         name: "enddef",
         description: "end of a user function started with :def",
         availability: Availability::VimOnly,
+        min_abbrev: 6, // :enddef
     },
     BuiltinCommand {
         name: "endenum",
         description: "end of an enum declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 7, // :endenum
     },
     BuiltinCommand {
         name: "endinterface",
         description: "end of an interface declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 12, // :endinterface
     },
     BuiltinCommand {
         name: "enum",
         description: "start of an enum declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 4, // :enum
     },
     BuiltinCommand {
         name: "export",
         description: "Vim9: export an item from a script",
         availability: Availability::VimOnly,
+        min_abbrev: 3, // :exp[ort]
     },
     BuiltinCommand {
         name: "final",
         description: "declare an immutable variable in Vim9",
         availability: Availability::VimOnly,
+        min_abbrev: 5, // :final
     },
     BuiltinCommand {
         name: "import",
         description: "Vim9: import an item from another script",
         availability: Availability::VimOnly,
+        min_abbrev: 3, // :imp[ort]
     },
     BuiltinCommand {
         name: "interface",
         description: "start of an interface declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 9, // :interface
     },
     BuiltinCommand {
         name: "public",
         description: "prefix for a class or object member",
         availability: Availability::VimOnly,
+        min_abbrev: 6, // :public
     },
     BuiltinCommand {
         name: "static",
         description: "prefix for a class member or function",
         availability: Availability::VimOnly,
+        min_abbrev: 6, // :static
     },
     BuiltinCommand {
         name: "this",
         description: "prefix for an object member during declaration",
         availability: Availability::VimOnly,
+        min_abbrev: 4, // :this
     },
     BuiltinCommand {
         name: "type",
         description: "create a type alias",
         availability: Availability::VimOnly,
+        min_abbrev: 4, // :type
     },
     BuiltinCommand {
         name: "var",
         description: "variable declaration in Vim9",
         availability: Availability::VimOnly,
+        min_abbrev: 3, // :var
     },
     BuiltinCommand {
         name: "vim9cmd",
         description: "make following command use Vim9 script syntax",
         availability: Availability::VimOnly,
+        min_abbrev: 4, // :vim9[cmd]
     },
 ];
 
