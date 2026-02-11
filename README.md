@@ -226,6 +226,14 @@ just dev-nvim # Open sample file in Neovim for manual testing
 just dev-vim  # Open sample file in Vim for manual testing
 ```
 
+## Known Issues
+
+### `<Cmd>` mapping false positives
+
+[tree-sitter-vim](https://github.com/tree-sitter-grammars/tree-sitter-vim) (v0.4.0) cannot correctly parse `<Cmd>...<CR>` style mappings (e.g., `nmap qu <Cmd>quit<CR>`). The grammar's `command_argument: /\S+/` greedily consumes `<CR>`, preventing `_map_rhs_statement` from recognizing its closing token. This causes the parser to emit ERROR or MISSING nodes.
+
+hjkls includes a workaround to detect and suppress these false positives so that valid `<Cmd>` mappings do not appear as syntax errors.
+
 ## Related Projects
 
 - [tower-lsp-server](https://github.com/tombi-toml/tower-lsp-server) - LSP server framework for Rust

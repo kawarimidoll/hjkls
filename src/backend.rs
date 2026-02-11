@@ -1252,6 +1252,80 @@ fn scan_directory_recursive(dir: &PathBuf, files: &mut Vec<PathBuf>) {
     }
 }
 
+/// All map command node kinds recognized by tree-sitter-vim.
+pub(crate) const MAP_COMMAND_KINDS: &[&str] = &[
+    "map", "nmap", "vmap", "xmap", "smap", "omap", "imap", "lmap", "cmap", "tmap", "noremap",
+    "nnoremap", "vnoremap", "xnoremap", "snoremap", "onoremap", "inoremap", "lnoremap", "cnoremap",
+    "tnoremap",
+];
+
+/// Check if an ERROR node is a false positive from `<Cmd>` mapping.
+///
+/// tree-sitter-vim v0.4.0 cannot parse `<Cmd>...<CR>` style mappings correctly
+/// (e.g., `nmap qu <Cmd>quit<CR>`) and reports them as ERROR nodes.
+/// This function detects such false positives by checking:
+/// 1. The first child is a map command (nmap, nnoremap, etc.)
+/// 2. Any child is a `keycode` node matching `<Cmd>` (case-insensitive)
+fn is_cmd_mapping_false_positive(node: &tree_sitter::Node, source: &str) -> bool {
+    if !node.is_error() {
+        return false;
+    }
+    let mut cursor = node.walk();
+    if !cursor.goto_first_child() {
+        return false;
+    }
+    // Condition 1: first child is a map command
+    if !MAP_COMMAND_KINDS.contains(&cursor.node().kind()) {
+        return false;
+    }
+    // Condition 2: presence of <Cmd> keycode (skip first child which is the map command)
+    while cursor.goto_next_sibling() {
+        let child = cursor.node();
+        if child.kind() == "keycode" {
+            if let Ok(text) = child.utf8_text(source.as_bytes()) {
+                if text.eq_ignore_ascii_case("<cmd>") {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Check if a MISSING `keycode` node is a false positive from `<Cmd>` mapping.
+///
+/// When parsing multi-line content, tree-sitter-vim may produce a `map_statement`
+/// with a MISSING `keycode` at the end instead of an ERROR node. This happens
+/// because `command_argument: /\S+/` consumes the closing `<CR>`, so the
+/// `_map_rhs_statement` rule inserts a MISSING `keycode` placeholder.
+fn is_cmd_mapping_missing_keycode(node: &tree_sitter::Node, source: &str) -> bool {
+    if !node.is_missing() || node.kind() != "keycode" {
+        return false;
+    }
+    // Walk up to find a map_statement parent containing a <Cmd> keycode sibling
+    let parent = match node.parent() {
+        Some(p) if p.kind() == "map_side" || p.kind() == "map_statement" => p,
+        _ => return false,
+    };
+    let mut cursor = parent.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            if child.kind() == "keycode" && !child.is_missing() {
+                if let Ok(text) = child.utf8_text(source.as_bytes()) {
+                    if text.eq_ignore_ascii_case("<cmd>") {
+                        return true;
+                    }
+                }
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    false
+}
+
 /// Recursively collect ERROR nodes from the syntax tree
 fn collect_errors(
     cursor: &mut tree_sitter::TreeCursor,
@@ -1260,6 +1334,16 @@ fn collect_errors(
 ) {
     loop {
         let node = cursor.node();
+
+        // Skip false positives from <Cmd> mappings (tree-sitter-vim limitation)
+        if is_cmd_mapping_false_positive(&node, source)
+            || is_cmd_mapping_missing_keycode(&node, source)
+        {
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+            continue;
+        }
 
         if node.is_error() || node.is_missing() {
             let start = node.start_position();
@@ -2899,5 +2983,70 @@ mod tests {
 
         // Empty string
         assert_eq!(Backend::replace_single_dot_with_double(""), "");
+    }
+
+    /// Helper to parse Vim script and collect diagnostics via collect_errors.
+    fn collect_diagnostics(source: &str) -> Vec<Diagnostic> {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&tree_sitter_vim::language()).unwrap();
+        let tree = parser.parse(source, None).unwrap();
+        let mut diagnostics = Vec::new();
+        let mut cursor = tree.walk();
+        collect_errors(&mut cursor, source, &mut diagnostics);
+        diagnostics
+    }
+
+    #[test]
+    fn test_cmd_mapping_no_false_positive_single_line() {
+        // Single-line <Cmd> mappings produce ERROR nodes — should be filtered
+        let cases = [
+            "nmap qu <Cmd>quit<CR>",
+            "nnoremap <leader>f <Cmd>Files<CR>",
+            "vnoremap <leader>y <Cmd>yank<CR>",
+            "imap <C-a> <Cmd>normal! ggVG<CR>",
+            "cnoremap <C-p> <Cmd>echo 'hi'<CR>",
+            "tnoremap <Esc> <Cmd>close<CR>",
+        ];
+        for src in &cases {
+            let diags = collect_diagnostics(src);
+            assert!(
+                diags.is_empty(),
+                "Expected no diagnostics for {:?}, got: {:?}",
+                src,
+                diags
+            );
+        }
+    }
+
+    #[test]
+    fn test_cmd_mapping_no_false_positive_multi_line() {
+        // Multi-line context produces MISSING keycode nodes — should also be filtered
+        let src = "\
+nmap qu <Cmd>quit<CR>
+nnoremap <leader>f <Cmd>Files<CR>
+vnoremap <leader>y <Cmd>yank<CR>
+xnoremap <leader>d <Cmd>delete<CR>
+inoremap <C-s> <Cmd>write<CR>
+cnoremap <C-p> <Cmd>echo 'hi'<CR>
+tnoremap <Esc> <Cmd>close<CR>
+nmap <F5> <Cmd>make<CR>
+nnoremap <leader>a <cmd>echo 'lower'<cr>
+nnoremap <leader>b <CMD>echo 'upper'<CR>";
+        let diags = collect_diagnostics(src);
+        assert!(
+            diags.is_empty(),
+            "Expected no diagnostics for multi-line <Cmd> mappings, got: {:?}",
+            diags
+        );
+    }
+
+    #[test]
+    fn test_real_syntax_errors_still_detected() {
+        // Genuine syntax errors must still be reported
+        let diags = collect_diagnostics("if");
+        assert!(
+            !diags.is_empty(),
+            "Expected syntax error for incomplete `if` statement"
+        );
     }
 }

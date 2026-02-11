@@ -243,3 +243,25 @@ nnoremap <CR> :quit<CR>
 nnoremap <Esc> <Esc>
 nnoremap <Up> k
 nnoremap <C-a> <C-a>
+
+" === <Cmd> mappings (should NOT show syntax errors) ===
+
+" Basic <Cmd> mapping
+nmap qu <Cmd>quit<CR>
+nnoremap <leader>f <Cmd>Files<CR>
+
+" Various map commands with <Cmd>
+vnoremap <leader>y <Cmd>yank<CR>
+xnoremap <leader>d <Cmd>delete<CR>
+inoremap <C-s> <Cmd>write<CR>
+cnoremap <C-p> <Cmd>echo 'hi'<CR>
+tnoremap <Esc> <Cmd>close<CR>
+onoremap af <Cmd>normal! vaf<CR>
+
+" Non-noremap variants
+nmap <F5> <Cmd>make<CR>
+imap <C-l> <Cmd>redraw<CR>
+
+" Case variations (should all be filtered)
+nnoremap <leader>a <cmd>echo 'lower'<cr>
+nnoremap <leader>b <CMD>echo 'upper'<CR>
