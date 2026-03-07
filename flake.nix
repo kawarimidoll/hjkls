@@ -94,6 +94,7 @@
 
               # YAML (GitHub Actions)
               actionlint.enable = true;
+              zizmor.enable = true;
 
               # Security
               check-merge-conflicts.enable = true;
@@ -144,6 +145,7 @@
               nixfmt
               dprint
               actionlint
+              zizmor
               convco
               neovim-test
               vim-dev
